@@ -48,12 +48,14 @@ export interface Pill {
   bg: string
 }
 
+// Teintes sémantiques (mêmes valeurs que les variables de styles.css).
 const P = {
-  check: { fg: '#8A4307', bg: '#FFF1DE' },
-  ok: { fg: '#0B5E39', bg: '#E3F4EA' },
-  grey: { fg: '#3D414A', bg: '#EEEEEA' },
-  red: { fg: '#9A1C1C', bg: '#FDECEC' },
-  blue: { fg: '#163A9E', bg: '#E4EBFF' },
+  check: { fg: '#A55A0B', bg: '#FCF1E3' },
+  ok: { fg: '#1E7A50', bg: '#E9F5EE' },
+  grey: { fg: '#4A5263', bg: '#F1F3F6' },
+  red: { fg: '#C0392B', bg: '#FBECEB' },
+  blue: { fg: '#0A626A', bg: '#EAF6F7' },
+  violet: { fg: '#5B3FC4', bg: '#EFEBFD' },
 }
 
 export const STATUS: Record<VehicleStatus, Pill & { cta: string }> = {
@@ -69,14 +71,14 @@ export const STATUS: Record<VehicleStatus, Pill & { cta: string }> = {
 export const PILL = P
 
 export const RENDER_STATE: Record<RenderStatus | 'none' | 'asis', { label: string; color: string }> = {
-  none: { label: 'Pas encore préparée', color: '#5B606B' },
-  pending: { label: 'En préparation', color: '#1F4FD8' },
-  processing: { label: 'En préparation', color: '#1F4FD8' },
-  to_review: { label: 'À regarder', color: '#8A4307' },
-  approved: { label: 'OK', color: '#0B5E39' },
-  failed: { label: 'Raté, à refaire', color: '#9A1C1C' },
-  kept_original: { label: 'Photo du parking', color: '#5B606B' },
-  asis: { label: 'Telle quelle', color: '#5B606B' },
+  none: { label: 'Pas encore préparée', color: '#5A6172' },
+  pending: { label: 'En préparation', color: '#0A626A' },
+  processing: { label: 'En préparation', color: '#0A626A' },
+  to_review: { label: 'À regarder', color: '#A55A0B' },
+  approved: { label: 'OK', color: '#1E7A50' },
+  failed: { label: 'Raté, à refaire', color: '#C0392B' },
+  kept_original: { label: 'Photo du parking', color: '#5A6172' },
+  asis: { label: 'Telle quelle', color: '#5A6172' },
 }
 
 export const LEAD_TYPES: Record<LeadType, string> = {

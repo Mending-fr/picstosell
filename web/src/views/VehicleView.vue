@@ -435,12 +435,12 @@ onBeforeRouteLeave(() => {
   <div class="page">
     <div v-if="notFound" class="empty" style="min-height: 60vh; justify-content: center">
       <strong>Cette voiture n'existe pas ou a été supprimée</strong>
-      <RouterLink to="/vehicles" class="btn btn-dark">Retour au stock</RouterLink>
+      <RouterLink to="/vehicles" class="btn btn-primary">Retour au stock</RouterLink>
     </div>
     <div v-else-if="loadError" class="empty" style="min-height: 60vh; justify-content: center">
       <strong>Impossible d'afficher cette voiture</strong>
       <span>{{ loadError }}</span>
-      <button type="button" class="btn btn-dark" @click="(loadError = ''), load()">Réessayer</button>
+      <button type="button" class="btn btn-primary" @click="(loadError = ''), load()">Réessayer</button>
     </div>
 
     <template v-else>
@@ -448,12 +448,12 @@ onBeforeRouteLeave(() => {
       <div class="page-head">
         <div class="row" style="gap: 14px">
           <button type="button" class="icon-btn" aria-label="Retour" @click="router.back()">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#15171C" stroke-width="2" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3B4150" stroke-width="2" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
           </button>
           <template v-if="v">
             <span class="plate plate-lg">{{ v.plate }}</span>
             <h1 class="title">{{ vehicleTitle(v) }}</h1>
-            <span v-if="queuePos >= 0 && v.status === 'to_review'" class="pill" style="color: #8a4307; background: #fff1de">
+            <span v-if="queuePos >= 0 && v.status === 'to_review'" class="pill" style="color: #A55A0B; background: #FCF1E3">
               Voiture {{ queuePos + 1 }} sur {{ queue.length }} à vérifier
             </span>
             <StatusPill v-else :status="v.status" />
@@ -471,7 +471,7 @@ onBeforeRouteLeave(() => {
             <span v-if="publishing" class="spinner" aria-hidden="true" />
             Tout est bon, mettre en ligne <span class="kbd-inv" aria-hidden="true">⌘ ↵</span>
           </button>
-          <RouterLink v-else-if="nextVehicle" :to="`/vehicles/${nextVehicle}`" class="btn btn-dark">Voiture suivante à vérifier</RouterLink>
+          <RouterLink v-else-if="nextVehicle" :to="`/vehicles/${nextVehicle}`" class="btn btn-primary">Voiture suivante à vérifier</RouterLink>
         </div>
       </div>
       <p v-if="publishError" class="alert alert-error" role="alert" style="margin: 0">{{ publishError }}</p>
@@ -494,7 +494,7 @@ onBeforeRouteLeave(() => {
               </div>
               <PhotoPicker v-model="newPhotos" :disabled="sending" />
               <div class="row" style="justify-content: flex-end">
-                <button type="button" class="btn btn-dark" :disabled="!newPhotos.length || sending" @click="sendPhotos">
+                <button type="button" class="btn btn-primary" :disabled="!newPhotos.length || sending" @click="sendPhotos">
                   <span v-if="sending" class="spinner" aria-hidden="true" />
                   Envoyer et préparer les photos
                 </button>
@@ -515,7 +515,7 @@ onBeforeRouteLeave(() => {
 
             <div v-if="cur" class="card viewer">
               <div class="row between">
-                <span style="font-size: 16px; font-weight: 700">{{ cur.kind === 'exterior' ? `Vue ${shotLabel(cur.shot_key).toLowerCase()}` : cur.kind === 'interior' ? 'Intérieur' : 'Détail' }}</span>
+                <span style="font-size: 16px; font-weight: 500">{{ cur.kind === 'exterior' ? `Vue ${shotLabel(cur.shot_key).toLowerCase()}` : cur.kind === 'interior' ? 'Intérieur' : 'Détail' }}</span>
                 <div v-if="curRender?.url" role="group" aria-label="Affichage" class="seg">
                   <button type="button" :aria-pressed="viewMode === 'side'" @click="viewMode = 'side'">Côte à côte</button>
                   <button type="button" :aria-pressed="viewMode === 'overlay'" @click="viewMode = 'overlay'">Superposé</button>
@@ -559,7 +559,7 @@ onBeforeRouteLeave(() => {
               </div>
 
               <div v-if="isManager && curRender" class="row">
-                <button type="button" class="btn btn-dark" :disabled="acting || curRender.status !== 'to_review' || !curRender.url" @click="act('approve')">
+                <button type="button" class="btn btn-primary" :disabled="acting || curRender.status !== 'to_review' || !curRender.url" @click="act('approve')">
                   C'est bon <span class="kbd-inv" aria-hidden="true">A</span>
                 </button>
                 <button type="button" class="btn" :disabled="acting || curRender.status === 'pending' || curRender.status === 'processing'" @click="act('retry')">
@@ -600,7 +600,7 @@ onBeforeRouteLeave(() => {
               <PhotoPicker v-model="newPhotos" :taken="takenKeys" :disabled="sending" />
               <div class="row" style="justify-content: flex-end">
                 <button type="button" class="btn" :disabled="sending" @click="(adding = false), (newPhotos = [])">Annuler</button>
-                <button type="button" class="btn btn-dark" :disabled="!newPhotos.length || sending" @click="sendPhotos">
+                <button type="button" class="btn btn-primary" :disabled="!newPhotos.length || sending" @click="sendPhotos">
                   <span v-if="sending" class="spinner" aria-hidden="true" />Envoyer les photos
                 </button>
               </div>
@@ -612,7 +612,7 @@ onBeforeRouteLeave(() => {
         <aside v-if="isManager" aria-label="L'annonce" class="card side">
           <div class="row between">
             <h2 style="font-size: 18px">L'annonce</h2>
-            <span v-if="dirty" class="muted" style="font-size: 13px; color: #8a4307; font-weight: 600">Modifications non enregistrées</span>
+            <span v-if="dirty" class="muted" style="font-size: 13px; color: #A55A0B; font-weight: 500">Modifications non enregistrées</span>
             <span v-else-if="v" class="muted" style="font-size: 13px">{{ STATUS[v.status].label }}</span>
           </div>
           <template v-if="v">
@@ -655,7 +655,7 @@ onBeforeRouteLeave(() => {
 
             <div class="hist">
               <div class="col" style="gap: 2px; min-width: 0">
-                <span style="font-size: 14px; font-weight: 600">Historique</span>
+                <span style="font-size: 14px; font-weight: 500">Historique</span>
                 <span class="muted" style="font-size: 13px">{{ form.history_url ? 'Lien HistoVec ajouté' : 'Aucun historique pour le moment' }}</span>
               </div>
               <div class="row" style="gap: 4px">
@@ -676,15 +676,15 @@ onBeforeRouteLeave(() => {
             </div>
             <EquipmentEditor v-if="showEquipment" v-model="equipment" />
 
-            <button type="button" class="btn" :class="{ 'btn-dark': dirty }" :disabled="!dirty || saving" @click="saveListing()">
+            <button type="button" class="btn" :class="{ 'btn-primary': dirty }" :disabled="!dirty || saving" @click="saveListing()">
               <span v-if="saving" class="spinner" aria-hidden="true" />{{ dirty ? 'Enregistrer les modifications' : 'Annonce enregistrée' }}
             </button>
 
             <div class="where">
-              <span class="muted" style="font-size: 13px; font-weight: 600">Où la mettre en ligne</span>
+              <span class="muted" style="font-size: 13px; font-weight: 500">Où la mettre en ligne</span>
               <div class="where-row">
                 <div class="col" style="gap: 2px">
-                  <span style="font-weight: 600">Votre site</span>
+                  <span style="font-weight: 500">Votre site</span>
                   <span class="muted" style="font-size: 13px">{{ isOnline ? 'En ligne' : isSold ? 'Vendue, retirée du site' : 'Pas encore en ligne' }}</span>
                 </div>
                 <button v-if="isOnline" type="button" class="btn btn-sm" :disabled="publishing" @click="unpublish">Retirer de mon site</button>
@@ -692,7 +692,7 @@ onBeforeRouteLeave(() => {
               </div>
               <div class="where-row">
                 <div class="col" style="gap: 2px">
-                  <span style="font-weight: 600">Leboncoin et La Centrale</span>
+                  <span style="font-weight: 500">Leboncoin et La Centrale</span>
                   <span class="muted" style="font-size: 13px">Photos et texte prêts à copier</span>
                 </div>
                 <div class="row" style="gap: 6px">
@@ -771,7 +771,7 @@ onBeforeRouteLeave(() => {
   aspect-ratio: 4/3;
   object-fit: cover;
   border-radius: 10px;
-  background: #e2e2dc;
+  background: #EEF0F3;
 }
 .wait {
   display: flex;
@@ -779,7 +779,7 @@ onBeforeRouteLeave(() => {
   justify-content: center;
   gap: 10px;
   color: var(--accent-dark);
-  background: #dce3f2;
+  background: #EAF6F7;
   font-size: 14px;
   text-align: center;
   padding: 12px;
@@ -808,7 +808,7 @@ onBeforeRouteLeave(() => {
   position: absolute;
   top: 10px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   background: rgba(255, 255, 255, 0.9);
   border-radius: 6px;
   padding: 3px 8px;
@@ -843,11 +843,11 @@ onBeforeRouteLeave(() => {
   aspect-ratio: 4/3;
   object-fit: cover;
   border-radius: 6px;
-  background: #e2e2dc;
+  background: #EEF0F3;
 }
 .th-l {
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
 }
 .th-s {
   font-size: 12px;
@@ -865,7 +865,7 @@ onBeforeRouteLeave(() => {
 .more summary {
   cursor: pointer;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--accent);
   min-height: 32px;
   display: flex;

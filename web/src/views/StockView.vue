@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { get, post, errorMessage } from '../api'
 import { STATUS, euros, num, days, vehicleTitle } from '../labels'
 import { isManager, toast } from '../session'
+import { modals, openAdd } from '../modals'
 import StatusPill from '../components/StatusPill.vue'
 import type { Vehicle, VehicleStatus } from '../types'
 
@@ -40,7 +41,20 @@ async function load() {
     error.value = errorMessage(e)
   }
 }
-onMounted(load)
+onMounted(() => {
+  load()
+  // Ancien lien /vehicles/new : on ouvre la modale d'ajout par-dessus le stock.
+  if (route.query.ajouter) {
+    const query = { ...route.query }
+    delete query.ajouter
+    router.replace({ query })
+    openAdd()
+  }
+})
+watch(
+  () => modals.version,
+  () => load(),
+)
 
 function matchesQ(v: Vehicle, s: string) {
   if (!s) return true
@@ -104,7 +118,9 @@ function exportCsv() {
     <h1>Mon stock</h1>
     <div class="row">
       <button v-if="isManager" type="button" class="btn" :disabled="!rows.length" @click="exportCsv">Exporter la liste</button>
-      <RouterLink to="/vehicles/new" class="btn btn-primary">Ajouter une voiture</RouterLink>
+      <button type="button" class="btn btn-primary" aria-keyshortcuts="N" @click="openAdd">
+        Ajouter une voiture<span class="kbd-inv" aria-hidden="true">N</span>
+      </button>
     </div>
   </div>
 
@@ -114,8 +130,8 @@ function exportCsv() {
     </button>
   </div>
 
-  <label class="search">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5B606B" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
+  <label class="search-pill search">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A90A0" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
     <span class="sr-only">Chercher dans le stock</span>
     <input v-model="q" type="search" placeholder="Plaque ou modèle" />
   </label>
@@ -154,9 +170,9 @@ function exportCsv() {
             </div>
           </td>
           <td><span class="plate">{{ v.plate }}</span></td>
-          <td style="font-weight: 600">{{ euros(v.price) || '–' }}</td>
+          <td style="font-weight: 500">{{ euros(v.price) || '–' }}</td>
           <td>{{ num(v.mileage) || '–' }}</td>
-          <td :style="{ color: v.days_in_stock > 45 ? '#B45309' : undefined, fontWeight: v.days_in_stock > 45 ? 600 : undefined }">{{ days(v.days_in_stock) }}</td>
+          <td :style="{ color: v.days_in_stock > 45 ? 'var(--amber-ink)' : undefined, fontWeight: v.days_in_stock > 45 ? 500 : undefined }">{{ days(v.days_in_stock) }}</td>
           <td>{{ v.status === 'online' || v.status === 'sold' || v.leads_count ? v.leads_count : '–' }}</td>
           <td><StatusPill :status="v.status" /></td>
           <td style="text-align: right">
@@ -173,41 +189,20 @@ function exportCsv() {
       <template v-else-if="all.length === 0">
         <strong>Votre stock est vide</strong>
         <span>Ajoutez votre première voiture : tapez la plaque, on remplit le reste.</span>
-        <RouterLink to="/vehicles/new" class="btn btn-primary">Ajouter une voiture</RouterLink>
+        <button type="button" class="btn btn-primary" @click="openAdd">Ajouter une voiture</button>
       </template>
       <template v-else>Aucune voiture ici pour l'instant.</template>
     </div>
   </div>
-  <span class="muted" style="font-size: 13px">En orange : en stock depuis plus de 45 jours. C'est peut-être le moment de revoir le prix.</span>
+  <span class="muted" style="font-size: 13px">En ambre : en stock depuis plus de 45 jours. C'est peut-être le moment de revoir le prix.</span>
 </template>
 
 <style scoped>
 .search {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: #fff;
-  border: 1px solid var(--field-2);
-  border-radius: 10px;
-  padding: 0 12px;
-  height: 44px;
   max-width: 420px;
 }
-.search:focus-within {
-  outline: 3px solid #4c7bff;
-  outline-offset: 1px;
-}
-.search input {
-  border: 0;
-  outline: 0;
-  flex: 1;
-  font: inherit;
-  font-size: 15px;
-  background: transparent;
-  min-width: 0;
-}
 .car-link {
-  font-weight: 600;
+  font-weight: 500;
   color: var(--ink);
   text-decoration: none;
 }

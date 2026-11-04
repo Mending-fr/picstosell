@@ -95,7 +95,7 @@ const providerLabel = (p: string) => PROVIDERS.find((x) => x.value === p)?.label
           <tr v-for="c in list" :key="c.id" :style="{ opacity: c.active ? 1 : 0.6 }">
             <td>
               <div class="col" style="gap: 2px">
-                <span style="font-weight: 700">{{ c.name }}</span>
+                <span style="font-weight: 500">{{ c.name }}</span>
                 <span class="mono muted">{{ c.model }}</span>
               </div>
             </td>
@@ -156,7 +156,7 @@ const providerLabel = (p: string) => PROVIDERS.find((x) => x.value === p)?.label
         <input v-model="form.active" type="checkbox" />
         <span>Actif (peut être choisi pour un garage ou un comparatif)</span>
       </label>
-      <button type="submit" class="btn btn-dark btn-lg" :disabled="saving"><span v-if="saving" class="spinner" aria-hidden="true" />Enregistrer</button>
+      <button type="submit" class="btn btn-primary btn-lg" :disabled="saving"><span v-if="saving" class="spinner" aria-hidden="true" />Enregistrer</button>
     </form>
   </div>
 </template>

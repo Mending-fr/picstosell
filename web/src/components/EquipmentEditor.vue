@@ -38,7 +38,7 @@ const unused = () => SUGGESTED.filter((s) => !props.modelValue.some((g) => g.gro
       <div class="row" style="flex-wrap: nowrap">
         <label class="lbl grow">
           <span class="sr-only">Nom du groupe</span>
-          <input class="f" style="min-height: 40px; font-weight: 600" :value="g.group" placeholder="Nom du groupe, ex. Confort" @input="rename(i, ($event.target as HTMLInputElement).value)" />
+          <input class="f" style="min-height: 40px; font-weight: 500" :value="g.group" placeholder="Nom du groupe, ex. Confort" @input="rename(i, ($event.target as HTMLInputElement).value)" />
         </label>
         <button type="button" class="btn btn-sm btn-danger" :aria-label="`Supprimer le groupe ${g.group}`" @click="removeGroup(i)">Supprimer</button>
       </div>
@@ -93,7 +93,7 @@ const unused = () => SUGGESTED.filter((s) => !props.modelValue.some((g) => g.gro
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: #eeeeea;
+  background: #F1F3F6;
   border-radius: 999px;
   padding: 2px 4px 2px 12px;
   font-size: 13px;
@@ -108,6 +108,6 @@ const unused = () => SUGGESTED.filter((s) => !props.modelValue.some((g) => g.gro
   color: var(--ink-2);
 }
 .chip button:hover {
-  background: #dcdcd6;
+  background: #E3E6EC;
 }
 </style>

@@ -143,11 +143,11 @@ onMounted(() => {
       </template>
       <div v-for="u in users ?? []" :key="u.id" class="urow">
         <div class="col" style="gap: 2px; min-width: 0">
-          <span style="font-weight: 700">{{ u.name }}{{ u.id === session.user?.id ? ' (vous)' : '' }}</span>
+          <span style="font-weight: 500">{{ u.name }}{{ u.id === session.user?.id ? ' (vous)' : '' }}</span>
           <span class="muted" style="font-size: 13px; word-break: break-all">{{ u.invited ? `${u.email} · pas encore connecté` : u.email }}</span>
         </div>
         <div class="row">
-          <span class="pill" :style="u.role === 'manager' ? { background: '#E4EBFF', color: '#163A9E' } : { background: '#EEEEEA', color: '#3D414A' }">{{ roleLabel(u.role) }}</span>
+          <span class="pill" :style="u.role === 'manager' ? { background: '#EAF6F7', color: '#0A626A' } : { background: '#F1F3F6', color: '#3B4150' }">{{ roleLabel(u.role) }}</span>
           <button v-if="u.id !== session.user?.id" type="button" class="btn-link" style="color: var(--red-ink)" :aria-label="`Retirer l'accès de ${u.name}`" @click="removeUser(u)">Retirer</button>
         </div>
       </div>
@@ -181,7 +181,7 @@ onMounted(() => {
           <option value="manager">Gérant : tout faire</option>
         </select>
       </label>
-      <button type="submit" class="btn btn-dark" :disabled="inviting"><span v-if="inviting" class="spinner" aria-hidden="true" />Créer l'accès</button>
+      <button type="submit" class="btn btn-primary" :disabled="inviting"><span v-if="inviting" class="spinner" aria-hidden="true" />Créer l'accès</button>
     </form>
   </section>
 
@@ -191,21 +191,21 @@ onMounted(() => {
       <label class="check">
         <input type="checkbox" :checked="garage.settings.hide_plate" @change="setSetting('hide_plate', ($event.target as HTMLInputElement).checked)" />
         <span class="col" style="gap: 2px">
-          <span style="font-weight: 600">Cacher la plaque sur les photos mises en ligne</span>
+          <span style="font-weight: 500">Cacher la plaque sur les photos mises en ligne</span>
           <span class="muted" style="font-size: 13px">La plaque est toujours cachée avant le traitement des photos, même si cette case est décochée.</span>
         </span>
       </label>
       <label class="check">
         <input type="checkbox" :checked="garage.settings.add_logo" @change="setSetting('add_logo', ($event.target as HTMLInputElement).checked)" />
         <span class="col" style="gap: 2px">
-          <span style="font-weight: 600">Ajouter le logo du garage sur les photos</span>
+          <span style="font-weight: 500">Ajouter le logo du garage sur les photos</span>
           <span class="muted" style="font-size: 13px">En bas à droite, discret.</span>
         </span>
       </label>
       <label class="check">
         <input type="checkbox" :checked="garage.settings.review_before_publish" @change="setSetting('review_before_publish', ($event.target as HTMLInputElement).checked)" />
         <span class="col" style="gap: 2px">
-          <span style="font-weight: 600">Vérifier chaque photo avant la mise en ligne</span>
+          <span style="font-weight: 500">Vérifier chaque photo avant la mise en ligne</span>
           <span class="muted" style="font-size: 13px">Recommandé tant que vous découvrez l'outil.</span>
         </span>
       </label>
@@ -229,30 +229,30 @@ onMounted(() => {
       <div class="row between" style="align-items: flex-start">
         <div class="col" style="gap: 4px">
           <span class="muted" style="font-size: 13px">Votre abonnement</span>
-          <span style="font-size: 24px; font-weight: 700">{{ usage.quota }} voitures par mois</span>
+          <span style="font-size: 24px; font-weight: 500">{{ usage.quota }} voitures par mois</span>
           <span style="font-size: 14px; color: var(--ink-2)">Photos, site, hébergement et assistance compris</span>
         </div>
-        <span class="pill" style="background: #e3f4ea; color: #0b5e39">{{ session.garage ? garageStatusLabel(session.garage.status) : 'Actif' }}</span>
+        <span class="pill" style="background: #E9F5EE; color: #1E7A50">{{ session.garage ? garageStatusLabel(session.garage.status) : 'Actif' }}</span>
       </div>
       <div class="col" style="gap: 8px">
         <div class="row between" style="font-size: 15px">
-          <span>Voitures en {{ monthName() }}</span><span style="font-weight: 700">{{ usage.vehicles }} sur {{ usage.quota }}</span>
+          <span>Voitures en {{ monthName() }}</span><span style="font-weight: 500">{{ usage.vehicles }} sur {{ usage.quota }}</span>
         </div>
         <div class="bar" role="progressbar" :aria-valuenow="usagePct" aria-valuemin="0" aria-valuemax="100" aria-label="Voitures utilisées ce mois">
-          <div :style="{ width: usagePct + '%', background: usagePct >= 100 ? '#B45309' : '#1F4FD8' }" />
+          <div :style="{ width: usagePct + '%', background: usagePct >= 100 ? '#A55A0B' : '#0E7C86' }" />
         </div>
         <span class="muted" style="font-size: 13px">{{ usage.renders }} photo{{ usage.renders > 1 ? 's' : '' }} de showroom préparée{{ usage.renders > 1 ? 's' : '' }} ce mois-ci.</span>
       </div>
       <div class="col">
-        <span class="muted" style="font-size: 13px; font-weight: 600; padding-bottom: 6px">En plus ce mois-ci</span>
+        <span class="muted" style="font-size: 13px; font-weight: 500; padding-bottom: 6px">En plus ce mois-ci</span>
         <div v-for="(x, i) in usage.extras" :key="i" class="urow">
           <span>{{ x.label ?? 'Option' }}{{ x.quantity ? ` : ${x.quantity}` : '' }}</span>
-          <span v-if="x.amount" style="font-weight: 600">{{ x.amount }} € HT</span>
+          <span v-if="x.amount" style="font-weight: 500">{{ x.amount }} € HT</span>
         </div>
         <span v-if="!usage.extras.length" class="muted" style="font-size: 14px">Rien en plus ce mois-ci.</span>
       </div>
       <div class="col">
-        <span class="muted" style="font-size: 13px; font-weight: 600; padding-bottom: 6px">Factures</span>
+        <span class="muted" style="font-size: 13px; font-weight: 500; padding-bottom: 6px">Factures</span>
         <span class="muted" style="font-size: 14px">Vos factures apparaîtront ici. En attendant, l'équipe Mending vous les envoie par e-mail.</span>
       </div>
     </template>
@@ -284,7 +284,7 @@ onMounted(() => {
 .pw {
   font-family: var(--mono);
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 500;
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -294,7 +294,7 @@ onMounted(() => {
 }
 .bar {
   height: 8px;
-  background: #eeeeea;
+  background: #F1F3F6;
   border-radius: 4px;
 }
 .bar div {

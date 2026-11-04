@@ -132,7 +132,7 @@ const statusLabel = (s: string) => (s === 'running' ? 'En cours' : s === 'done' 
         <label v-for="c in configs" :key="c.id" class="opt" :class="{ on: form.configs.includes(c.id), off: !c.active }">
           <input type="checkbox" :checked="form.configs.includes(c.id)" @change="toggle(form.configs, c.id)" />
           <span class="col" style="gap: 2px; min-width: 0">
-            <span style="font-weight: 700">{{ c.name }}</span>
+            <span style="font-weight: 500">{{ c.name }}</span>
             <span class="muted" style="font-size: 12px">Méthode {{ c.method }} · {{ c.quality }} · {{ usd(c.unit_cost_usd, 3) }} / image{{ c.active ? '' : ' · inactif' }}</span>
           </span>
         </label>
@@ -167,7 +167,7 @@ const statusLabel = (s: string) => (s === 'running' ? 'En cours' : s === 'done' 
     <p v-if="errors.form" class="alert alert-error" role="alert" style="margin: 0">{{ errors.form }}</p>
     <div class="est">
       <span style="font-size: 14px">Environ <strong>{{ estimate.photos }} photos</strong> à générer, soit <strong>{{ usd(estimate.cost) }}</strong></span>
-      <button type="submit" class="btn btn-dark" :disabled="saving || !vehicles"><span v-if="saving" class="spinner" aria-hidden="true" />Lancer le test</button>
+      <button type="submit" class="btn btn-primary" :disabled="saving || !vehicles"><span v-if="saving" class="spinner" aria-hidden="true" />Lancer le test</button>
     </div>
   </form>
 
@@ -178,11 +178,11 @@ const statusLabel = (s: string) => (s === 'running' ? 'En cours' : s === 'done' 
         <thead><tr><th>Test</th><th>Garage</th><th>Réglages</th><th>Voitures</th><th>État</th><th>Créé le</th></tr></thead>
         <tbody v-if="list">
           <tr v-for="c in list" :key="c.id" class="clickable" @click="router.push(`/mending/comparisons/${c.id}`)">
-            <td><RouterLink :to="`/mending/comparisons/${c.id}`" style="font-weight: 700" @click.stop>{{ c.name }}</RouterLink></td>
+            <td><RouterLink :to="`/mending/comparisons/${c.id}`" style="font-weight: 500" @click.stop>{{ c.name }}</RouterLink></td>
             <td>{{ garageName(c.garage_id) }}</td>
             <td>{{ c.ai_config_ids.length }}</td>
             <td>{{ c.vehicle_ids.length }}</td>
-            <td><span class="pill" :style="c.status === 'running' ? { background: '#E4EBFF', color: '#163A9E' } : { background: '#E3F4EA', color: '#0B5E39' }">{{ statusLabel(c.status) }}</span></td>
+            <td><span class="pill" :style="c.status === 'running' ? { background: '#EAF6F7', color: '#0A626A' } : { background: '#E9F5EE', color: '#1E7A50' }">{{ statusLabel(c.status) }}</span></td>
             <td>{{ new Date(c.created_at).toLocaleDateString('fr-FR') }}</td>
           </tr>
         </tbody>

@@ -120,7 +120,7 @@ const perCarOk = computed(() => {
       <div class="stat"><span class="stat-label">Coût des photos IA</span><span class="stat-value">{{ usd(data.cost_usd_month) }}</span></div>
       <div class="stat">
         <span class="stat-label">Par voiture</span>
-        <span class="stat-value" :style="{ color: data.cost_per_vehicle_usd === null ? undefined : perCarOk ? '#0B5E39' : '#B45309' }">{{ usd(data.cost_per_vehicle_usd) }}</span>
+        <span class="stat-value" :style="{ color: data.cost_per_vehicle_usd === null ? undefined : perCarOk ? '#1E7A50' : '#A55A0B' }">{{ usd(data.cost_per_vehicle_usd) }}</span>
         <span class="stat-sub">objectif : moins de 0,50 $</span>
       </div>
       <div class="stat">
@@ -238,7 +238,7 @@ const perCarOk = computed(() => {
         </label>
         <label class="lbl">Voitures par mois<input v-model="form.vehicle_quota" class="f" inputmode="numeric" /></label>
       </div>
-      <button type="submit" class="btn btn-dark btn-lg" :disabled="adding"><span v-if="adding" class="spinner" aria-hidden="true" />Créer le garage</button>
+      <button type="submit" class="btn btn-primary btn-lg" :disabled="adding"><span v-if="adding" class="spinner" aria-hidden="true" />Créer le garage</button>
     </form>
   </AppModal>
 </template>
@@ -255,7 +255,7 @@ const perCarOk = computed(() => {
   border-radius: 7px;
   color: #fff;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 500;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -265,7 +265,7 @@ const perCarOk = computed(() => {
   background: none;
   border: 0;
   padding: 0;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--ink);
   text-align: left;
   min-height: 28px;
@@ -313,16 +313,16 @@ const perCarOk = computed(() => {
 }
 .lvl {
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 500;
   border-radius: 6px;
   padding: 3px 8px;
   width: 72px;
   text-align: center;
-  color: #8a4307;
-  background: #fff1de;
+  color: #A55A0B;
+  background: #FCF1E3;
 }
 .lvl.error {
-  color: #9a1c1c;
-  background: #fdecec;
+  color: #C0392B;
+  background: #FBECEB;
 }
 </style>

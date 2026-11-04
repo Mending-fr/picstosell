@@ -1,25 +1,27 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { get, post, errorMessage } from '../api'
 import { session, isManager, toast, refreshSidebar } from '../session'
-import { PILL, todayLabel } from '../labels'
-import PriceSoldModal from '../components/PriceSoldModal.vue'
-import type { Dashboard, TodoItem } from '../types'
+import { todayLabel, vehicleTitle } from '../labels'
+import { modals, openAdd, openPrice, typingIn } from '../modals'
+import type { Dashboard, TodoAction, TodoItem, Vehicle } from '../types'
 
 const router = useRouter()
 const data = ref<Dashboard | null>(null)
+const names = ref<Record<number, string>>({})
 const error = ref('')
 const q = ref('')
 const searchEl = ref<HTMLInputElement | null>(null)
-const priceOpen = ref(false)
 const busyRow = ref<string | null>(null)
 
 async function load() {
   error.value = ''
   try {
-    data.value = await get<Dashboard>('/dashboard')
-    session.usage = data.value.usage
+    const [d, list] = await Promise.all([get<Dashboard>('/dashboard'), get<{ data: Vehicle[] }>('/vehicles').catch(() => null)])
+    data.value = d
+    session.usage = d.usage
+    if (list) names.value = Object.fromEntries(list.data.map((v) => [v.id, v.model || vehicleTitle(v, false)]))
   } catch (e) {
     error.value = errorMessage(e)
   }
@@ -27,19 +29,26 @@ async function load() {
 
 const firstName = computed(() => {
   const n = session.user?.name ?? ''
-  const first = n.split(' ')[0]
-  return /démo|demo/i.test(n) ? '' : first
+  return /démo|demo/i.test(n) ? '' : n.split(' ')[0]
 })
 
 const c = computed(() => data.value?.counts)
-const firstOf = (action: string) => data.value?.todo.find((t) => t.action === action)
+const todoOf = (action: TodoAction) => (data.value?.todo ?? []).filter((t) => t.action === action)
+
+/** Noms courts des voitures concernées, trois au plus, séparés par des virgules. */
+function carNames(action: TodoAction): string {
+  return todoOf(action)
+    .slice(0, 3)
+    .map((t) => names.value[t.id] ?? t.title)
+    .join(', ')
+}
 
 const reviewTo = computed(() => {
-  const t = firstOf('review')
+  const t = todoOf('review')[0]
   return t ? `/vehicles/${t.id}` : '/vehicles?status=to_review'
 })
 const publishTo = computed(() => {
-  const t = firstOf('publish')
+  const t = todoOf('publish')[0]
   return t ? `/vehicles/${t.id}` : '/vehicles?status=ready'
 })
 
@@ -48,21 +57,50 @@ const visibleTodo = computed(() => {
   return isManager.value ? all : all.filter((t) => t.action === 'request_photos')
 })
 
-const ROW: Record<string, { status: string; cta: string; pill: { fg: string; bg: string } }> = {
-  review: { status: 'À vérifier', cta: 'Vérifier', pill: PILL.check },
-  publish: { status: 'Prête', cta: 'Mettre en ligne', pill: PILL.ok },
-  request_photos: { status: 'Sans photo', cta: 'Ajouter les photos', pill: PILL.grey },
-  unpublish: { status: 'Vendue', cta: "Retirer l'annonce", pill: PILL.red },
-  open_lead: { status: 'Demande', cta: 'Voir la demande', pill: PILL.blue },
+// ---------- phrase de résumé, construite à partir des compteurs ----------
+const n = (k: number) => (k === 1 ? 'une' : String(k))
+const pl = (k: number, one: string, many: string) => (k > 1 ? many : one)
+
+const summary = computed(() => {
+  const d = data.value
+  if (!d) return ''
+  const k = d.counts
+  const parts: string[] = []
+  if (isManager.value) {
+    if (k.to_review) parts.push(`${n(k.to_review)} ${pl(k.to_review, 'voiture', 'voitures')} à vérifier`)
+    if (k.ready) parts.push(`${n(k.ready)} ${pl(k.ready, 'voiture prête', 'voitures prêtes')} à mettre en ligne`)
+    const leads = todoOf('open_lead').length
+    if (leads) parts.push(`${n(leads)} ${pl(leads, 'demande', 'demandes')} à traiter`)
+    if (k.sold_still_online) parts.push(`${n(k.sold_still_online)} ${pl(k.sold_still_online, 'annonce', 'annonces')} de voiture vendue à retirer`)
+  }
+  if (k.to_photograph) parts.push(`${n(k.to_photograph)} ${pl(k.to_photograph, 'voiture', 'voitures')} à photographier`)
+  if (!parts.length) return "Rien d'urgent aujourd'hui."
+  const s = parts.length === 1 ? parts[0] : `${parts.slice(0, -1).join(', ')} et ${parts[parts.length - 1]}`
+  return `${s.charAt(0).toUpperCase()}${s.slice(1)}.`
+})
+
+// ---------- liste « À faire aujourd'hui » ----------
+interface Tone {
+  tag: string
+  cta: string
+  tone: 'amber' | 'green' | 'slate' | 'red' | 'violet'
+}
+const ROW: Record<TodoAction, Tone> = {
+  review: { tag: 'À vérifier', cta: 'Vérifier', tone: 'amber' },
+  publish: { tag: 'Prête', cta: 'Mettre en ligne', tone: 'green' },
+  request_photos: { tag: 'Sans photo', cta: 'Ajouter les photos', tone: 'slate' },
+  unpublish: { tag: 'Vendue', cta: "Retirer l'annonce", tone: 'red' },
+  open_lead: { tag: 'Demande', cta: 'Voir la demande', tone: 'violet' },
 }
 
 function rowKey(t: TodoItem) {
   return `${t.type}-${t.id}-${t.action}`
 }
+function rowTo(t: TodoItem) {
+  return t.action === 'open_lead' ? { path: '/leads', query: { id: String(t.id) } } : `/vehicles/${t.id}`
+}
 
-async function act(t: TodoItem) {
-  if (t.action === 'open_lead') return router.push({ path: '/leads', query: { id: String(t.id) } })
-  if (t.action !== 'unpublish') return router.push(`/vehicles/${t.id}`)
+async function unpublish(t: TodoItem) {
   busyRow.value = rowKey(t)
   try {
     await post(`/vehicles/${t.id}/publish`, { published: false })
@@ -78,298 +116,504 @@ async function act(t: TodoItem) {
   }
 }
 
+// ---------- ligne discrète du stock ----------
+const stockLine = computed(() => {
+  const k = c.value
+  if (!k) return []
+  const items = [
+    { n: k.to_photograph, label: 'à photographier', dot: 'var(--slate-dot)', to: '/vehicles?status=to_photograph', title: '' },
+    { n: k.processing, label: 'en préparation', dot: 'var(--accent-line)', to: '/vehicles?status=to_photograph', title: 'Photos showroom prêtes dans quelques minutes', hide: !k.processing },
+    { n: k.to_review, label: 'à vérifier', dot: 'var(--amber-dot)', to: '/vehicles?status=to_review', title: '' },
+    { n: k.ready, label: pl(k.ready, 'prête', 'prêtes'), dot: 'var(--green-dot)', to: '/vehicles?status=ready', title: '' },
+    { n: k.online, label: 'en ligne', dot: 'var(--accent)', to: '/vehicles?status=online', title: `${k.online_without_leads} sans aucune demande` },
+    { n: k.sold_month, label: `${pl(k.sold_month, 'vendue', 'vendues')} ce mois`, dot: 'var(--violet-dot)', to: '/vehicles?status=sold', title: k.sold_still_online ? `${k.sold_still_online} encore en ligne` : 'Toutes retirées du site' },
+  ]
+  return items.filter((i) => !i.hide)
+})
+
+// ---------- recherche et raccourcis ----------
 function search() {
   const s = q.value.trim()
   router.push({ path: '/vehicles', query: s ? { q: s } : {} })
 }
 
 function onKey(e: KeyboardEvent) {
-  if (e.metaKey || e.ctrlKey || e.altKey || priceOpen.value) return
-  const t = e.target as HTMLElement
-  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return
+  if (e.metaKey || e.ctrlKey || e.altKey || modals.add || modals.price || typingIn(e)) return
   if (document.querySelector('[role="dialog"]')) return
   const k = e.key.toLowerCase()
   if (e.key === '/') {
     e.preventDefault()
     searchEl.value?.focus()
-  } else if (k === 'n') router.push('/vehicles/new')
-  else if (k === 'v' && isManager.value) router.push(reviewTo.value)
+  } else if (k === 'v' && isManager.value) router.push(reviewTo.value)
   else if (k === 'p' && isManager.value) router.push(publishTo.value)
-  else if (k === 's' && isManager.value) {
-    e.preventDefault()
-    priceOpen.value = true
-  }
 }
 
-function onChanged() {
-  load()
-}
-
+watch(
+  () => modals.version,
+  () => load(),
+)
 onMounted(() => {
   load()
   refreshSidebar()
   document.addEventListener('keydown', onKey)
 })
 onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
-
-const plural = (n: number, one: string, many: string) => (n > 1 ? many : one)
 </script>
 
 <template>
-  <div class="page-head">
-    <div class="col" style="gap: 4px">
-      <h1>Bonjour{{ firstName ? ` ${firstName}` : '' }}</h1>
-      <p class="lead" style="margin: 0">
-        {{ todayLabel() }}<template v-if="data">
-          · {{ visibleTodo.length ? `${visibleTodo.length} ${plural(visibleTodo.length, 'chose', 'choses')} à faire aujourd'hui` : 'rien d\'urgent aujourd\'hui' }}</template
-        >
-      </p>
-    </div>
-    <form class="search" role="search" @submit.prevent="search">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5B606B" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
-      <label for="home-q" class="sr-only">Rechercher</label>
-      <input id="home-q" ref="searchEl" v-model="q" type="search" placeholder="Chercher une plaque, un modèle" />
-      <span class="kbd" aria-hidden="true">/</span>
-    </form>
-  </div>
+  <div class="home">
+    <header class="hello">
+      <div class="col hello-t">
+        <span class="date">{{ todayLabel() }}</span>
+        <h1>
+          Bonjour{{ firstName ? ` ${firstName}` : '' }}.
+          <span v-if="data" class="sum">{{ summary }}</span>
+          <span v-else-if="!error" class="skel sum-skel" aria-hidden="true" />
+        </h1>
+      </div>
+      <form class="search-pill hs" role="search" @submit.prevent="search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A90A0" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
+        <label for="home-q" class="sr-only">Rechercher dans le stock</label>
+        <input id="home-q" ref="searchEl" v-model="q" type="search" placeholder="Plaque ou modèle" aria-keyshortcuts="/" />
+        <span class="kbd" aria-hidden="true">/</span>
+      </form>
+    </header>
 
-  <p v-if="error" class="alert alert-error" role="alert">
-    {{ error }} <button type="button" class="btn-link" @click="load">Réessayer</button>
-  </p>
+    <p v-if="error" class="alert alert-error" role="alert" style="margin: 0">
+      {{ error }} <button type="button" class="btn-link" style="min-height: 0" @click="load">Réessayer</button>
+    </p>
 
-  <section aria-labelledby="wf" class="col" style="gap: 14px">
-    <h2 id="wf" class="section-title">Que voulez-vous faire ?</h2>
-    <div class="wf-grid">
-      <RouterLink to="/vehicles/new" class="wf wf-blue">
-        <div class="wf-top">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" aria-hidden="true"><rect x="3" y="7" width="18" height="10" rx="2" /><path d="M7 12h10" /></svg>
+    <section aria-label="Actions principales" class="cards" :class="{ few: !isManager }">
+      <button type="button" class="ac ac-add" aria-keyshortcuts="N" @click="openAdd">
+        <span class="ac-top">
+          <span class="ac-ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M12 5v14M5 12h14" /></svg></span>
           <span class="kbd-inv" aria-hidden="true">N</span>
-        </div>
-        <span class="wf-title">Ajouter une voiture</span>
-        <span class="wf-text" style="color: #dce5ff">Tapez la plaque, on remplit le reste. Les photos se font ensuite au téléphone, sur le parking.</span>
-      </RouterLink>
+        </span>
+        <span class="ac-t big">Ajouter une voiture</span>
+        <span class="ac-x">Par la plaque ou le numéro de série</span>
+      </button>
 
       <template v-if="isManager">
-        <RouterLink :to="reviewTo" class="wf">
-          <div class="wf-top">
-            <span v-if="c" class="wf-n" style="color: #b45309">{{ c.to_review }}</span>
-            <span v-else class="skel" style="width: 28px; height: 30px" />
-            <span class="kbd" aria-hidden="true">V</span>
-          </div>
-          <span class="wf-title">Vérifier les photos</span>
-          <span class="wf-text">
-            <template v-if="!c">Chargement…</template>
-            <template v-else-if="c.to_review">{{ c.to_review }} {{ plural(c.to_review, 'voiture a ses', 'voitures ont leurs') }} photos de showroom prêtes. Un coup d'œil avant la mise en ligne.</template>
-            <template v-else>Rien à vérifier pour l'instant. Les photos arrivent ici dès qu'elles sont prêtes.</template>
+        <RouterLink :to="reviewTo" class="ac amber" aria-keyshortcuts="V">
+          <span class="ac-top">
+            <span class="ac-n">{{ c ? c.to_review : '' }}<span v-if="!c" class="skel" style="width: 20px; height: 20px" /></span>
+            <span class="ac-k" aria-hidden="true">V</span>
           </span>
+          <span class="ac-t">Vérifier les photos</span>
+          <span class="ac-x">{{ !c ? 'Chargement…' : c.to_review ? carNames('review') : 'Rien à vérifier pour le moment' }}</span>
         </RouterLink>
 
-        <RouterLink :to="publishTo" class="wf">
-          <div class="wf-top">
-            <span v-if="c" class="wf-n" style="color: #0f7a4a">{{ c.ready }}</span>
-            <span v-else class="skel" style="width: 28px; height: 30px" />
-            <span class="kbd" aria-hidden="true">P</span>
-          </div>
-          <span class="wf-title">Mettre en ligne</span>
-          <span class="wf-text">
-            <template v-if="!c">Chargement…</template>
-            <template v-else-if="c.ready">{{ c.ready }} {{ plural(c.ready, 'annonce est prête', 'annonces sont prêtes') }} pour votre site, Leboncoin et La Centrale.</template>
-            <template v-else>Aucune annonce en attente. Vérifiez d'abord les photos.</template>
+        <RouterLink :to="publishTo" class="ac green" aria-keyshortcuts="P">
+          <span class="ac-top">
+            <span class="ac-n">{{ c ? c.ready : '' }}<span v-if="!c" class="skel" style="width: 20px; height: 20px" /></span>
+            <span class="ac-k" aria-hidden="true">P</span>
           </span>
+          <span class="ac-t">Mettre en ligne</span>
+          <span class="ac-x">{{ !c ? 'Chargement…' : c.ready ? carNames('publish') : 'Aucune voiture prête' }}</span>
         </RouterLink>
 
-        <button type="button" class="wf" @click="priceOpen = true">
-          <div class="wf-top">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#15171C" stroke-width="2" aria-hidden="true"><path d="M20 12l-8 8-9-9V3h8z" /><circle cx="7.5" cy="7.5" r="1.5" /></svg>
-            <span class="kbd" aria-hidden="true">S</span>
-          </div>
-          <span class="wf-title">Changer un prix ou marquer vendue</span>
-          <span class="wf-text">Tapez la plaque et c'est fait, l'annonce suit sur votre site.</span>
+        <button type="button" class="ac slate" aria-keyshortcuts="S" @click="openPrice">
+          <span class="ac-top">
+            <span class="ac-n">€</span>
+            <span class="ac-k" aria-hidden="true">S</span>
+          </span>
+          <span class="ac-t">Prix ou vendue</span>
+          <span class="ac-x">Par la plaque ou le modèle</span>
         </button>
       </template>
-      <RouterLink v-else to="/vehicles?status=to_photograph" class="wf">
-        <div class="wf-top">
-          <span v-if="c" class="wf-n">{{ c.to_photograph }}</span>
-          <span v-else class="skel" style="width: 28px; height: 30px" />
-        </div>
-        <span class="wf-title">Voitures à photographier</span>
-        <span class="wf-text">Les voitures arrivées sur le parking qui attendent leurs photos.</span>
+      <RouterLink v-else to="/vehicles?status=to_photograph" class="ac slate">
+        <span class="ac-top">
+          <span class="ac-n">{{ c ? c.to_photograph : '' }}<span v-if="!c" class="skel" style="width: 20px; height: 20px" /></span>
+        </span>
+        <span class="ac-t">À photographier</span>
+        <span class="ac-x">{{ !c ? 'Chargement…' : c.to_photograph ? carNames('request_photos') : 'Aucune voiture en attente' }}</span>
       </RouterLink>
-    </div>
-  </section>
+    </section>
 
-  <section aria-labelledby="flow" class="col" style="gap: 14px">
-    <h2 id="flow" class="section-title">Votre stock en ce moment</h2>
-    <div v-if="!c" class="tiles">
-      <div v-for="i in 6" :key="i" class="skel" style="height: 92px; border-radius: 12px" />
-    </div>
-    <div v-else class="tiles">
-      <RouterLink to="/vehicles?status=to_photograph" class="stat">
-        <span class="stat-label">À photographier</span><span class="stat-value">{{ c.to_photograph }}</span>
-        <span class="stat-sub">arrivées sur le parking</span>
-      </RouterLink>
-      <RouterLink to="/vehicles?status=to_photograph" class="stat">
-        <span class="stat-label">Photos en préparation</span><span class="stat-value">{{ c.processing }}</span>
-        <span class="stat-sub" :style="c.processing ? { color: '#1F4FD8' } : undefined">{{ c.processing ? 'prêtes dans quelques minutes' : 'aucune en cours' }}</span>
-      </RouterLink>
-      <RouterLink to="/vehicles?status=to_review" class="stat" :class="{ warm: c.to_review > 0 }">
-        <span class="stat-label">À vérifier</span><span class="stat-value">{{ c.to_review }}</span>
-        <span class="stat-sub">{{ c.to_review ? "c'est à vous" : 'tout est vérifié' }}</span>
-      </RouterLink>
-      <RouterLink to="/vehicles?status=ready" class="stat">
-        <span class="stat-label">Prêtes</span><span class="stat-value">{{ c.ready }}</span>
-        <span class="stat-sub">à mettre en ligne</span>
-      </RouterLink>
-      <RouterLink to="/vehicles?status=online" class="stat">
-        <span class="stat-label">En ligne</span><span class="stat-value">{{ c.online }}</span>
-        <span class="stat-sub">{{ c.online_without_leads }} sans aucune demande</span>
-      </RouterLink>
-      <RouterLink to="/vehicles?status=sold" class="stat">
-        <span class="stat-label">Vendues ce mois</span><span class="stat-value">{{ c.sold_month }}</span>
-        <span class="stat-sub">{{ c.sold_still_online ? `${c.sold_still_online} encore en ligne` : 'toutes retirées du site' }}</span>
-      </RouterLink>
-    </div>
-  </section>
-
-  <section aria-labelledby="todo" class="col" style="gap: 14px">
-    <div class="row between" style="align-items: baseline">
-      <h2 id="todo" class="section-title">À faire aujourd'hui</h2>
-      <span class="muted" style="font-size: 13px">Le plus urgent en haut</span>
-    </div>
-    <div class="table-wrap">
+    <section aria-labelledby="todo" class="todo">
+      <div class="todo-head">
+        <h2 id="todo" class="section-title">À faire aujourd'hui</h2>
+        <RouterLink to="/vehicles" class="all">Tout voir</RouterLink>
+      </div>
       <template v-if="!data && !error">
-        <div v-for="i in 4" :key="i" class="todo-row">
-          <span class="skel" style="width: 92px; height: 26px" />
-          <span class="col grow" style="gap: 6px"><span class="skel" style="width: 50%; height: 16px" /><span class="skel" style="width: 70%; height: 13px" /></span>
+        <div v-for="i in 3" :key="i" class="tr">
+          <span class="skel" style="width: 96px; height: 24px; border-radius: 999px" />
+          <span class="col grow" style="gap: 6px"><span class="skel" style="width: 40%; height: 15px" /><span class="skel" style="width: 60%; height: 13px" /></span>
         </div>
       </template>
-      <div v-else-if="data && !visibleTodo.length" class="empty">
-        <strong>Tout est à jour</strong>
-        <span>Rien ne vous attend. Ajoutez une voiture dès qu'elle arrive sur le parking.</span>
-        <RouterLink to="/vehicles/new" class="btn btn-primary">Ajouter une voiture</RouterLink>
+      <div v-else-if="data && !visibleTodo.length" class="none">
+        <strong>Tout est à jour.</strong> Ajoutez une voiture dès qu'elle arrive sur le parking.
       </div>
-      <div v-for="t in visibleTodo" :key="rowKey(t)" class="todo-row">
-        <span v-if="t.plate" class="plate">{{ t.plate }}</span>
-        <span v-else class="plate" style="border-style: dashed; color: var(--muted)">SITE</span>
-        <div class="col grow" style="gap: 2px; min-width: 0">
-          <span style="font-size: 15px; font-weight: 600">{{ t.title }}</span>
-          <span class="muted" style="font-size: 13px">{{ t.detail }}</span>
-        </div>
-        <span class="pill" :style="{ color: ROW[t.action].pill.fg, background: ROW[t.action].pill.bg }">{{ ROW[t.action].status }}</span>
-        <button type="button" class="btn btn-dark btn-sm" style="min-height: 40px" :disabled="busyRow === rowKey(t)" @click="act(t)">
-          {{ ROW[t.action].cta }}
+      <template v-for="t in visibleTodo" :key="rowKey(t)">
+        <button v-if="t.action === 'unpublish'" type="button" class="tr" :class="ROW[t.action].tone" :disabled="busyRow === rowKey(t)" @click="unpublish(t)">
+          <span class="tag">{{ ROW[t.action].tag }}</span>
+          <span class="tx">
+            <span class="tt">{{ t.title }}</span>
+            <span class="td">{{ t.detail }}</span>
+          </span>
+          <span v-if="t.plate" class="plate">{{ t.plate }}</span>
+          <span class="cta">{{ ROW[t.action].cta }}</span>
         </button>
-      </div>
-    </div>
-  </section>
+        <RouterLink v-else :to="rowTo(t)" class="tr" :class="ROW[t.action].tone">
+          <span class="tag">{{ ROW[t.action].tag }}</span>
+          <span class="tx">
+            <span class="tt">{{ t.title }}</span>
+            <span class="td">{{ t.detail }}</span>
+          </span>
+          <span v-if="t.plate" class="plate">{{ t.plate }}</span>
+          <span class="cta">{{ ROW[t.action].cta }}</span>
+        </RouterLink>
+      </template>
+    </section>
 
-  <PriceSoldModal v-if="priceOpen" @close="priceOpen = false" @changed="onChanged" />
+    <section aria-label="Votre stock" class="stockline">
+      <template v-if="c">
+        <RouterLink v-for="s in stockLine" :key="s.label" :to="s.to" class="sl" :title="s.title || undefined">
+          <span class="dot" :style="{ background: s.dot }" /><strong>{{ s.n }}</strong> {{ s.label }}
+        </RouterLink>
+      </template>
+      <span v-else class="skel" style="width: 60%; height: 16px" />
+    </section>
+  </div>
 </template>
 
 <style scoped>
-.search {
+.home {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  gap: 40px;
+  padding-top: 12px;
+}
+.hello {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.hello-t {
   gap: 10px;
-  background: #fff;
-  border: 1px solid var(--field-2);
-  border-radius: 10px;
-  padding: 0 12px;
-  height: 44px;
-  flex: 0 1 380px;
-}
-.search:focus-within {
-  outline: 3px solid #4c7bff;
-  outline-offset: 1px;
-}
-.search input {
-  border: 0;
-  outline: 0;
-  flex: 1;
-  font: inherit;
-  font-size: 15px;
-  background: transparent;
   min-width: 0;
+  flex: 1 1 440px;
 }
-.wf-grid {
+.date {
+  font-size: 14px;
+  color: var(--muted-3);
+}
+.sum {
+  color: var(--muted-2);
+}
+.sum-skel {
+  display: inline-block;
+  width: 280px;
+  height: 22px;
+  vertical-align: middle;
+}
+.hs {
+  width: 300px;
+  max-width: 100%;
+}
+
+/* cartes d'action */
+.cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  grid-template-columns: 1.25fr repeat(3, minmax(0, 1fr));
   gap: 14px;
 }
-.wf {
+.cards.few {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.ac {
+  font: inherit;
+  text-align: left;
   text-decoration: none;
-  color: var(--ink);
-  background: #fff;
   border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 20px;
+  border-radius: 20px;
+  padding: 22px;
+  background: #fff;
+  color: var(--ink);
   display: flex;
   flex-direction: column;
   gap: 14px;
-  min-height: 150px;
-  text-align: left;
+  min-height: 184px;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
-.wf:hover {
-  border-color: #c4c4bd;
+.ac:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(28, 34, 48, 0.08);
   color: var(--ink);
 }
-.wf-blue {
+@media (prefers-reduced-motion: reduce) {
+  .ac:hover {
+    transform: none;
+  }
+}
+.ac-add {
+  border: 0;
   background: var(--accent);
-  border-color: var(--accent);
   color: #fff;
+  box-shadow: 0 8px 22px rgba(14, 124, 134, 0.24);
 }
-.wf-blue:hover {
-  background: var(--accent-dark);
+.ac-add:hover {
   color: #fff;
+  background: #0c717a;
+  box-shadow: 0 10px 26px rgba(14, 124, 134, 0.3);
 }
-.wf-top {
+.ac-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
   width: 100%;
 }
-.wf-n {
-  font-size: 26px;
-  font-weight: 700;
+.ac-ico {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.wf-title {
+.ac-n {
+  min-width: 44px;
+  height: 44px;
+  padding: 0 10px;
+  border-radius: 14px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 500;
+}
+.ac-k {
+  font-family: var(--mono);
+  font-size: 11px;
+  border-radius: 5px;
+  padding: 1px 6px;
+  background: #fff;
+  line-height: 1.5;
+}
+.ac-t {
+  font-size: 17px;
+  font-weight: 500;
+  margin-top: auto;
+}
+.ac-t.big {
   font-size: 19px;
-  font-weight: 700;
 }
-.wf-text {
+.ac-x {
   font-size: 14px;
+  line-height: 1.4;
   color: var(--muted);
 }
-.tiles {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  gap: 10px;
+.ac-add .ac-x {
+  color: #cfedef;
 }
-.stat.warm {
-  background: #fff7ed;
-  border-color: #f3d9b5;
+.amber {
+  --t-ink: var(--amber-ink);
+  --t-tint: var(--amber-tint);
+  --t-line: var(--amber-line);
 }
-.stat.warm .stat-label,
-.stat.warm .stat-sub {
-  color: var(--orange-ink);
+.green {
+  --t-ink: var(--green-ink);
+  --t-tint: var(--green-tint);
+  --t-line: var(--green-line);
 }
-.todo-row {
+.slate {
+  --t-ink: var(--slate-ink);
+  --t-tint: var(--slate-tint);
+  --t-line: var(--slate-line);
+}
+.violet {
+  --t-ink: var(--violet-ink);
+  --t-tint: var(--violet-tint);
+  --t-line: var(--violet-line);
+}
+.red {
+  --t-ink: var(--red-ink);
+  --t-tint: var(--red-tint);
+  --t-line: var(--red-line);
+}
+.ac.amber,
+.ac.green,
+.ac.slate {
+  background: var(--t-tint);
+  border-color: var(--t-line);
+}
+.ac.amber .ac-n,
+.ac.green .ac-n,
+.ac.slate .ac-n,
+.ac.amber .ac-k,
+.ac.green .ac-k,
+.ac.slate .ac-k {
+  color: var(--t-ink);
+}
+
+/* à faire aujourd'hui */
+.todo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.todo-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 10px;
+}
+.all {
+  font-size: 13px;
+  text-decoration: none;
+}
+.tr {
+  font: inherit;
+  text-align: left;
+  width: calc(100% + 32px);
+  background: transparent;
+  border: 0;
+  text-decoration: none;
+  color: var(--ink);
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 14px 18px;
-  border-bottom: 1px solid var(--line-2);
+  padding: 14px 16px;
+  margin: 0 -16px;
+  border-radius: 14px;
 }
-.todo-row:last-child {
-  border-bottom: 0;
+.tr:hover {
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(28, 34, 48, 0.05);
+  color: var(--ink);
+}
+.tag {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--t-ink);
+  background: var(--t-tint);
+  border-radius: 999px;
+  padding: 4px 10px;
+  width: 96px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.tx {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+.tt {
+  font-size: 15px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.td {
+  font-size: 14px;
+  color: var(--muted-2);
+}
+.cta {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--t-ink);
+  width: 130px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.tr:hover .cta {
+  text-decoration: underline;
+}
+.none {
+  font-size: 15px;
+  color: var(--muted-2);
+  padding: 8px 0;
+}
+.none strong {
+  color: var(--ink);
+}
+
+/* ligne du stock */
+.stockline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  font-size: 14px;
+  color: var(--muted-2);
+  border-top: 1px solid var(--line-2);
+  padding-top: 20px;
+}
+.sl {
+  text-decoration: none;
+  color: var(--muted-2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+}
+.sl strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+.sl:hover {
+  color: var(--ink);
+}
+
+@media (max-width: 1100px) {
+  .cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 @media (max-width: 640px) {
-  .todo-row {
-    flex-wrap: wrap;
-    gap: 10px;
+  .home {
+    gap: 28px;
+    padding-top: 0;
   }
-  .todo-row .grow {
-    flex-basis: calc(100% - 120px);
+  .hs {
+    width: 100%;
+  }
+  .ac {
+    min-height: 150px;
+    padding: 18px;
+  }
+  .cards:not(.few) .ac-add,
+  .cards:not(.few) .ac:last-child {
+    grid-column: 1 / -1;
+    min-height: 0;
+  }
+  .cards:not(.few) .ac:last-child .ac-t {
+    margin-top: 0;
+  }
+  .ac-k,
+  .kbd,
+  .kbd-inv {
+    display: none;
+  }
+  .ac-add .ac-t {
+    margin-top: 0;
+  }
+  .tr {
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    padding: 14px 16px;
+  }
+  .tx {
+    order: 3;
+    flex-basis: 100%;
+  }
+  .tr .plate {
+    order: 2;
+    margin-left: auto;
+  }
+  .cta {
+    order: 4;
+    width: auto;
+    text-align: left;
   }
 }
 </style>

@@ -103,14 +103,14 @@ function reset() {
       <img v-if="s.image_url" :src="s.image_url" alt="" />
       <div v-else class="noimg" />
       <span class="a-l">{{ s.label }}</span>
-      <span class="a-s" :style="{ color: s.configured ? '#0B5E39' : '#B45309' }">{{ s.configured ? 'Réglé' : 'À régler' }}</span>
+      <span class="a-s" :style="{ color: s.configured ? '#1E7A50' : '#A55A0B' }">{{ s.configured ? 'Réglé' : 'À régler' }}</span>
     </button>
   </div>
 
   <div v-if="cur" class="split">
     <section aria-label="Réglage de l'angle" class="card editor">
       <div class="row between">
-        <span style="font-size: 17px; font-weight: 700">{{ cur.label }}</span>
+        <span style="font-size: 17px; font-weight: 500">{{ cur.label }}</span>
         <span class="muted" style="font-size: 13px">Placez la silhouette là où la voiture doit apparaître</span>
       </div>
       <div class="stage" :class="{ empty: !cur.image_url }">
@@ -134,14 +134,14 @@ function reset() {
           <span v-if="uploading" class="spinner" aria-hidden="true" />{{ cur.image_url ? 'Remplacer la photo' : 'Ajouter la photo du showroom' }}
         </button>
         <button type="button" class="btn-link" @click="reset">Revenir au réglage par défaut</button>
-        <button type="button" class="btn btn-dark" style="margin-left: auto" :disabled="saving || !dirty" @click="save">
+        <button type="button" class="btn btn-primary" style="margin-left: auto" :disabled="saving || !dirty" @click="save">
           <span v-if="saving" class="spinner" aria-hidden="true" />{{ dirty ? 'Enregistrer' : 'Enregistré' }}
         </button>
       </div>
     </section>
 
     <aside aria-label="Aperçu sur le téléphone" class="phone-col">
-      <span class="muted" style="font-size: 13px; font-weight: 600; align-self: flex-start">Ce que verra la personne sur le parking</span>
+      <span class="muted" style="font-size: 13px; font-weight: 500; align-self: flex-start">Ce que verra la personne sur le parking</span>
       <div class="phone">
         <span class="p-title">{{ cur.label }}</span>
         <div class="p-screen">
@@ -184,7 +184,7 @@ function reset() {
 }
 .a-l {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
 }
 .a-s {
   font-size: 12px;
@@ -246,7 +246,7 @@ function reset() {
   width: 220px;
   height: 420px;
   border-radius: 28px;
-  background: #0e0f12;
+  background: #1c2230;
   padding: 12px;
   display: flex;
   flex-direction: column;

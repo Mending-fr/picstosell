@@ -118,20 +118,21 @@ onBeforeUnmount(() => props.modelValue.forEach((p) => URL.revokeObjectURL(p.prev
 
 <style scoped>
 .drop {
-  border: 2px dashed var(--field);
-  border-radius: 12px;
-  padding: 28px;
+  border: 1.5px dashed var(--accent-line);
+  border-radius: 16px;
+  padding: 26px;
   text-align: center;
   color: var(--ink-2);
   font-size: 15px;
+  background: var(--accent-band);
 }
 .drop.over {
   border-color: var(--accent);
-  background: var(--accent-soft);
+  background: var(--accent-tint);
 }
 .pick {
-  font-weight: 700;
-  color: var(--accent);
+  font-weight: 500;
+  color: var(--accent-ink);
   background: none;
   border: 0;
   text-decoration: underline;
@@ -153,7 +154,7 @@ onBeforeUnmount(() => props.modelValue.forEach((p) => URL.revokeObjectURL(p.prev
   gap: 6px;
   background: #fff;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 14px;
   padding: 6px;
 }
 .item.error {
@@ -166,14 +167,14 @@ onBeforeUnmount(() => props.modelValue.forEach((p) => URL.revokeObjectURL(p.prev
   width: 100%;
   aspect-ratio: 4/3;
   object-fit: cover;
-  border-radius: 6px;
+  border-radius: 10px;
 }
 .st {
   position: absolute;
   left: 6px;
   top: 6px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   background: rgba(255, 255, 255, 0.92);
   border-radius: 6px;
   padding: 3px 8px;

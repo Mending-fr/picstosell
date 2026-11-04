@@ -24,7 +24,7 @@ interface Item {
 }
 
 const all = computed<Item[]>(() => [
-  { id: 'all', ini: 'M', name: 'Tous les garages', sub: 'Espace Mending', color: '#3B4A6B', todo: 0 },
+  { id: 'all', ini: 'M', name: 'Tous les garages', sub: 'Espace Mending', color: '#5B4BDB', todo: 0 },
   ...session.garages.map((g) => ({ id: g.id, ini: g.initials, name: g.name, sub: garageStatusLabel(g.status), color: g.color, todo: g.todo_count })),
 ])
 
@@ -124,11 +124,11 @@ function addGarage() {
           <span class="name">{{ cur.name }}</span>
           <span class="sub">{{ cur.sub }}</span>
         </span>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A9AEB8" stroke-width="2" aria-hidden="true"><path d="M8 9l4-4 4 4M8 15l4 4 4-4" /></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A90A0" stroke-width="2" aria-hidden="true"><path d="M8 9l4-4 4 4M8 15l4 4 4-4" /></svg>
       </button>
       <div v-if="open" class="sw-pop" @keydown="onKey">
         <label class="sw-search">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A9AEB8" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8A90A0" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
           <span class="sr-only">Chercher un garage</span>
           <input ref="search" v-model="q" type="search" placeholder="Rechercher" @input="active = 0" />
           <span class="k">⌘K</span>
@@ -174,45 +174,50 @@ function addGarage() {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding-bottom: 16px;
+  padding-bottom: 20px;
   position: relative;
   flex: 1 1 auto;
   min-width: 0;
   width: 100%;
 }
 .sw-btn {
-  color: #fff;
+  color: var(--ink);
   background: transparent;
-  border: 1px solid var(--side-line);
-  border-radius: 10px;
+  border: 1px solid transparent;
+  border-radius: 12px;
   padding: 8px 10px;
-  min-height: 56px;
+  min-height: 52px;
   display: flex;
   align-items: center;
   gap: 10px;
   text-align: left;
   width: 100%;
 }
+.sw-btn:not(.static) {
+  border-color: var(--side-line);
+  background: rgba(255, 255, 255, 0.55);
+}
 .sw-btn.open,
 .sw-btn:not(.static):hover {
-  background: var(--side-hover);
+  background: #fff;
+  border-color: #d8e2e3;
 }
 .ini {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: 13px;
+  font-weight: 500;
+  font-size: 12px;
   flex-shrink: 0;
   color: #fff;
 }
 .ini.sm {
   width: 26px;
   height: 26px;
-  border-radius: 6px;
+  border-radius: 7px;
   font-size: 11px;
 }
 .txt {
@@ -222,7 +227,7 @@ function addGarage() {
   min-width: 0;
 }
 .name {
-  font-weight: 600;
+  font-weight: 500;
   font-size: 14px;
   line-height: 1.25;
   overflow: hidden;
@@ -242,29 +247,34 @@ function addGarage() {
   font-size: 11px;
 }
 .sw-pop {
-  background: var(--side-hover);
-  border: 1px solid var(--side-line);
-  border-radius: 10px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
   padding: 8px;
   display: flex;
   flex-direction: column;
   gap: 4px;
   position: absolute;
-  top: calc(100% - 8px);
+  top: calc(100% - 12px);
   left: 0;
   right: 0;
   z-index: 30;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--shadow-pop);
+  min-width: 240px;
 }
 .sw-search {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #15171c;
-  border: 1px solid #3a3d44;
-  border-radius: 8px;
+  background: var(--field-bg);
+  border: 1px solid var(--field);
+  border-radius: 10px;
   padding: 0 10px;
   height: 40px;
+}
+.sw-search:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
 }
 .sw-search input {
   border: 0;
@@ -272,15 +282,15 @@ function addGarage() {
   flex: 1;
   min-width: 0;
   background: transparent;
-  color: #fff;
+  color: var(--ink);
   font: inherit;
   font-size: 14px;
 }
 .k {
   font-family: var(--mono);
   font-size: 11px;
-  color: var(--side-muted);
-  border: 1px solid #3a3d44;
+  color: var(--muted-3);
+  border: 1px solid var(--line);
   border-radius: 4px;
   padding: 0 5px;
 }
@@ -293,10 +303,10 @@ function addGarage() {
   overflow-y: auto;
 }
 .sw-opt {
-  color: #fff;
+  color: var(--ink);
   background: transparent;
   border: 0;
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 8px;
   min-height: 44px;
   display: flex;
@@ -306,40 +316,45 @@ function addGarage() {
   width: 100%;
 }
 .sw-opt.hl {
-  background: #2a2d35;
+  background: var(--slate-tint);
 }
 .sw-opt.on {
-  background: var(--side-line);
+  background: var(--accent-tint);
+}
+.sw-opt.on .name {
+  color: var(--accent-ink);
 }
 .todo {
   font-size: 11px;
-  font-weight: 700;
-  background: var(--orange);
-  color: #fff;
+  font-weight: 500;
+  background: var(--amber-tint);
+  color: var(--amber-ink);
   border-radius: 999px;
   padding: 1px 7px;
 }
 .none {
   font-size: 13px;
-  color: var(--side-muted);
+  color: var(--muted-3);
   padding: 8px;
 }
 .sw-foot {
-  border-top: 1px solid var(--side-line);
+  border-top: 1px solid var(--line-2);
   margin-top: 4px;
-  padding-top: 6px;
+  padding-top: 4px;
 }
 .sw-foot button {
-  color: var(--side-text);
+  color: var(--accent-ink);
   background: none;
   border: 0;
+  border-radius: 10px;
   font-size: 13px;
+  font-weight: 500;
   padding: 10px 8px;
   width: 100%;
   text-align: left;
   min-height: 40px;
 }
 .sw-foot button:hover {
-  color: #fff;
+  background: var(--accent-tint);
 }
 </style>

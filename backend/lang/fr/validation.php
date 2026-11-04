@@ -38,5 +38,9 @@ return [
         'plate' => 'plaque', 'price' => 'prix', 'mileage' => 'kilométrage', 'file' => 'photo',
         'kind' => 'type de photo', 'shot_key' => 'angle', 'url' => 'lien', 'role' => 'rôle',
         'message' => 'message', 'brand_color' => 'couleur',
+        'doors' => 'nombre de portes', 'seats' => 'nombre de places', 'power_hp' => 'puissance', 'fiscal_hp' => 'puissance fiscale',
+        'first_registration' => 'date de mise en circulation', 'fuel' => 'carburant', 'gearbox' => 'boîte', 'color' => 'couleur',
+        'make' => 'marque', 'model' => 'modèle', 'version' => 'version', 'vin' => 'numéro de série', 'history_url' => 'lien HistoVec',
+        'description' => 'description', 'vehicle_quota' => 'quota de voitures', 'city' => 'ville', 'address' => 'adresse', 'hours' => 'horaires',
     ],
 ];

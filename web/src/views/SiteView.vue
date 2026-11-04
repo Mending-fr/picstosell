@@ -20,7 +20,7 @@ const COLORS = [
   { name: 'Rouge', hex: '#B8222A' },
   { name: 'Jaune foncé', hex: '#A16207' },
   { name: 'Bleu', hex: '#1F4FD8' },
-  { name: 'Vert', hex: '#0F7A4A' },
+  { name: 'Vert', hex: '#1E7A50' },
   { name: 'Noir', hex: '#15171C' },
 ]
 
@@ -115,7 +115,7 @@ const preview = computed(() => online.value.slice(0, 4))
         <span v-else class="skel" style="display: inline-block; width: 260px; height: 16px" />
       </p>
     </div>
-    <a v-if="garage" :href="garage.site_url" target="_blank" rel="noopener" class="btn btn-dark">Voir mon site</a>
+    <a v-if="garage" :href="garage.site_url" target="_blank" rel="noopener" class="btn btn-primary">Voir mon site</a>
   </div>
 
   <p v-if="error" class="alert alert-error" role="alert">{{ error }} <button type="button" class="btn-link" @click="load">Réessayer</button></p>
@@ -179,12 +179,12 @@ const preview = computed(() => online.value.slice(0, 4))
 
       <div class="row" style="justify-content: flex-end">
         <span v-if="dirty" class="muted" style="font-size: 13px">Modifications non enregistrées</span>
-        <button type="button" class="btn btn-dark btn-lg" :disabled="saving || !dirty" @click="save"><span v-if="saving" class="spinner" aria-hidden="true" />Enregistrer</button>
+        <button type="button" class="btn btn-primary btn-lg" :disabled="saving || !dirty" @click="save"><span v-if="saving" class="spinner" aria-hidden="true" />Enregistrer</button>
       </div>
     </div>
 
     <aside aria-label="Aperçu" class="col" style="flex: 1 1 300px; min-width: 0; gap: 8px; position: sticky; top: 16px">
-      <span class="muted" style="font-size: 13px; font-weight: 600">Aperçu</span>
+      <span class="muted" style="font-size: 13px; font-weight: 500">Aperçu</span>
       <div class="pv">
         <div class="pv-head">
           <span class="row" style="gap: 8px; flex-wrap: nowrap; min-width: 0">
@@ -194,20 +194,20 @@ const preview = computed(() => online.value.slice(0, 4))
           <span class="pv-call" :style="{ background: form.brand_color }">Appeler</span>
         </div>
         <div class="pv-body">
-          <span style="font-size: 17px; font-weight: 700">Nos occasions</span>
+          <span style="font-size: 17px; font-weight: 500">Nos occasions</span>
           <div v-if="preview.length" class="pv-grid">
             <div v-for="v in preview" :key="v.id" class="pv-car">
               <img v-if="v.cover_url" :src="v.cover_url" alt="" />
               <div v-else class="pv-img" />
               <div class="col" style="padding: 6px 8px; gap: 2px">
-                <span style="font-size: 11px; font-weight: 700">{{ vehicleTitle(v, false) }}</span>
-                <span style="font-size: 12px; font-weight: 700" :style="{ color: form.brand_color }">{{ euros(v.price) }}</span>
+                <span style="font-size: 11px; font-weight: 500">{{ vehicleTitle(v, false) }}</span>
+                <span style="font-size: 12px; font-weight: 500" :style="{ color: form.brand_color }">{{ euros(v.price) }}</span>
               </div>
             </div>
           </div>
           <span v-else class="muted" style="font-size: 13px">Vos voitures en ligne apparaîtront ici.</span>
           <div v-if="form.phone || form.address || form.hours" class="pv-foot">
-            <span v-if="form.phone" style="font-weight: 700">{{ form.phone }}</span>
+            <span v-if="form.phone" style="font-weight: 500">{{ form.phone }}</span>
             <span v-if="form.address">{{ form.address }}{{ form.city ? `, ${form.city}` : '' }}</span>
             <span v-if="form.hours" style="white-space: pre-line">{{ form.hours }}</span>
           </div>
@@ -296,7 +296,7 @@ const preview = computed(() => online.value.slice(0, 4))
   gap: 8px;
 }
 .pv-name {
-  font-weight: 700;
+  font-weight: 500;
   font-size: 14px;
   white-space: nowrap;
   overflow: hidden;
@@ -304,7 +304,7 @@ const preview = computed(() => online.value.slice(0, 4))
 }
 .pv-call {
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 500;
   color: #fff;
   border-radius: 6px;
   padding: 5px 8px;
@@ -330,7 +330,7 @@ const preview = computed(() => online.value.slice(0, 4))
   width: 100%;
   aspect-ratio: 4/3;
   object-fit: cover;
-  background: #dce3f2;
+  background: #EAF6F7;
 }
 .pv-foot {
   border-top: 1px solid var(--line-2);

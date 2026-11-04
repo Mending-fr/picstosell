@@ -138,7 +138,7 @@ async function setStatus(l: Lead, status: 'new' | 'done') {
           <span class="muted" style="font-size: 12px; white-space: nowrap">{{ relative(l.created_at) }}</span>
         </span>
         <span style="font-size: 13px; color: var(--ink-2)">{{ subject(l) }}</span>
-        <span class="state" :style="{ color: l.status === 'new' ? '#B45309' : '#5B606B' }">{{ l.status === 'new' ? 'Nouvelle' : 'Traitée' }}</span>
+        <span class="state" :style="{ color: l.status === 'new' ? 'var(--violet-ink)' : 'var(--muted-2)' }">{{ l.status === 'new' ? 'Nouvelle' : 'Traitée' }}</span>
       </button>
       <div v-if="leads && !shown.length" class="empty" style="padding: 24px">Aucune demande dans cette liste.</div>
     </div>
@@ -150,7 +150,7 @@ async function setStatus(l: Lead, status: 'new' | 'done') {
             <h2 style="font-size: 22px">{{ cur.name }}</h2>
             <span class="muted" style="font-size: 14px">{{ relative(cur.created_at) }} · depuis {{ source(cur) }}</span>
           </div>
-          <span class="pill" :style="{ color: cur.status === 'new' ? '#B45309' : '#5B606B', background: '#F5F5F2' }">{{ cur.status === 'new' ? 'Nouvelle' : 'Traitée' }}</span>
+          <span class="pill" :style="cur.status === 'new' ? { color: 'var(--violet-ink)', background: 'var(--violet-tint)' } : { color: 'var(--slate-ink)', background: 'var(--slate-tint)' }">{{ cur.status === 'new' ? 'Nouvelle' : 'Traitée' }}</span>
         </div>
         <div class="facts">
           <div class="fact">
@@ -173,7 +173,7 @@ async function setStatus(l: Lead, status: 'new' | 'done') {
           </div>
         </div>
         <div class="col" style="gap: 6px">
-          <span class="muted" style="font-size: 13px; font-weight: 600">Son message</span>
+          <span class="muted" style="font-size: 13px; font-weight: 500">Son message</span>
           <p class="msg">{{ cur.message || 'Pas de message, rappelez simplement le client.' }}</p>
         </div>
         <label class="lbl">
@@ -217,7 +217,7 @@ async function setStatus(l: Lead, status: 'new' | 'done') {
   text-align: left;
   border: 0;
   border-bottom: 1px solid var(--line-2);
-  border-left: 4px solid transparent;
+  border-left: 3px solid transparent;
   background: #fff;
   padding: 14px 16px;
   display: flex;
@@ -228,8 +228,11 @@ async function setStatus(l: Lead, status: 'new' | 'done') {
 .item:last-child {
   border-bottom: 0;
 }
+.item:hover {
+  background: #f7fafa;
+}
 .item.on {
-  background: var(--accent-soft);
+  background: var(--accent-tint);
   border-left-color: var(--accent);
 }
 .name {
@@ -237,11 +240,11 @@ async function setStatus(l: Lead, status: 'new' | 'done') {
   font-weight: 500;
 }
 .unread .name {
-  font-weight: 700;
+  font-weight: 500;
 }
 .state {
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
 }
 .detail {
   flex: 2 1 420px;
@@ -258,7 +261,7 @@ async function setStatus(l: Lead, status: 'new' | 'done') {
 }
 .fact {
   background: var(--ground);
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 12px;
   display: flex;
   flex-direction: column;
@@ -270,15 +273,15 @@ async function setStatus(l: Lead, status: 'new' | 'done') {
 }
 .v {
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 500;
 }
 .msg {
   margin: 0;
   font-size: 16px;
   line-height: 1.55;
-  background: #fafaf8;
+  background: #F7FAFA;
   border: 1px solid var(--line-2);
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 14px;
   white-space: pre-line;
 }

@@ -11,7 +11,7 @@ const id = Number(route.params.id)
 const data = ref<Comparison | null>(null)
 const error = ref('')
 const notFound = ref(false)
-const COLORS = ['#1F4FD8', '#0F7A4A', '#A16207', '#7C3AED', '#B8222A', '#0E7490']
+const COLORS = ['#0E7C86', '#1E7A50', '#A55A0B', '#5B3FC4', '#C0392B', '#4A5263']
 
 /** Notes envoyées mais pas encore confirmées : elles priment sur les données rechargées. */
 const inflight = new Map<number, RenderRating | null>()
@@ -153,9 +153,9 @@ async function rate(r: Render, rating: RenderRating) {
 }
 
 const RATE: { v: RenderRating; label: string; fg: string; bg: string }[] = [
-  { v: 'publishable', label: 'Publiable', fg: '#0B5E39', bg: '#E3F4EA' },
-  { v: 'redo', label: 'À refaire', fg: '#8A4307', bg: '#FFF1DE' },
-  { v: 'unusable', label: 'Inutilisable', fg: '#9A1C1C', bg: '#FDECEC' },
+  { v: 'publishable', label: 'Publiable', fg: '#1E7A50', bg: '#E9F5EE' },
+  { v: 'redo', label: 'À refaire', fg: '#A55A0B', bg: '#FCF1E3' },
+  { v: 'unusable', label: 'Inutilisable', fg: '#C0392B', bg: '#FBECEB' },
 ]
 
 const best = computed(() => {
@@ -188,7 +188,7 @@ const isPending = (r: Render | null) => !!r && (r.status === 'pending' || r.stat
 <template>
   <div v-if="notFound" class="empty" style="min-height: 50vh; justify-content: center">
     <strong>Ce test n'existe pas</strong>
-    <RouterLink to="/mending/comparisons" class="btn btn-dark">Retour aux tests</RouterLink>
+    <RouterLink to="/mending/comparisons" class="btn btn-primary">Retour aux tests</RouterLink>
   </div>
   <template v-else>
     <div class="page-head">
@@ -224,20 +224,20 @@ const isPending = (r: Render | null) => !!r && (r.status === 'pending' || r.stat
               <td>
                 <div class="row" style="flex-wrap: nowrap; gap: 10px">
                   <span class="dot" :style="{ background: colorOf(s.ai_config_id) }" />
-                  <span style="font-weight: 700">{{ cfg(s.ai_config_id)?.name }}</span>
-                  <span v-if="best === s.ai_config_id && (s.publishable_pct ?? 0) > 0" class="pill" style="font-size: 11px; padding: 2px 8px; background: #e3f4ea; color: #0b5e39">En tête</span>
+                  <span style="font-weight: 500">{{ cfg(s.ai_config_id)?.name }}</span>
+                  <span v-if="best === s.ai_config_id && (s.publishable_pct ?? 0) > 0" class="pill" style="font-size: 11px; padding: 2px 8px; background: #E9F5EE; color: #1E7A50">En tête</span>
                 </div>
               </td>
               <td style="color: var(--ink-2)">{{ cfg(s.ai_config_id)?.method }} · {{ cfg(s.ai_config_id)?.quality }}</td>
               <td>
                 <div class="row" style="flex-wrap: nowrap">
                   <div class="bar"><div :style="{ width: (s.publishable_pct ?? 0) + '%' }" /></div>
-                  <span style="font-weight: 700">{{ s.publishable_pct === null ? '–' : `${s.publishable_pct} %` }}</span>
+                  <span style="font-weight: 500">{{ s.publishable_pct === null ? '–' : `${s.publishable_pct} %` }}</span>
                 </div>
               </td>
               <td>{{ s.redo }}</td>
               <td>{{ s.unusable }}</td>
-              <td style="font-weight: 600">{{ usd(s.cost_per_vehicle_usd) }}</td>
+              <td style="font-weight: 500">{{ usd(s.cost_per_vehicle_usd) }}</td>
               <td>{{ duration(s.avg_duration_ms) }}</td>
             </tr>
           </tbody>
@@ -252,8 +252,8 @@ const isPending = (r: Render | null) => !!r && (r.status === 'pending' || r.stat
     <section v-if="data" aria-labelledby="models" class="col" style="gap: 12px">
       <h2 id="models" style="font-size: 18px">Modèles comparés</h2>
       <div class="cards">
-        <div v-for="c in data.configs" :key="c.id" class="mcard" :style="{ borderColor: cards[c.id]?.shown ? colorOf(c.id) : '#E4E4DF', opacity: cards[c.id]?.shown ? 1 : 0.6 }">
-          <label class="row" style="gap: 10px; font-size: 16px; font-weight: 700; cursor: pointer; flex-wrap: nowrap">
+        <div v-for="c in data.configs" :key="c.id" class="mcard" :style="{ borderColor: cards[c.id]?.shown ? colorOf(c.id) : '#E3E6EC', opacity: cards[c.id]?.shown ? 1 : 0.6 }">
+          <label class="row" style="gap: 10px; font-size: 16px; font-weight: 500; cursor: pointer; flex-wrap: nowrap">
             <input v-model="cards[c.id].shown" type="checkbox" style="width: 20px; height: 20px; margin: 0" />
             <span class="dot" :style="{ background: colorOf(c.id) }" />
             {{ c.name }}
@@ -278,7 +278,7 @@ const isPending = (r: Render | null) => !!r && (r.status === 'pending' || r.stat
           <div class="row between" style="font-size: 13px; color: var(--ink-2)">
             <span>Prix indicatif</span><span class="mono" style="font-size: 13px">{{ usd(c.unit_cost_usd, 3) }} / image</span>
           </div>
-          <span v-if="cardDirty(c.id)" style="font-size: 12px; color: #8a4307; font-weight: 600">Modifié : sera enregistré au prochain lancement</span>
+          <span v-if="cardDirty(c.id)" style="font-size: 12px; color: #A55A0B; font-weight: 500">Modifié : sera enregistré au prochain lancement</span>
         </div>
       </div>
       <div class="est">
@@ -286,7 +286,7 @@ const isPending = (r: Render | null) => !!r && (r.status === 'pending' || r.stat
           {{ data.vehicles.length }} voiture{{ data.vehicles.length > 1 ? 's' : '' }} × {{ photoCount }} vues au total × {{ shownConfigs.length }} modèle{{ shownConfigs.length > 1 ? 's' : '' }} =
           <strong>{{ photoCount * shownConfigs.length }} photos</strong>, environ <strong>{{ usd(estCost) }}</strong>
         </span>
-        <button type="button" class="btn btn-dark" :disabled="running || data.status === 'running'" @click="rerun">
+        <button type="button" class="btn btn-primary" :disabled="running || data.status === 'running'" @click="rerun">
           <span v-if="running" class="spinner" aria-hidden="true" />{{ anyDirty ? 'Relancer le test avec ces réglages' : 'Relancer le test' }}
         </button>
       </div>
@@ -304,7 +304,7 @@ const isPending = (r: Render | null) => !!r && (r.status === 'pending' || r.stat
           <div v-if="!rows.length" class="panel empty">Pas de photo extérieure pour cette voiture.</div>
           <div v-for="r in rows" :key="r.key" class="grow-row" :style="{ gridTemplateColumns: `120px repeat(${Math.max(shownConfigs.length, 1)}, minmax(0, 1fr))` }">
             <div class="col" style="gap: 6px; padding-top: 4px">
-              <span style="font-size: 14px; font-weight: 700">{{ r.label }}</span>
+              <span style="font-size: 14px; font-weight: 500">{{ r.label }}</span>
               <a v-if="r.source" :href="r.source" target="_blank" rel="noopener"><img :src="r.source" alt="Photo parking" class="src" /></a>
               <div v-else class="src ph" />
               <span class="muted" style="font-size: 11px">Photo parking</span>
@@ -355,7 +355,7 @@ const isPending = (r: Render | null) => !!r && (r.status === 'pending' || r.stat
 .bar {
   width: 90px;
   height: 8px;
-  background: #eeeeea;
+  background: #F1F3F6;
   border-radius: 4px;
 }
 .bar div {
@@ -396,17 +396,18 @@ const isPending = (r: Render | null) => !!r && (r.status === 'pending' || r.stat
 .ptab {
   font-family: var(--mono);
   font-size: 13px;
-  font-weight: 700;
-  min-height: 44px;
-  padding: 0 12px;
-  border-radius: 8px;
-  border: 1.5px solid var(--ink);
+  font-weight: 500;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--plate-line);
   background: #fff;
-  color: var(--ink);
+  color: var(--ink-2);
 }
 .ptab[aria-selected='true'] {
-  background: var(--ink);
-  color: #fff;
+  background: var(--accent-soft);
+  border-color: var(--accent-line);
+  color: var(--accent-ink);
 }
 .grow-row {
   display: grid;
@@ -434,7 +435,7 @@ const isPending = (r: Render | null) => !!r && (r.status === 'pending' || r.stat
   aspect-ratio: 4/3;
   border-radius: 6px;
   object-fit: cover;
-  background: #dce3f2;
+  background: #EAF6F7;
 }
 .wait {
   display: flex;
@@ -442,7 +443,7 @@ const isPending = (r: Render | null) => !!r && (r.status === 'pending' || r.stat
   justify-content: center;
   gap: 8px;
   font-size: 12px;
-  color: #2a3a66;
+  color: var(--accent-ink);
   text-align: center;
   padding: 6px;
 }
@@ -457,7 +458,7 @@ const isPending = (r: Render | null) => !!r && (r.status === 'pending' || r.stat
 }
 .rates button {
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   min-height: 44px;
   border-radius: 6px;
   border: 1px solid var(--field-2);

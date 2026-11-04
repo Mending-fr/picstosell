@@ -60,6 +60,7 @@ async function submit() {
 
 <style scoped>
 .wrap {
+  background: linear-gradient(180deg, var(--accent-band) 0%, var(--ground) 60%);
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -71,8 +72,8 @@ async function submit() {
   max-width: 420px;
   background: #fff;
   border: 1px solid var(--line);
-  border-radius: 16px;
-  padding: 28px;
+  border-radius: 20px;
+  padding: 32px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -81,15 +82,15 @@ async function submit() {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-weight: 700;
+  font-weight: 500;
   font-size: 18px;
 }
 .logo {
   width: 36px;
   height: 36px;
   border-radius: 9px;
-  background: var(--ink);
-  color: #fff;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
   display: flex;
   align-items: center;
   justify-content: center;

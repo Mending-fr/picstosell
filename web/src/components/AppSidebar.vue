@@ -96,14 +96,20 @@ async function doLogout() {
 
 <style scoped>
 .side {
-  flex: 0 0 240px;
-  width: 240px;
-  background: var(--side);
-  color: #fff;
-  padding: 24px 16px;
+  --s-bg: var(--side);
+  --s-line: var(--side-line);
+  --s-hover: var(--side-hover);
+  --s-on: var(--side-on);
+  --s-on-ink: var(--side-on-ink);
+  flex: 0 0 236px;
+  width: 236px;
+  background: var(--s-bg);
+  border-right: 1px solid var(--s-line);
+  color: var(--ink);
+  padding: 24px 14px 20px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   position: sticky;
   top: 0;
   align-self: flex-start;
@@ -111,7 +117,11 @@ async function doLogout() {
   overflow-y: auto;
 }
 .side.mending {
-  background: var(--side-mending);
+  --s-bg: var(--side-mending);
+  --s-line: var(--side-mending-line);
+  --s-hover: var(--side-mending-hover);
+  --s-on: var(--side-mending-on);
+  --s-on-ink: var(--side-mending-ink);
 }
 .top {
   display: flex;
@@ -125,7 +135,7 @@ async function doLogout() {
 .links {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   flex: 1;
 }
 .nl {
@@ -134,26 +144,30 @@ async function doLogout() {
   align-items: center;
   color: var(--side-text);
   text-decoration: none;
-  border-radius: 8px;
-  padding: 10px 12px;
+  border-radius: 10px;
+  padding: 9px 12px;
   font-size: 14px;
-  min-height: 44px;
+  min-height: 42px;
 }
 .nl:hover {
-  color: #fff;
-  background: var(--side-hover);
+  color: var(--ink);
+  background: var(--s-hover);
 }
 .nl.on {
-  background: var(--side-on);
-  color: #fff;
-  font-weight: 600;
+  background: var(--s-on);
+  color: var(--s-on-ink);
+  font-weight: 500;
 }
 .nl.small {
   font-size: 13px;
+  color: var(--side-muted);
+}
+.nl.small:hover {
+  color: var(--ink);
 }
 .usage {
   margin-top: auto;
-  padding: 0 12px 4px;
+  padding: 0 12px 6px;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -163,19 +177,19 @@ async function doLogout() {
   color: var(--side-muted);
 }
 .bar {
-  height: 2px;
-  background: var(--side-line);
-  border-radius: 1px;
+  height: 3px;
+  background: var(--s-line);
+  border-radius: 2px;
 }
 .bar div {
-  height: 2px;
-  background: var(--side-muted);
-  border-radius: 1px;
+  height: 3px;
+  background: var(--accent-line);
+  border-radius: 2px;
 }
 .bottom {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   margin-top: 8px;
 }
 .bottom.no-usage {
@@ -187,8 +201,8 @@ async function doLogout() {
   align-items: center;
   gap: 8px;
   padding: 8px 12px 0;
-  border-top: 1px solid var(--side-line);
-  margin-top: 4px;
+  border-top: 1px solid var(--s-line);
+  margin-top: 6px;
 }
 .me-name {
   font-size: 12px;
@@ -204,10 +218,10 @@ async function doLogout() {
   font-size: 12px;
   min-height: 40px;
   padding: 0;
-  text-decoration: underline;
 }
 .out:hover {
-  color: #fff;
+  color: var(--ink);
+  text-decoration: underline;
 }
 @media (max-width: 860px) {
   .side {
@@ -215,7 +229,9 @@ async function doLogout() {
     flex: none;
     height: auto;
     position: static;
-    padding: 12px 16px;
+    padding: 10px 16px;
+    border-right: 0;
+    border-bottom: 1px solid var(--s-line);
   }
   .top {
     align-items: center;
@@ -225,19 +241,19 @@ async function doLogout() {
   }
   .menu-btn {
     display: inline-flex;
-    width: 56px;
-    height: 56px;
-    border-radius: 10px;
-    border: 1px solid var(--side-line);
-    background: transparent;
-    color: #fff;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    border: 1px solid var(--s-line);
+    background: #fff;
+    color: var(--ink-2);
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
   }
   .links {
     display: none;
-    padding-top: 12px;
+    padding-top: 10px;
   }
   .links.open {
     display: flex;
