@@ -262,13 +262,13 @@ const isPending = (r: Render | null) => !!r && (r.status === 'pending' || r.stat
           <div class="two">
             <label class="lbl" style="font-size: 12px">
               Méthode
-              <select v-model="cards[c.id].method" class="f" style="min-height: 40px; font-size: 14px">
+              <select v-model="cards[c.id].method" class="f f-sm">
                 <option v-for="m in METHODS" :key="m.value" :value="m.value">{{ m.label }}</option>
               </select>
             </label>
             <label class="lbl" style="font-size: 12px">
               Qualité
-              <select v-model="cards[c.id].quality" class="f" style="min-height: 40px; font-size: 14px">
+              <select v-model="cards[c.id].quality" class="f f-sm">
                 <option value="2K">2K</option>
                 <option value="1K">1K</option>
               </select>

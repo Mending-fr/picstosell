@@ -309,6 +309,35 @@ a.btn-primary:hover,
   color: var(--ink);
   width: 100%;
 }
+select.f {
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 0 40px 0 14px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%235B606B' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 12px 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+select.f:hover:not(:disabled) {
+  border-color: #B9B9B2;
+}
+select.f:disabled {
+  background-color: var(--ground, #F5F5F2);
+  cursor: default;
+}
+/* Variante compacte pour les tableaux et les cartes denses */
+.f.f-sm {
+  min-height: 40px;
+  font-size: 14px;
+  border-radius: 8px;
+}
+select.f.f-sm {
+  padding: 0 34px 0 12px;
+  background-position: right 12px center;
+}
 textarea.f {
   padding: 10px 12px;
   line-height: 1.45;

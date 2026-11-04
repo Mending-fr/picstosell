@@ -2,7 +2,7 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ApiError, get, patch, post, errorMessage } from '../../api'
-import { GARAGE_STATUSES, METHODS, garageStatusLabel, monthName, pct, shortDateTime, usd } from '../../labels'
+import { GARAGE_STATUSES, garageStatusLabel, monthName, pct, shortDateTime, usd } from '../../labels'
 import { refreshGarages, switchGarage, toast } from '../../session'
 import AppModal from '../../components/AppModal.vue'
 import type { AdminGarageRow, AdminOverview, AiConfig, Garage } from '../../types'
@@ -24,11 +24,6 @@ async function load() {
   }
 }
 onMounted(load)
-
-const methodOf = (id: number | null) => {
-  const c = configs.value.find((x) => x.id === id)
-  return c ? METHODS.find((m) => m.value === c.method)?.label ?? c.method : '–'
-}
 
 async function update(g: AdminGarageRow, field: 'status' | 'ai_config_id', value: string) {
   const before = g[field]
@@ -126,7 +121,7 @@ const perCarOk = computed(() => {
       <RouterLink to="/mending/comparisons" class="btn-link" style="display: inline-flex; align-items: center">Comparer les modèles avant de choisir</RouterLink>
     </div>
     <div class="table-wrap">
-      <table class="t" style="min-width: 980px">
+      <table class="t" style="min-width: 860px">
         <thead>
           <tr>
             <th>Garage</th>
@@ -135,7 +130,6 @@ const perCarOk = computed(() => {
             <th>Par voiture</th>
             <th>Refaites</th>
             <th>Réglage photo</th>
-            <th>Méthode</th>
             <th>Statut</th>
           </tr>
         </thead>
@@ -157,17 +151,16 @@ const perCarOk = computed(() => {
             <td>
               <label>
                 <span class="sr-only">Réglage photo de {{ g.name }}</span>
-                <select class="f sel" :value="g.ai_config_id ?? ''" @change="update(g, 'ai_config_id', ($event.target as HTMLSelectElement).value)">
+                <select class="f f-sm sel" :value="g.ai_config_id ?? ''" @change="update(g, 'ai_config_id', ($event.target as HTMLSelectElement).value)">
                   <option value="">Par défaut</option>
                   <option v-for="c in configs" :key="c.id" :value="c.id" :disabled="!c.active">{{ c.name }}{{ c.active ? '' : ' (inactif)' }}</option>
                 </select>
               </label>
             </td>
-            <td style="color: var(--ink-2)">{{ methodOf(g.ai_config_id) }}</td>
             <td>
               <label>
                 <span class="sr-only">Statut de {{ g.name }}</span>
-                <select class="f sel" :value="g.status" @change="update(g, 'status', ($event.target as HTMLSelectElement).value)">
+                <select class="f f-sm sel" :value="g.status" @change="update(g, 'status', ($event.target as HTMLSelectElement).value)">
                   <option v-for="s in GARAGE_STATUSES" :key="s.value" :value="s.value">{{ s.label }}</option>
                 </select>
               </label>
@@ -245,10 +238,9 @@ const perCarOk = computed(() => {
   text-decoration: underline;
 }
 .sel {
-  min-height: 40px;
-  font-size: 14px;
   width: auto;
-  max-width: 240px;
+  min-width: 150px;
+  max-width: 260px;
 }
 .erow {
   display: flex;

@@ -96,7 +96,7 @@ onBeforeUnmount(() => props.modelValue.forEach((p) => URL.revokeObjectURL(p.prev
         </div>
         <label class="lbl" style="font-size: 12px">
           <span class="sr-only">Angle de la photo {{ i + 1 }}</span>
-          <select class="f" style="min-height: 40px; font-size: 14px" :value="p.slot" :disabled="disabled || p.state === 'done'" @change="setSlot(p, ($event.target as HTMLSelectElement).value)">
+          <select class="f f-sm" :value="p.slot" :disabled="disabled || p.state === 'done'" @change="setSlot(p, ($event.target as HTMLSelectElement).value)">
             <optgroup label="Extérieur (placée dans le showroom)">
               <option v-for="s in SHOTS" :key="s.key" :value="s.key">{{ s.label }}</option>
             </optgroup>
