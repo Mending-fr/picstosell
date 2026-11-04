@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import GarageSwitcher from './GarageSwitcher.vue'
-import { session, isSuper, isManager, logout, clearSession } from '../session'
+import { session, isManager, logout, clearSession } from '../session'
 import { modals, typingIn } from '../modals'
 
 const props = defineProps<{ variant: 'garage' | 'mending' }>()
@@ -107,7 +107,6 @@ onBeforeUnmount(() => {
         <RouterLink v-for="l in links" :key="l.to" :to="l.to" class="tl" :class="{ on: isOn(l) }" :aria-current="isOn(l) ? 'page' : undefined">
           {{ l.label }}<span v-if="l.badge" class="badge" :aria-label="`${l.badge} nouvelles`">{{ l.badge }}</span>
         </RouterLink>
-        <RouterLink v-if="variant === 'garage' && isSuper" to="/mending" class="tl small">Espace Mending</RouterLink>
         <RouterLink v-if="variant === 'mending'" to="/" class="tl small">‹ Espace garage</RouterLink>
       </nav>
 
@@ -149,10 +148,8 @@ onBeforeUnmount(() => {
   --b-mark: var(--bar-mending-mark);
 }
 .bar-in {
-  max-width: 1340px;
-  margin-inline: auto;
   height: 64px;
-  padding: 0 32px;
+  padding: 0 28px;
   display: flex;
   align-items: center;
   gap: 28px;
@@ -238,8 +235,9 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 8px;
   height: 38px;
-  width: 240px;
-  flex-shrink: 0;
+  width: 320px;
+  flex-shrink: 1;
+  min-width: 180px;
   padding: 0 14px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.08);
