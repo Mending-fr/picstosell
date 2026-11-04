@@ -29,7 +29,12 @@ class GarageAdminController
             'vehicle_quota' => 'sometimes|nullable|integer|min:0',
             'ai_config_id' => 'sometimes|nullable|exists:ai_configs,id',
             'domain' => ['sometimes', 'nullable', 'string', 'max:190', Rule::unique('garages', 'domain')->ignore($garage->id)],
+            'show_usage' => 'sometimes|boolean',
         ]);
+        if (array_key_exists('show_usage', $data)) {
+            $data['settings'] = array_merge($garage->settings ?? [], ['show_usage' => $data['show_usage']]);
+            unset($data['show_usage']);
+        }
         $garage->update($data);
 
         return $garage->fresh()->toApi();

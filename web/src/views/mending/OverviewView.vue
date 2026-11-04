@@ -25,7 +25,7 @@ async function load() {
 }
 onMounted(load)
 
-async function update(g: AdminGarageRow, field: 'status' | 'ai_config_id', value: string) {
+async function update(g: AdminGarageRow, field: 'status' | 'ai_config_id' | 'show_usage', value: string | boolean) {
   const before = g[field]
   const v = field === 'ai_config_id' ? (value ? Number(value) : null) : value
   ;(g as unknown as Record<string, unknown>)[field] = v
@@ -131,6 +131,7 @@ const perCarOk = computed(() => {
             <th>Refaites</th>
             <th>Réglage photo</th>
             <th>Statut</th>
+            <th title="Affiche « Ce mois : x / quota voitures » dans le menu du garage">Compteur visible</th>
           </tr>
         </thead>
         <tbody v-if="data">
@@ -163,6 +164,12 @@ const perCarOk = computed(() => {
                 <select class="f f-sm sel" :value="g.status" @change="update(g, 'status', ($event.target as HTMLSelectElement).value)">
                   <option v-for="s in GARAGE_STATUSES" :key="s.value" :value="s.value">{{ s.label }}</option>
                 </select>
+              </label>
+            </td>
+            <td>
+              <label class="chk">
+                <input type="checkbox" :checked="g.show_usage" @change="update(g, 'show_usage', ($event.target as HTMLInputElement).checked)" />
+                <span class="sr-only">Afficher le compteur de voitures à {{ g.name }}</span>
               </label>
             </td>
           </tr>
@@ -236,6 +243,19 @@ const perCarOk = computed(() => {
 .gname:hover {
   color: var(--accent);
   text-decoration: underline;
+}
+.chk {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  cursor: pointer;
+}
+.chk input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
 }
 .sel {
   width: auto;

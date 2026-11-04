@@ -75,16 +75,14 @@ async function doLogout() {
         {{ l.label }}<span v-if="l.badge" class="badge" :aria-label="`${l.badge} nouvelles`">{{ l.badge }}</span>
       </RouterLink>
 
-      <div v-if="variant === 'garage' && session.usage && isManager" class="usage">
-        <span class="u-sub">Ce mois-ci</span>
-        <span class="u-big">{{ session.usage.vehicles_month }} {{ session.usage.vehicles_month > 1 ? 'voitures' : 'voiture' }}</span>
+      <div v-if="variant === 'garage' && session.usage?.visible && session.usage.quota && isManager" class="usage" :title="`${session.usage.vehicles_month} voitures traitées ce mois, sur ${session.usage.quota} comprises dans l'abonnement`">
+        <span class="u-sub">Ce mois : {{ session.usage.vehicles_month }} / {{ session.usage.quota }} voitures</span>
         <div class="bar" role="progressbar" :aria-valuenow="usagePct" aria-valuemin="0" aria-valuemax="100" aria-label="Voitures du mois">
           <div :style="{ width: usagePct + '%' }" />
         </div>
-        <span class="u-sub">sur {{ session.usage.quota }} comprises dans l'abonnement</span>
       </div>
 
-      <div class="bottom" :class="{ 'no-usage': variant === 'mending' || !session.usage }">
+      <div class="bottom" :class="{ 'no-usage': variant === 'mending' || !session.usage?.visible }">
         <RouterLink v-if="variant === 'garage' && isSuper" to="/mending" class="nl small">Espace Mending</RouterLink>
         <RouterLink v-if="variant === 'mending'" to="/" class="nl small">‹ Retour à l'espace garage</RouterLink>
         <div class="me">
@@ -155,30 +153,24 @@ async function doLogout() {
 }
 .usage {
   margin-top: auto;
-  padding: 12px;
-  border: 1px solid var(--side-line);
-  border-radius: 10px;
+  padding: 0 12px 4px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 .u-sub {
   font-size: 12px;
   color: var(--side-muted);
 }
-.u-big {
-  font-size: 20px;
-  font-weight: 700;
-}
 .bar {
-  height: 6px;
+  height: 2px;
   background: var(--side-line);
-  border-radius: 3px;
+  border-radius: 1px;
 }
 .bar div {
-  height: 6px;
-  background: #4c7bff;
-  border-radius: 3px;
+  height: 2px;
+  background: var(--side-muted);
+  border-radius: 1px;
 }
 .bottom {
   display: flex;

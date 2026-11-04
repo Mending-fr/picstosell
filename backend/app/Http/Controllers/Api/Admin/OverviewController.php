@@ -27,6 +27,7 @@ class OverviewController
                 'cost_per_vehicle_usd' => $vehicles ? number_format($cost / $vehicles, 3, '.', '') : null,
                 'redo_rate' => $total ? round($redo / $total, 3) : null,
                 'ai_config_id' => $g->ai_config_id,
+                'show_usage' => (bool) $g->setting('show_usage'),
             ];
         });
         $vehicles = $rows->sum('vehicles_month');

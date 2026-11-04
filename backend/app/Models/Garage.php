@@ -17,6 +17,8 @@ class Garage extends Model
         'add_logo' => false,
         'review_before_publish' => true,
         'export_size' => 'marketplace',
+        // Compteur « voitures du mois / quota » dans le menu du garage (réglé par Mending)
+        'show_usage' => false,
     ];
 
     protected $guarded = ['id'];

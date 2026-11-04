@@ -14,7 +14,7 @@ interface SessionState {
   /** Incrémenté à chaque changement de garage pour recharger la vue. */
   viewKey: number
   newLeads: number
-  usage: { vehicles_month: number; quota: number } | null
+  usage: { vehicles_month: number; quota: number; visible?: boolean } | null
   toast: { text: string; kind: 'ok' | 'error'; id: number } | null
 }
 
@@ -73,7 +73,7 @@ export async function loadGarage(): Promise<void> {
 export async function refreshSidebar(): Promise<void> {
   if (!session.user || !hasGarage.value) return
   try {
-    const d = await get<{ usage: { vehicles_month: number; quota: number } }>('/dashboard')
+    const d = await get<{ usage: { vehicles_month: number; quota: number; visible?: boolean } }>('/dashboard')
     session.usage = d.usage
   } catch {
     /* sans importance */

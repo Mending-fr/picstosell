@@ -49,6 +49,7 @@ class DashboardController extends Controller
             'usage' => [
                 'vehicles_month' => (clone $v)->withTrashed()->where('created_at', '>=', now()->startOfMonth())->count(),
                 'quota' => $g->vehicle_quota,
+                'visible' => (bool) $g->setting('show_usage'),
             ],
         ];
     }

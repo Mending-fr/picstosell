@@ -251,6 +251,7 @@ export interface AdminGarageRow extends GarageSummary {
   cost_per_vehicle_usd: string | null
   redo_rate: number | null
   ai_config_id: number | null
+  show_usage: boolean
 }
 
 export interface AdminError {
