@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const DEMO_HINT = "La recherche par plaque renvoie des données d'exemple. Les photos passent par la vraie IA."
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { session, isSuper, currentGarage, switchGarage, refreshGarages } from '../session'
@@ -163,7 +164,7 @@ function addGarage() {
       <span class="ini" :style="{ background: currentGarage.color }">{{ currentGarage.initials }}</span>
       <span class="txt">
         <span class="name">{{ currentGarage.name }}</span>
-        <span class="sub" :title="currentGarage.is_demo ? &quot;La recherche par plaque renvoie des données d'exemple. Les photos passent par la vraie IA.&quot; : undefined">{{ garageStatusLabel(currentGarage.status) }}</span>
+        <span class="sub" :title="currentGarage.is_demo ? DEMO_HINT : undefined">{{ garageStatusLabel(currentGarage.status) }}</span>
       </span>
     </div>
   </div>
