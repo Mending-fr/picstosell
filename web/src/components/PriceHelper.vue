@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { euros, num } from '../labels'
+import AppModal from './AppModal.vue'
 import { carKey, priceJobs, startPriceJob } from '../priceJobs'
 
 const props = defineProps<{ car: Record<string, unknown> }>()
 const emit = defineEmits<{ use: [price: number] }>()
 
 const localError = ref('')
-const showComps = ref(false)
+const details = ref(false)
 const key = computed(() => carKey(props.car))
 const job = computed(() => priceJobs.get(key.value) ?? null)
 const loading = computed(() => job.value?.status === 'running')
@@ -42,6 +43,13 @@ function run(force = false) {
   startPriceJob(props.car)
 }
 
+/** Résumé des sources sur une ligne : « Web : 13 200 à 14 300 € · Auto-ways : 13 400 € ». */
+const summary = computed<string[]>(() => {
+  const a = advice.value
+  if (!a) return []
+  return a.sources.map((s) => (s.provider === 'web' ? `Web : ${euros(s.low)} à ${euros(s.high)}` : `Auto-ways : ${euros(s.price)}`))
+})
+
 const web = () => advice.value?.sources.find((s) => s.provider === 'web')
 const aw = () => advice.value?.sources.find((s) => s.provider === 'autoways')
 </script>
@@ -60,39 +68,80 @@ const aw = () => advice.value?.sources.find((s) => s.provider === 'autoways')
 
     <div v-if="advice && !loading" class="ph-card col">
       <template v-if="advice.available">
-        <div class="ph-top">
+        <div class="col" style="gap: 2px">
+          <span class="ph-k">Fourchette estimée</span>
+          <span class="ph-range">{{ euros(advice.low) }} à {{ euros(advice.high) }}</span>
+          <span v-if="summary.length" class="ph-sum"><span v-for="(x, i) in summary" :key="x" class="nw">{{ i ? ' · ' : '' }}{{ x }}</span></span>
+        </div>
+        <div class="ph-acts">
+          <button type="button" class="btn btn-primary btn-sm" @click="emit('use', advice.suggested!)">Utiliser {{ euros(advice.suggested) }}</button>
+          <button type="button" class="btn-link" @click="details = true">Voir le détail</button>
+        </div>
+      </template>
+      <template v-else>
+        <p class="muted" style="margin: 0">Pas assez d'informations pour proposer une fourchette.</p>
+        <div class="ph-acts">
+          <button type="button" class="btn-link" @click="run(true)">Relancer</button>
+          <button v-if="advice.notes.length" type="button" class="btn-link" @click="details = true">Voir le détail</button>
+        </div>
+      </template>
+    </div>
+
+    <AppModal v-if="details && advice" title="D'où vient cette fourchette" wide @close="details = false">
+      <div class="col" style="gap: 18px">
+        <div v-if="advice.available" class="d-top">
           <div class="col" style="gap: 2px">
             <span class="ph-k">Fourchette estimée</span>
-            <span class="ph-range">{{ euros(advice.low) }} à {{ euros(advice.high) }}</span>
+            <span class="ph-range big">{{ euros(advice.low) }} à {{ euros(advice.high) }}</span>
           </div>
-          <button type="button" class="btn btn-primary" @click="emit('use', advice.suggested!)">Utiliser {{ euros(advice.suggested) }}</button>
+          <span class="muted" style="font-size: 13px">Prix conseillé : <strong style="color: var(--ink)">{{ euros(advice.suggested) }}</strong></span>
         </div>
-        <ul class="ph-src">
+
+        <ul class="d-src">
           <li v-if="web()">
             <span class="dot web" aria-hidden="true" />
-            Annonces sur le web : {{ euros(web()!.low) }} à {{ euros(web()!.high) }}<template v-if="web()!.confidence">, {{ CONFIDENCE[web()!.confidence!] }}</template>.
-            <button v-if="web()!.comparables?.length" type="button" class="btn-link" @click="showComps = !showComps">
-              {{ showComps ? 'Masquer' : web()!.comparables!.length === 1 ? "Voir l'annonce" : `Voir les ${web()!.comparables!.length} annonces` }}
-            </button>
+            <span class="col" style="gap: 2px">
+              <span class="d-src-t">Annonces sur le web</span>
+              <span class="muted">{{ euros(web()!.low) }} à {{ euros(web()!.high) }}<template v-if="web()!.confidence">, {{ CONFIDENCE[web()!.confidence!] }}</template></span>
+            </span>
           </li>
-          <li v-if="aw()"><span class="dot aw" aria-hidden="true" />{{ aw()!.label }} : {{ euros(aw()!.price) }}</li>
-        </ul>
-        <p v-if="web()?.comment" class="ph-comment">{{ web()!.comment }}</p>
-        <ul v-if="showComps" class="ph-comps">
-          <li v-for="c in web()!.comparables" :key="c.url">
-            <a :href="c.url" target="_blank" rel="noopener noreferrer">{{ c.title }}</a>
-            <span class="muted">{{ [c.site, c.year, c.mileage != null ? `${num(c.mileage)} km` : null].filter(Boolean).join(' · ') }}</span>
-            <strong>{{ euros(c.price) }}</strong>
+          <li v-if="aw()">
+            <span class="dot aw" aria-hidden="true" />
+            <span class="col" style="gap: 2px">
+              <span class="d-src-t">{{ aw()!.label }}</span>
+              <span class="muted">{{ euros(aw()!.price) }}</span>
+            </span>
           </li>
         </ul>
-      </template>
-      <p v-else class="muted" style="margin: 0">Pas assez d'informations pour proposer une fourchette.</p>
-      <p v-for="n in advice.notes" :key="n" class="muted ph-note">{{ n }}</p>
-      <div class="ph-foot">
-        <span class="muted">Estimation indicative, à confronter à votre connaissance du marché.</span>
-        <button type="button" class="btn-link" @click="run(true)">Relancer</button>
+
+        <p v-if="web()?.comment" class="d-comment">{{ web()!.comment }}</p>
+
+        <div v-if="web()?.comparables?.length" class="col" style="gap: 8px">
+          <span class="ph-k">Annonces comparables ({{ web()!.comparables!.length }})</span>
+          <table class="t d-table">
+            <thead>
+              <tr><th>Annonce</th><th>Site</th><th>Année</th><th class="r">Km</th><th class="r">Prix</th></tr>
+            </thead>
+            <tbody>
+              <tr v-for="c in web()!.comparables" :key="c.url">
+                <td class="d-title"><a :href="c.url" target="_blank" rel="noopener noreferrer">{{ c.title }}</a></td>
+                <td class="muted">{{ c.site }}</td>
+                <td>{{ c.year ?? '–' }}</td>
+                <td class="r">{{ c.mileage != null ? num(c.mileage) : '–' }}</td>
+                <td class="r" style="font-weight: 500">{{ euros(c.price) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p v-for="n in advice.notes" :key="n" class="muted ph-note">{{ n }}</p>
+        <span class="muted" style="font-size: 12px">Estimation indicative, à confronter à votre connaissance du marché.</span>
       </div>
-    </div>
+      <template #footer>
+        <button type="button" class="btn" @click="(details = false), run(true)">Relancer la recherche</button>
+        <button v-if="advice.available" type="button" class="btn btn-primary" @click="(details = false), emit('use', advice.suggested!)">Utiliser {{ euros(advice.suggested) }}</button>
+      </template>
+    </AppModal>
   </div>
 </template>
 
@@ -123,13 +172,6 @@ const aw = () => advice.value?.sources.find((s) => s.provider === 'autoways')
   flex-direction: column;
   align-items: stretch;
 }
-.ph-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
 .ph-k {
   font-size: 12px;
   color: var(--muted, #7A8090);
@@ -139,78 +181,94 @@ const aw = () => advice.value?.sources.find((s) => s.provider === 'autoways')
   font-weight: 500;
   color: var(--ink, #1C2230);
 }
-.ph-src {
+.ph-range.big {
+  font-size: 26px;
+}
+.ph-sum {
+  font-size: 13px;
+  color: var(--muted);
+}
+.nw {
+  white-space: nowrap;
+}
+.ph-acts {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.ph-acts .btn-link {
+  font-size: 14px;
+  min-height: 0;
+}
+.d-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.d-src {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
 }
-.ph-src li {
+.d-src li {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-start;
+  background: var(--ground);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 14px;
+}
+.d-src-t {
+  font-weight: 500;
 }
 .dot {
   width: 8px;
   height: 8px;
   border-radius: 4px;
   flex-shrink: 0;
+  margin-top: 6px;
 }
 .dot.web {
-  background: var(--accent, #2E5A88);
+  background: var(--accent);
 }
 .dot.aw {
   background: #8C76E6;
 }
-.ph-comment {
+.d-comment {
   margin: 0;
-  color: var(--ink-2, #3D414A);
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink-2);
 }
-.ph-comps {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  background: #fff;
+.d-table {
+  border: 1px solid var(--line);
   border-radius: 12px;
-  padding: 10px 12px;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
 }
-.ph-comps li {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 2px 12px;
+.d-table th,
+.d-table td {
+  padding: 9px 12px;
 }
-.ph-comps li a {
+.d-title {
+  max-width: 280px;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
 }
-.ph-comps li .muted {
-  grid-column: 1;
-  font-size: 12px;
-}
-.ph-comps li strong {
-  grid-column: 2;
-  grid-row: 1 / span 2;
-  align-self: center;
-  font-weight: 500;
+.r {
+  text-align: right;
 }
 .ph-note {
   margin: 0;
   font-size: 13px;
-}
-.ph-foot {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  font-size: 12px;
 }
 .ph-spin {
   width: 16px;
