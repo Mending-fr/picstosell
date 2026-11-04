@@ -115,8 +115,10 @@ export interface Vehicle {
   equipment: EquipmentGroup[]
   history_url: string | null
   status: VehicleStatus
+  photographer_id?: number | null
   days_in_stock: number
   leads_count: number
+  photos_count?: number
   cover_url: string | null
   published_at: string | null
   sold_at: string | null
@@ -131,6 +133,8 @@ export type VehicleInput = Partial<Omit<Vehicle, 'id' | 'status' | 'days_in_stoc
 
 export interface PlateLookup {
   found: boolean
+  plate?: string
+  message?: string
   data: {
     make: string | null
     model: string | null
@@ -144,7 +148,7 @@ export interface PlateLookup {
     doors: number | null
     seats: number | null
     vin: string | null
-  } | null
+  } | Record<string, never> | null
 }
 
 export interface Placement {
@@ -244,8 +248,8 @@ export interface AdminGarageRow extends GarageSummary {
   vehicles_month: number
   quota: number
   cost_usd: string
-  cost_per_vehicle_usd: string
-  redo_rate: number
+  cost_per_vehicle_usd: string | null
+  redo_rate: number | null
   ai_config_id: number | null
 }
 
@@ -260,8 +264,8 @@ export interface AdminOverview {
   garages_active: number
   vehicles_month: number
   cost_usd_month: string
-  cost_per_vehicle_usd: string
-  redo_rate: number
+  cost_per_vehicle_usd: string | null
+  redo_rate: number | null
   garages: AdminGarageRow[]
   errors: AdminError[]
 }
@@ -270,6 +274,7 @@ export interface ComparisonListItem {
   id: number
   name: string
   status: string
+  garage_id?: number
   created_at: string
   ai_config_ids: number[]
   vehicle_ids: number[]
@@ -281,20 +286,21 @@ export interface ComparisonSummaryRow {
   publishable: number
   redo: number
   unusable: number
-  publishable_pct: number
-  cost_per_vehicle_usd: string
+  publishable_pct: number | null
+  cost_per_vehicle_usd: string | null
   avg_duration_ms: number | null
 }
 
 export interface ComparisonCell {
   source_url: string | null
-  renders: Record<string, Render>
+  renders: Record<string, Render | null>
 }
 
 export interface Comparison {
   id: number
   name: string
   status: string
+  garage_id?: number
   configs: AiConfig[]
   vehicles: { id: number; plate: string; label: string }[]
   summary: ComparisonSummaryRow[]
