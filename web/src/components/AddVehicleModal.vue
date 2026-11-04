@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { isFullPlate, onPlateInput, onThousandsInput } from '../inputs'
 import PriceHelper from './PriceHelper.vue'
+import { carKey, priceJobs } from '../priceJobs'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import AppModal from './AppModal.vue'
 import PhotoPicker, { type PickedPhoto } from './PhotoPicker.vue'
 import { ApiError, get, post, errorMessage } from '../api'
 import { FUELS, GEARBOXES, fuelLabel, gearboxLabel, num, parseNum, plateNormalize } from '../labels'
-import { session, isManager, refreshSidebar } from '../session'
+import { session, isManager, refreshSidebar, toast } from '../session'
 import { stockChanged } from '../modals'
 import { uploadPhotos } from '../uploads'
 import type { PlateLookup, User, Vehicle } from '../types'
@@ -15,7 +16,7 @@ import type { PlateLookup, User, Vehicle } from '../types'
 const emit = defineEmits<{ close: [] }>()
 const router = useRouter()
 
-const STEPS = ['La plaque', 'La voiture', 'Prix et km', 'Les photos']
+const STEPS = ['La plaque', 'La voiture', 'Kilométrage', 'Prix', 'Les photos']
 const step = ref(1)
 
 // ---------- étape 1 : la plaque ----------
@@ -190,6 +191,13 @@ function nextFromPrice() {
   step.value = 4
 }
 
+// Le prix est facultatif ici : la recherche peut continuer pendant qu'on passe aux photos.
+function nextFromPriceStep() {
+  errors.value = {}
+  stepError.value = ''
+  step.value = 5
+}
+
 const who = computed(() => users.value.find((u) => u.id === photographer.value) ?? null)
 const phoneText = computed(() => {
   if (who.value && who.value.id !== session.user?.id) return `La voiture apparaît dans l'appli de ${who.value.name}.`
@@ -233,10 +241,19 @@ const priceCar = computed(() => ({
   power_hp: parseNum(form.power_hp),
   color: form.color || null,
 }))
+async function applyPrice(p: number) {
+  if (!created.value) return
+  try {
+    created.value = await post<Vehicle>(`/vehicles/${created.value.id}/price`, { price: p })
+    toast(`Prix enregistré : ${num(p)} €.`)
+  } catch (e) {
+    toast(errorMessage(e), 'error')
+  }
+}
 function usePrice(p: number) {
   form.price = num(p)
 }
-const STEP_OF: Record<string, number> = { plate: 1, mileage: 3, price: 3, history_url: 3, photographer_id: 4 }
+const STEP_OF: Record<string, number> = { plate: 1, mileage: 3, history_url: 3, price: 4, photographer_id: 5 }
 
 async function save() {
   errors.value = {}
@@ -248,7 +265,7 @@ async function save() {
     v = await post<Vehicle>('/vehicles', payload())
   } catch (e) {
     if (e instanceof ApiError && e.status === 422) {
-      let target = 4
+      let target = 5
       for (const [k, msgs] of Object.entries(e.errors)) {
         errors.value[k] = msgs[0]
         let s = STEP_OF[k] ?? 2
@@ -295,7 +312,7 @@ async function save() {
   created.value = v
   saving.value = false
   saveStep.value = ''
-  step.value = 5
+  step.value = 6
   stockChanged()
   refreshSidebar()
 }
@@ -334,7 +351,8 @@ function next() {
   if (step.value === 1) find()
   else if (step.value === 2) nextFromCar()
   else if (step.value === 3) nextFromPrice()
-  else if (step.value === 4) save()
+  else if (step.value === 4) nextFromPriceStep()
+  else if (step.value === 5) save()
 }
 
 function close() {
@@ -344,7 +362,7 @@ function close() {
 
 const nextLabel = computed(() => {
   if (step.value === 1) return 'Chercher la voiture'
-  if (step.value === 4) return 'Ajouter la voiture'
+  if (step.value === 5) return 'Ajouter la voiture'
   return 'Continuer'
 })
 
@@ -437,27 +455,16 @@ const doneTitle = computed(() => {
         </div>
       </template>
 
-      <!-- 3. Prix et km -->
+      <!-- 3. Le kilométrage -->
       <template v-else-if="step === 3">
-        <div class="grid2">
-          <label class="lbl big-lbl">
-            Kilométrage
-            <span class="unit-f" :class="{ bad: !!errors.mileage }">
-              <input :value="form.mileage" inputmode="numeric" placeholder="Ex. 19 300" @input="form.mileage = onThousandsInput($event)" :aria-invalid="!!errors.mileage" />
-              <span>km</span>
-            </span>
-            <span v-if="errors.mileage" class="err">{{ errors.mileage }}</span>
-          </label>
-          <label class="lbl big-lbl">
-            Prix de vente
-            <span class="unit-f" :class="{ bad: !!errors.price }">
-              <input :value="form.price" inputmode="numeric" placeholder="Ex. 31 900" @input="form.price = onThousandsInput($event)" :aria-invalid="!!errors.price" />
-              <span>€ TTC</span>
-            </span>
-            <span v-if="errors.price" class="err">{{ errors.price }}</span>
-          </label>
-        </div>
-        <PriceHelper :car="priceCar" @use="usePrice" />
+        <label class="lbl big-lbl" style="max-width: 320px">
+          Kilométrage au compteur
+          <span class="unit-f" :class="{ bad: !!errors.mileage }">
+            <input :value="form.mileage" inputmode="numeric" placeholder="Ex. 19 300" autofocus @input="form.mileage = onThousandsInput($event)" :aria-invalid="!!errors.mileage" />
+            <span>km</span>
+          </span>
+          <span v-if="errors.mileage" class="err">{{ errors.mileage }}</span>
+        </label>
         <button v-if="!showHistory" type="button" class="btn-link fix" @click="showHistory = true">+ Ajouter le lien HistoVec (facultatif)</button>
         <label v-else class="lbl">
           Lien HistoVec envoyé par l'ancien propriétaire (facultatif)
@@ -466,8 +473,22 @@ const doneTitle = computed(() => {
         </label>
       </template>
 
-      <!-- 4. Les photos -->
+      <!-- 4. Le prix -->
       <template v-else-if="step === 4">
+        <label class="lbl big-lbl" style="max-width: 320px">
+          Prix de vente
+          <span class="unit-f" :class="{ bad: !!errors.price }">
+            <input :value="form.price" inputmode="numeric" placeholder="Ex. 31 900" @input="form.price = onThousandsInput($event)" :aria-invalid="!!errors.price" />
+            <span>€ TTC</span>
+          </span>
+          <span v-if="errors.price" class="err">{{ errors.price }}</span>
+        </label>
+        <PriceHelper :car="priceCar" @use="usePrice" />
+        <span class="help">Le prix peut attendre : continuez, il se règle aussi depuis la fiche de la voiture.</span>
+      </template>
+
+      <!-- 5. Les photos -->
+      <template v-else-if="step === 5">
         <span class="q">Qui fait les photos ?</span>
         <div role="radiogroup" aria-label="Qui fait les photos" class="col" style="gap: 10px">
           <button type="button" role="radio" class="mode" :aria-checked="mode === 'phone'" :disabled="saving" @click="mode = 'phone'">
@@ -506,17 +527,20 @@ const doneTitle = computed(() => {
         <span class="done-t" role="status">{{ doneTitle }}</span>
         <span v-if="created" class="plate">{{ created.plate }}</span>
         <span class="done-x">{{ doneText }}</span>
+        <div v-if="created && !created.price && priceJobs.has(carKey(priceCar))" class="done-price">
+          <PriceHelper :car="priceCar" @use="applyPrice" />
+        </div>
       </div>
 
-      <p v-if="stepError && step < 5" class="alert alert-error" role="alert" style="margin: 0">{{ stepError }}</p>
+      <p v-if="stepError && step < 6" class="alert alert-error" role="alert" style="margin: 0">{{ stepError }}</p>
     </form>
 
     <template #footer>
-      <template v-if="step < 5">
+      <template v-if="step < 6">
         <button v-if="step > 1" type="button" class="btn btn-ghost btn-lg" :disabled="saving" @click="back">Retour</button>
         <span class="foot-note" role="status">
           <template v-if="saving">{{ mode === 'upload' && photos.length && sentCount ? `Envoi des photos (${sentCount} sur ${photos.length})…` : saveStep }}</template>
-          <template v-else>Étape {{ step }} sur 4</template>
+          <template v-else>Étape {{ step }} sur {{ STEPS.length }}</template>
         </span>
         <button type="submit" form="add-step" class="btn btn-primary btn-lg" :disabled="busy">
           <span v-if="busy" class="spinner" aria-hidden="true" />
@@ -731,6 +755,11 @@ const doneTitle = computed(() => {
   .found-t {
     font-size: 19px;
   }
+}
+.done-price {
+  width: 100%;
+  text-align: left;
+  margin-top: 8px;
 }
 .plate-in.odd {
   border-color: #E5A04B;

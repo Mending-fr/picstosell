@@ -1,46 +1,45 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { post, errorMessage } from '../api'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { euros, num } from '../labels'
-
-interface Comparable { title: string; url: string; price: number; year: number | null; mileage: number | null; site: string }
-interface Source {
-  provider: 'web' | 'autoways'
-  label: string
-  low?: number
-  high?: number
-  suggested?: number
-  price?: number
-  confidence?: 'low' | 'medium' | 'high'
-  comment?: string
-  comparables?: Comparable[]
-}
-interface Advice { available: boolean; low: number | null; high: number | null; suggested: number | null; sources: Source[]; notes: string[] }
+import { carKey, priceJobs, startPriceJob } from '../priceJobs'
 
 const props = defineProps<{ car: Record<string, unknown> }>()
 const emit = defineEmits<{ use: [price: number] }>()
 
-const loading = ref(false)
-const error = ref('')
-const advice = ref<Advice | null>(null)
+const localError = ref('')
 const showComps = ref(false)
+const key = computed(() => carKey(props.car))
+const job = computed(() => priceJobs.get(key.value) ?? null)
+const loading = computed(() => job.value?.status === 'running')
+const advice = computed(() => (job.value?.status === 'done' ? job.value.advice : null))
+const error = computed(() => localError.value || (job.value?.status === 'error' ? job.value.error : ''))
 
-const CONFIDENCE: Record<string, string> = { low: 'peu d\'annonces trouvées', medium: 'quelques annonces proches', high: 'beaucoup d\'annonces proches' }
+// Cet écran « regarde » la recherche : tant qu'il est affiché, pas de message en fin de recherche.
+let watched: string | null = null
+function watchKey(k: string | null) {
+  if (watched) {
+    const j = priceJobs.get(watched)
+    if (j) j.watchers = Math.max(0, j.watchers - 1)
+  }
+  watched = k
+  if (k) {
+    const j = priceJobs.get(k)
+    if (j) j.watchers++
+  }
+}
+watch([key, () => priceJobs.has(key.value)], () => watchKey(priceJobs.has(key.value) ? key.value : null), { immediate: true })
+onBeforeUnmount(() => watchKey(null))
 
-async function run() {
-  error.value = ''
+const CONFIDENCE: Record<string, string> = { low: "peu d'annonces trouvées", medium: 'quelques annonces proches', high: "beaucoup d'annonces proches" }
+
+function run(force = false) {
+  localError.value = ''
   if (!props.car.make || !props.car.model) {
-    error.value = 'Indiquez au moins la marque et le modèle.'
+    localError.value = 'Indiquez au moins la marque et le modèle.'
     return
   }
-  loading.value = true
-  try {
-    advice.value = await post<Advice>('/pricing/advice', props.car)
-  } catch (e) {
-    error.value = errorMessage(e)
-  } finally {
-    loading.value = false
-  }
+  if (force) priceJobs.delete(key.value)
+  startPriceJob(props.car)
 }
 
 const web = () => advice.value?.sources.find((s) => s.provider === 'web')
@@ -49,13 +48,13 @@ const aw = () => advice.value?.sources.find((s) => s.provider === 'autoways')
 
 <template>
   <div class="ph">
-    <button v-if="!advice && !loading" type="button" class="btn ph-btn" @click="run">
+    <button v-if="!advice && !loading" type="button" class="btn ph-btn" @click="run()">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
       M'aider à fixer le prix
     </button>
     <div v-if="loading" class="ph-card" role="status">
       <span class="ph-spin" aria-hidden="true" />
-      <span>Recherche d'annonces comparables… cela peut prendre une minute.</span>
+      <span>Recherche d'annonces comparables, environ une minute. Vous pouvez continuer, le résultat vous attendra.</span>
     </div>
     <p v-if="error" class="err">{{ error }}</p>
 
@@ -73,7 +72,7 @@ const aw = () => advice.value?.sources.find((s) => s.provider === 'autoways')
             <span class="dot web" aria-hidden="true" />
             Annonces sur le web : {{ euros(web()!.low) }} à {{ euros(web()!.high) }}<template v-if="web()!.confidence">, {{ CONFIDENCE[web()!.confidence!] }}</template>.
             <button v-if="web()!.comparables?.length" type="button" class="btn-link" @click="showComps = !showComps">
-              {{ showComps ? 'Masquer' : `Voir les ${web()!.comparables!.length} annonces` }}
+              {{ showComps ? 'Masquer' : web()!.comparables!.length === 1 ? "Voir l'annonce" : `Voir les ${web()!.comparables!.length} annonces` }}
             </button>
           </li>
           <li v-if="aw()"><span class="dot aw" aria-hidden="true" />{{ aw()!.label }} : {{ euros(aw()!.price) }}</li>
@@ -91,7 +90,7 @@ const aw = () => advice.value?.sources.find((s) => s.provider === 'autoways')
       <p v-for="n in advice.notes" :key="n" class="muted ph-note">{{ n }}</p>
       <div class="ph-foot">
         <span class="muted">Estimation indicative, à confronter à votre connaissance du marché.</span>
-        <button type="button" class="btn-link" @click="run">Relancer</button>
+        <button type="button" class="btn-link" @click="run(true)">Relancer</button>
       </div>
     </div>
   </div>
