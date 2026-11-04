@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Réglages</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F5F2}
+a{color:#1F4FD8}a:hover{color:#163A9E}
+.nl{display:flex;justify-content:space-between;align-items:center;color:#C9CDD4;text-decoration:none;border-radius:8px;padding:10px 12px;font-size:14px}
+.nl:hover{color:#fff;background:#22252C}
+.on{background:#2A2D35;color:#fff;font-weight:600}
+.badge{font-size:12px;font-weight:700;background:#B45309;color:#fff;border-radius:999px;padding:1px 8px}
+.f{font:inherit;font-size:15px;height:44px;border:1px solid #CFCFC8;border-radius:10px;padding:0 12px;background:#fff;color:#15171C;width:100%;box-sizing:border-box}
+.lbl{display:flex;flex-direction:column;gap:6px;font-size:13px;color:#3D414A;font-weight:600}
+.card{background:#fff;border:1px solid #E4E4DF;border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:16px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:14px 0;border-bottom:1px solid #EFEFEA;flex-wrap:wrap}
+.tg{display:flex;gap:12px;align-items:flex-start;font-size:15px;padding:12px 0;border-bottom:1px solid #EFEFEA}
+.tg input{width:22px;height:22px;margin:0;flex-shrink:0}
+</style>
+</helmet>
+<div style="font-family:'Inter Tight',system-ui,sans-serif;color:#15171C;background:#F5F5F2;min-height:1080px;display:flex;flex-wrap:wrap;align-items:stretch">
+
+<nav aria-label="Navigation principale" style="flex:1 1 220px;max-width:240px;background:#15171C;color:#fff;padding:24px 16px;box-sizing:border-box;display:flex;flex-direction:column;gap:4px">
+<dc-import name="Switcher" start="val" hint-size="100%,72px"></dc-import>
+<a href="Main.dc.html" class="nl">Accueil</a>
+<a href="Stock.dc.html" class="nl">Mon stock</a>
+<a href="Demandes.dc.html" class="nl">Demandes reçues<span class="badge">2</span></a>
+<a href="Showroom.dc.html" class="nl">Mon showroom</a>
+<a href="Site.dc.html" class="nl">Mon site</a>
+<a href="Reglages.dc.html" class="nl on" aria-current="page">Réglages</a>
+<a href="Mending.dc.html" class="nl" style="font-size:12px;margin-top:auto">Espace Mending</a>
+</nav>
+
+<main style="flex:999 1 560px;min-width:0;padding:32px 40px;box-sizing:border-box;display:flex;flex-direction:column;gap:20px;max-width:900px">
+<h1 style="margin:0;font-size:28px">Réglages</h1>
+
+<div role="tablist" aria-label="Rubriques" style="display:flex;gap:8px;flex-wrap:wrap">
+<sc-for list="{{tabs}}" as="t" hint-placeholder-count="3">
+<button type="button" role="tab" aria-selected="{{t.on}}" onClick="{{t.pick}}" style="font:inherit;font-size:15px;font-weight:600;height:44px;padding:0 16px;border-radius:999px;border:1px solid {{t.border}};background:{{t.bg}};color:{{t.fg}};cursor:pointer">{{t.label}}</button>
+</sc-for>
+</div>
+
+<sc-if value="{{isTeam}}" hint-placeholder-val="{{ true }}">
+<section class="card" aria-label="Équipe">
+<div style="display:flex;flex-direction:column">
+<div class="row"><div style="display:flex;flex-direction:column;gap:2px"><span style="font-weight:700">[GÉRANT]</span><span style="font-size:13px;color:#5B606B">[E-MAIL]</span></div><span style="font-size:13px;font-weight:600;background:#E4EBFF;color:#163A9E;border-radius:999px;padding:4px 10px">Gérant : tout faire</span></div>
+<div class="row"><div style="display:flex;flex-direction:column;gap:2px"><span style="font-weight:700">[EMPLOYÉ 1]</span><span style="font-size:13px;color:#5B606B">[E-MAIL]</span></div><span style="font-size:13px;font-weight:600;background:#EEEEEA;color:#3D414A;border-radius:999px;padding:4px 10px">Photos seulement</span></div>
+<div class="row" style="border-bottom:0"><div style="display:flex;flex-direction:column;gap:2px"><span style="font-weight:700">[EMPLOYÉ 2]</span><span style="font-size:13px;color:#5B606B">Invitation envoyée, pas encore acceptée</span></div><button type="button" style="font:inherit;font-size:14px;font-weight:600;background:none;border:0;color:#1F4FD8;height:44px;cursor:pointer">Renvoyer</button></div>
+</div>
+<div style="background:#F5F5F2;border-radius:12px;padding:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;align-items:end">
+<label class="lbl">Inviter quelqu'un (e-mail)<input class="f" type="email" placeholder="prenom@garage.fr"></label>
+<label class="lbl">Ce qu'il peut faire<select class="f"><option>Photos seulement</option><option>Gérant : tout faire</option></select></label>
+<button type="button" style="font:inherit;font-size:15px;font-weight:700;height:44px;border-radius:10px;border:0;background:#15171C;color:#fff;cursor:pointer">Envoyer l'invitation</button>
+</div>
+</section>
+</sc-if>
+
+<sc-if value="{{isPhotos}}" hint-placeholder-val="{{ false }}">
+<section class="card" aria-label="Photos">
+<label class="tg"><input type="checkbox" checked><span style="display:flex;flex-direction:column;gap:2px"><span style="font-weight:600">Cacher la plaque sur les photos mises en ligne</span><span style="font-size:13px;color:#5B606B">La plaque est toujours cachée avant le traitement des photos, même si cette case est décochée.</span></span></label>
+<label class="tg"><input type="checkbox" checked><span style="display:flex;flex-direction:column;gap:2px"><span style="font-weight:600">Ajouter le logo du garage sur les photos</span><span style="font-size:13px;color:#5B606B">En bas à droite, discret.</span></span></label>
+<label class="tg"><input type="checkbox"><span style="display:flex;flex-direction:column;gap:2px"><span style="font-weight:600">Vérifier chaque photo avant la mise en ligne</span><span style="font-size:13px;color:#5B606B">Recommandé tant que vous découvrez l'outil.</span></span></label>
+<label class="lbl" style="max-width:360px">Taille des photos téléchargées<select class="f"><option>Leboncoin et La Centrale (recommandé)</option><option>Grande taille</option></select></label>
+</section>
+</sc-if>
+
+<sc-if value="{{isPlan}}" hint-placeholder-val="{{ false }}">
+<section class="card" aria-label="Abonnement">
+<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap">
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:13px;color:#5B606B">Votre abonnement</span><span style="font-size:24px;font-weight:700">[PRIX] € HT par mois</span><span style="font-size:14px;color:#3D414A">Photos, site, hébergement et assistance compris</span></div>
+<span style="font-size:13px;font-weight:600;background:#E3F4EA;color:#0B5E39;border-radius:999px;padding:4px 10px">Actif</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;justify-content:space-between;font-size:15px"><span>Voitures ce mois-ci</span><span style="font-weight:700">21 sur [PLAFOND]</span></div>
+<div style="height:8px;background:#EEEEEA;border-radius:4px"><div style="width:52%;height:8px;background:#1F4FD8;border-radius:4px"></div></div>
+</div>
+<div style="display:flex;flex-direction:column">
+<span style="font-size:13px;color:#5B606B;font-weight:600;padding-bottom:6px">En plus ce mois-ci</span>
+<div class="row"><span>Historiques complets commandés : 2</span><span style="font-weight:600">[PRIX] € HT</span></div>
+</div>
+<div style="display:flex;flex-direction:column">
+<span style="font-size:13px;color:#5B606B;font-weight:600;padding-bottom:6px">Factures</span>
+<div class="row"><span>Octobre 2026</span><a href="#" style="font-weight:600;padding:8px 0">Télécharger</a></div>
+<div class="row"><span>Septembre 2026</span><a href="#" style="font-weight:600;padding:8px 0">Télécharger</a></div>
+</div>
+</section>
+</sc-if>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1080}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { tab: 'team' };
+  }
+  renderVals() {
+    const cur = this.state.tab;
+    const list = [
+      { id: 'team', label: 'Équipe' },
+      { id: 'photos', label: 'Photos' },
+      { id: 'plan', label: 'Abonnement et factures' }
+    ];
+    return {
+      isTeam: cur === 'team',
+      isPhotos: cur === 'photos',
+      isPlan: cur === 'plan',
+      tabs: list.map((t) => {
+        const on = t.id === cur;
+        return { ...t, on: on ? 'true' : 'false', bg: on ? '#15171C' : '#fff', fg: on ? '#fff' : '#15171C', border: on ? '#15171C' : '#DCDCD6', pick: () => this.setState({ tab: t.id }) };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

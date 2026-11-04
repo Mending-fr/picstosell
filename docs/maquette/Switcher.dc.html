@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Changer de garage</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="font-family:'Inter Tight',system-ui,sans-serif;color:#fff;background:{{bg}};display:flex;flex-direction:column;gap:8px;padding-bottom:16px">
+
+<button type="button" aria-expanded="{{expanded}}" aria-haspopup="listbox" onClick="{{toggle}}" style="font:inherit;color:#fff;background:{{btnBg}};border:1px solid #2F333C;border-radius:10px;padding:8px 10px;min-height:56px;display:flex;align-items:center;gap:10px;text-align:left;cursor:pointer;width:100%">
+<span style="width:32px;height:32px;border-radius:8px;background:{{cur.color}};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0">{{cur.ini}}</span>
+<span style="display:flex;flex-direction:column;flex:1;min-width:0"><span style="font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{cur.name}}</span><span style="font-size:12px;color:#A9AEB8">{{cur.sub}}</span></span>
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A9AEB8" stroke-width="2" aria-hidden="true"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"></path></svg>
+</button>
+
+<sc-if value="{{open}}" hint-placeholder-val="{{ false }}">
+<div style="background:#22252C;border:1px solid #2F333C;border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:4px">
+<label style="display:flex;align-items:center;gap:8px;background:#15171C;border:1px solid #3A3D44;border-radius:8px;padding:0 10px;height:40px">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A9AEB8" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg>
+<span style="position:absolute;left:-9999px">Chercher un garage</span>
+<input type="search" value="{{q}}" onInput="{{setQ}}" placeholder="Chercher un garage" style="border:0;outline:0;flex:1;min-width:0;background:transparent;color:#fff;font:inherit;font-size:14px">
+<span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#A9AEB8;border:1px solid #3A3D44;border-radius:4px;padding:0 5px">⌘K</span>
+</label>
+<div role="listbox" aria-label="Dossiers clients" style="display:flex;flex-direction:column;gap:2px;padding-top:4px">
+<sc-for list="{{items}}" as="g" hint-placeholder-count="5">
+<button type="button" role="option" aria-selected="{{g.on}}" onClick="{{g.pick}}" style="font:inherit;color:#fff;background:{{g.bg}};border:0;border-radius:8px;padding:8px;min-height:44px;display:flex;align-items:center;gap:10px;text-align:left;cursor:pointer;width:100%">
+<span style="width:26px;height:26px;border-radius:6px;background:{{g.color}};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;flex-shrink:0">{{g.ini}}</span>
+<span style="display:flex;flex-direction:column;flex:1;min-width:0"><span style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{g.name}}</span><span style="font-size:11px;color:#A9AEB8">{{g.sub}}</span></span>
+<sc-if value="{{g.hasTodo}}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:700;background:#B45309;color:#fff;border-radius:999px;padding:1px 7px">{{g.todo}}</span></sc-if>
+</button>
+</sc-for>
+<sc-if value="{{none}}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;color:#A9AEB8;padding:8px">Aucun garage trouvé</span></sc-if>
+</div>
+<div style="border-top:1px solid #2F333C;margin-top:4px;padding-top:6px;display:flex;flex-direction:column">
+<a href="Mending.dc.html" style="color:#C9CDD4;text-decoration:none;font-size:13px;padding:10px 8px">+ Ajouter un garage</a>
+</div>
+</div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"start":{"editor":"enum","options":["val","all"],"default":"val"},"bg":{"editor":null,"default":"#15171C"},"$preview":{"width":240,"height":520}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { open: false, cur: props.start || 'val', q: '' };
+  }
+  renderVals() {
+    const list = [
+      { id: 'all', ini: 'M', name: 'Tous les garages', sub: 'Espace Mending', color: '#3B4A6B', todo: 0 },
+      { id: 'val', ini: 'VA', name: 'Valognes Automobiles', sub: 'Pilote', color: '#1F4FD8', todo: 5 },
+      { id: 'g2', ini: 'G2', name: '[GARAGE 2]', sub: 'En installation', color: '#0F7A4A', todo: 2 },
+      { id: 'g3', ini: 'G3', name: '[GARAGE 3]', sub: 'Démo prévue', color: '#A16207', todo: 0 },
+      { id: 'g4', ini: 'G4', name: '[GARAGE 4]', sub: 'Démo prévue', color: '#7C3AED', todo: 0 }
+    ];
+    const s = this.state;
+    const q = s.q.trim().toLowerCase();
+    const cur = list.find((g) => g.id === s.cur) || list[1];
+    const items = list
+      .filter((g) => !q || (g.name + ' ' + g.sub).toLowerCase().includes(q))
+      .map((g) => ({
+        ...g,
+        hasTodo: g.todo > 0,
+        on: g.id === s.cur ? 'true' : 'false',
+        bg: g.id === s.cur ? '#2F333C' : 'transparent',
+        pick: () => this.setState({ cur: g.id, open: false, q: '' })
+      }));
+    return {
+      bg: this.props.bg ?? '#15171C',
+      btnBg: s.open ? '#22252C' : 'transparent',
+      cur,
+      open: s.open,
+      expanded: s.open ? 'true' : 'false',
+      toggle: () => this.setState({ open: !s.open, q: '' }),
+      q: s.q,
+      setQ: (e) => this.setState({ q: e.target.value }),
+      items,
+      none: items.length === 0
+    };
+  }
+}
+</script>
+</body>
+</html>

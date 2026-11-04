@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Mon site</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F5F2}
+a{color:#1F4FD8}a:hover{color:#163A9E}
+.nl{display:flex;justify-content:space-between;align-items:center;color:#C9CDD4;text-decoration:none;border-radius:8px;padding:10px 12px;font-size:14px}
+.nl:hover{color:#fff;background:#22252C}
+.on{background:#2A2D35;color:#fff;font-weight:600}
+.badge{font-size:12px;font-weight:700;background:#B45309;color:#fff;border-radius:999px;padding:1px 8px}
+.f{font:inherit;font-size:15px;height:44px;border:1px solid #CFCFC8;border-radius:10px;padding:0 12px;background:#fff;color:#15171C;width:100%;box-sizing:border-box}
+.lbl{display:flex;flex-direction:column;gap:6px;font-size:13px;color:#3D414A;font-weight:600}
+.card{background:#fff;border:1px solid #E4E4DF;border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:16px}
+.stat{background:#fff;border:1px solid #E4E4DF;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:4px}
+</style>
+</helmet>
+<div style="font-family:'Inter Tight',system-ui,sans-serif;color:#15171C;background:#F5F5F2;min-height:1080px;display:flex;flex-wrap:wrap;align-items:stretch">
+
+<nav aria-label="Navigation principale" style="flex:1 1 220px;max-width:240px;background:#15171C;color:#fff;padding:24px 16px;box-sizing:border-box;display:flex;flex-direction:column;gap:4px">
+<dc-import name="Switcher" start="val" hint-size="100%,72px"></dc-import>
+<a href="Main.dc.html" class="nl">Accueil</a>
+<a href="Stock.dc.html" class="nl">Mon stock</a>
+<a href="Demandes.dc.html" class="nl">Demandes reçues<span class="badge">2</span></a>
+<a href="Showroom.dc.html" class="nl">Mon showroom</a>
+<a href="Site.dc.html" class="nl on" aria-current="page">Mon site</a>
+<a href="Reglages.dc.html" class="nl">Réglages</a>
+<a href="Mending.dc.html" class="nl" style="font-size:12px;margin-top:auto">Espace Mending</a>
+</nav>
+
+<main style="flex:999 1 560px;min-width:0;padding:32px 40px;box-sizing:border-box;display:flex;flex-direction:column;gap:20px;max-width:1200px">
+<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between">
+<div style="display:flex;flex-direction:column;gap:4px">
+<h1 style="margin:0;font-size:28px">Mon site</h1>
+<p style="margin:0;color:#5B606B;font-size:15px">[ADRESSE DU SITE] · en ligne, 31 voitures affichées</p>
+</div>
+<a href="Vitrine.dc.html" style="text-decoration:none;font-size:15px;font-weight:700;height:44px;padding:0 18px;border-radius:10px;background:#15171C;color:#fff;display:flex;align-items:center">Voir mon site</a>
+</div>
+
+<section aria-labelledby="stats" style="display:flex;flex-direction:column;gap:10px">
+<h2 id="stats" style="margin:0;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#5B606B;font-weight:600">Les 30 derniers jours</h2>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">
+<div class="stat"><span style="font-size:13px;color:#5B606B">Visiteurs</span><span style="font-size:26px;font-weight:700">[N]</span></div>
+<div class="stat"><span style="font-size:13px;color:#5B606B">Demandes reçues</span><span style="font-size:26px;font-weight:700">[N]</span></div>
+<div class="stat"><span style="font-size:13px;color:#5B606B">Clics sur « Appeler »</span><span style="font-size:26px;font-weight:700">[N]</span></div>
+<div class="stat"><span style="font-size:13px;color:#5B606B">Voiture la plus vue</span><span style="font-size:17px;font-weight:700">[MODÈLE]</span></div>
+</div>
+</section>
+
+<div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+<div style="flex:999 1 480px;min-width:0;display:flex;flex-direction:column;gap:20px">
+<section class="card" aria-labelledby="look">
+<h2 id="look" style="margin:0;font-size:18px">L'apparence</h2>
+<div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+<div style="width:120px;height:60px;border:1px dashed #CFCFC8;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:13px;color:#5B606B">[LOGO]</div>
+<button type="button" style="font:inherit;font-size:14px;font-weight:600;height:44px;padding:0 16px;border-radius:10px;border:1px solid #DCDCD6;background:#fff;color:#15171C;cursor:pointer">Changer le logo</button>
+</div>
+<div role="radiogroup" aria-label="Couleur principale" style="display:flex;flex-direction:column;gap:8px">
+<span style="font-size:13px;color:#3D414A;font-weight:600">Couleur principale</span>
+<div style="display:flex;gap:10px;flex-wrap:wrap">
+<sc-for list="{{colors}}" as="c" hint-placeholder-count="5">
+<button type="button" role="radio" aria-checked="{{c.on}}" aria-label="{{c.name}}" onClick="{{c.pick}}" style="width:44px;height:44px;border-radius:22px;background:{{c.hex}};border:3px solid {{c.ring}};box-shadow:0 0 0 2px #fff inset;cursor:pointer"></button>
+</sc-for>
+</div>
+</div>
+</section>
+
+<section class="card" aria-labelledby="coord">
+<h2 id="coord" style="margin:0;font-size:18px">Vos coordonnées sur le site</h2>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+<label class="lbl">Téléphone<input class="f" value="[TÉLÉPHONE]"></label>
+<label class="lbl">E-mail qui reçoit les demandes<input class="f" value="[E-MAIL]"></label>
+<label class="lbl">Adresse<input class="f" value="[ADRESSE]"></label>
+<label class="lbl">Horaires<input class="f" value="[HORAIRES]"></label>
+</div>
+<label class="lbl">Présentation du garage<textarea class="f" rows="3" style="height:auto;padding:10px 12px;line-height:1.45">[PRÉSENTATION DU GARAGE EN 2 OU 3 PHRASES]</textarea></label>
+</section>
+
+<section class="card" aria-labelledby="pub">
+<h2 id="pub" style="margin:0;font-size:18px">Leboncoin et La Centrale</h2>
+<p style="margin:0;font-size:15px;color:#3D414A;line-height:1.5">Pour l'instant, chaque annonce prête vous donne ses photos et un texte à copier. La mise en ligne automatique viendra plus tard.</p>
+</section>
+
+<div style="display:flex;justify-content:flex-end"><button type="button" style="font:inherit;font-size:15px;font-weight:700;height:48px;padding:0 22px;border-radius:10px;border:0;background:#15171C;color:#fff;cursor:pointer">Enregistrer</button></div>
+</div>
+
+<aside aria-label="Aperçu" style="flex:1 1 300px;min-width:0;display:flex;flex-direction:column;gap:8px">
+<span style="font-size:13px;color:#5B606B;font-weight:600">Aperçu</span>
+<div style="background:#fff;border:1px solid #E4E4DF;border-radius:14px;overflow:hidden">
+<div style="padding:12px 14px;border-bottom:1px solid #EFEFEA;display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="font-weight:700;font-size:14px;color:{{brand}}">[LOGO] Valognes Automobiles</span><span style="font-size:11px;font-weight:700;color:#fff;background:{{brand}};border-radius:6px;padding:5px 8px">Appeler</span></div>
+<div style="padding:14px;display:flex;flex-direction:column;gap:10px">
+<span style="font-size:17px;font-weight:700">Nos occasions</span>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">
+<div style="border:1px solid #EFEFEA;border-radius:8px;overflow:hidden"><div style="aspect-ratio:4/3;background:#DCE3F2"></div><div style="padding:6px 8px;display:flex;flex-direction:column;gap:2px"><span style="font-size:11px;font-weight:700">Renault Clio V</span><span style="font-size:12px;font-weight:700;color:{{brand}}">13 490 €</span></div></div>
+<div style="border:1px solid #EFEFEA;border-radius:8px;overflow:hidden"><div style="aspect-ratio:4/3;background:#DCE3F2"></div><div style="padding:6px 8px;display:flex;flex-direction:column;gap:2px"><span style="font-size:11px;font-weight:700">Dacia Duster</span><span style="font-size:12px;font-weight:700;color:{{brand}}">16 900 €</span></div></div>
+</div>
+</div>
+</div>
+</aside>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1080}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { color: '#B8222A' };
+  }
+  renderVals() {
+    const list = [
+      { name: 'Rouge', hex: '#B8222A' },
+      { name: 'Jaune foncé', hex: '#A16207' },
+      { name: 'Bleu', hex: '#1F4FD8' },
+      { name: 'Vert', hex: '#0F7A4A' },
+      { name: 'Noir', hex: '#15171C' }
+    ];
+    const cur = this.state.color;
+    return {
+      brand: cur,
+      colors: list.map((c) => ({ ...c, on: c.hex === cur ? 'true' : 'false', ring: c.hex === cur ? '#15171C' : 'transparent', pick: () => this.setState({ color: c.hex }) }))
+    };
+  }
+}
+</script>
+</body>
+</html>

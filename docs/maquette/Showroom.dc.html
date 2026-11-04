@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Mon showroom</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F5F2}
+a{color:#1F4FD8}a:hover{color:#163A9E}
+.nl{display:flex;justify-content:space-between;align-items:center;color:#C9CDD4;text-decoration:none;border-radius:8px;padding:10px 12px;font-size:14px}
+.nl:hover{color:#fff;background:#22252C}
+.on{background:#2A2D35;color:#fff;font-weight:600}
+.badge{font-size:12px;font-weight:700;background:#B45309;color:#fff;border-radius:999px;padding:1px 8px}
+.lbl{display:flex;flex-direction:column;gap:8px;font-size:13px;color:#3D414A;font-weight:600}
+</style>
+</helmet>
+<div style="font-family:'Inter Tight',system-ui,sans-serif;color:#15171C;background:#F5F5F2;min-height:1080px;display:flex;flex-wrap:wrap;align-items:stretch">
+
+<nav aria-label="Navigation principale" style="flex:1 1 220px;max-width:240px;background:#15171C;color:#fff;padding:24px 16px;box-sizing:border-box;display:flex;flex-direction:column;gap:4px">
+<dc-import name="Switcher" start="val" hint-size="100%,72px"></dc-import>
+<a href="Main.dc.html" class="nl">Accueil</a>
+<a href="Stock.dc.html" class="nl">Mon stock</a>
+<a href="Demandes.dc.html" class="nl">Demandes reçues<span class="badge">2</span></a>
+<a href="Showroom.dc.html" class="nl on" aria-current="page">Mon showroom</a>
+<a href="Site.dc.html" class="nl">Mon site</a>
+<a href="Reglages.dc.html" class="nl">Réglages</a>
+<a href="Mending.dc.html" class="nl" style="font-size:12px;margin-top:auto">Espace Mending</a>
+</nav>
+
+<main style="flex:999 1 560px;min-width:0;padding:32px 40px;box-sizing:border-box;display:flex;flex-direction:column;gap:20px;max-width:1200px">
+<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between">
+<div style="display:flex;flex-direction:column;gap:4px">
+<h1 style="margin:0;font-size:28px">Mon showroom</h1>
+<p style="margin:0;color:#5B606B;font-size:15px">Les photos de votre showroom, une par angle. Chaque voiture photographiée sur le parking y est placée.</p>
+</div>
+<button type="button" style="font:inherit;font-size:15px;font-weight:700;height:44px;padding:0 18px;border-radius:10px;border:0;background:#1F4FD8;color:#fff;cursor:pointer">Ajouter un angle</button>
+</div>
+
+<div role="tablist" aria-label="Angles" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px">
+<sc-for list="{{vues}}" as="v" hint-placeholder-count="6">
+<button type="button" role="tab" aria-selected="{{v.on}}" onClick="{{v.pick}}" style="font:inherit;text-align:left;border:2px solid {{v.ring}};border-radius:10px;background:#fff;padding:6px;display:flex;flex-direction:column;gap:6px;cursor:pointer;color:#15171C">
+<div style="aspect-ratio:4/3;border-radius:6px;background:#D9D4CA"></div>
+<span style="font-size:13px;font-weight:600">{{v.label}}</span>
+<span style="font-size:12px;color:{{v.stColor}}">{{v.state}}</span>
+</button>
+</sc-for>
+</div>
+
+<div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+<section aria-label="Réglage de l'angle" style="flex:999 1 520px;min-width:0;background:#fff;border:1px solid #E4E4DF;border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+<span style="font-size:17px;font-weight:700">{{cur.label}}</span>
+<span style="font-size:13px;color:#5B606B">Placez la silhouette là où la voiture doit apparaître</span>
+</div>
+<div style="aspect-ratio:16/10;border-radius:10px;background:linear-gradient(#D9D4CA 0 62%,#BDB6A8 62% 100%);position:relative;display:flex;align-items:flex-end;justify-content:center;padding-bottom:{{bottom}}%;box-sizing:border-box;overflow:hidden">
+<span style="position:absolute;top:12px;left:12px;font-size:13px;color:#3D414A;background:rgba(255,255,255,.8);border-radius:6px;padding:3px 8px">[Photo du showroom]</span>
+<svg width="{{w}}%" viewBox="0 0 330 190" fill="rgba(31,79,216,.10)" stroke="#1F4FD8" stroke-width="3" stroke-dasharray="10 8" role="img" aria-label="Emplacement de la voiture">
+<path d="M20 140 L40 95 Q60 70 110 62 L200 58 Q245 60 270 85 L305 100 Q318 110 315 140 Z"></path>
+<circle cx="85" cy="145" r="26"></circle><circle cx="255" cy="145" r="26"></circle>
+</svg>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">
+<label class="lbl">Taille de la voiture<input type="range" min="40" max="90" value="{{w}}" onInput="{{setW}}" style="width:100%;height:28px"></label>
+<label class="lbl">Distance au bas de la photo<input type="range" min="2" max="30" value="{{bottom}}" onInput="{{setBottom}}" style="width:100%;height:28px"></label>
+</div>
+<div style="display:flex;gap:10px;flex-wrap:wrap">
+<button type="button" style="font:inherit;font-size:14px;font-weight:600;height:44px;padding:0 16px;border-radius:10px;border:1px solid #DCDCD6;background:#fff;color:#15171C;cursor:pointer">Remplacer la photo</button>
+<button type="button" style="font:inherit;font-size:14px;font-weight:600;height:44px;padding:0 16px;border-radius:10px;border:1px solid #DCDCD6;background:#fff;color:#15171C;cursor:pointer">Essayer avec une voiture du stock</button>
+<button type="button" style="font:inherit;font-size:14px;font-weight:700;height:44px;padding:0 18px;border-radius:10px;border:0;background:#15171C;color:#fff;cursor:pointer;margin-left:auto">Enregistrer</button>
+</div>
+</section>
+
+<aside aria-label="Aperçu sur le téléphone" style="flex:1 1 240px;min-width:0;display:flex;flex-direction:column;gap:10px;align-items:center">
+<span style="font-size:13px;color:#5B606B;font-weight:600;align-self:flex-start">Ce que verra la personne sur le parking</span>
+<div style="width:220px;height:420px;border-radius:28px;background:#0E0F12;padding:12px;box-sizing:border-box;display:flex;flex-direction:column;gap:8px">
+<span style="color:#fff;font-size:12px;text-align:center;padding-top:8px">{{cur.label}}</span>
+<div style="flex:1;border-radius:14px;background:repeating-linear-gradient(135deg,#2A2C31 0 12px,#24262B 12px 24px);display:flex;align-items:center;justify-content:center">
+<svg width="170" viewBox="0 0 330 190" fill="none" stroke="#7FA2FF" stroke-width="5" stroke-dasharray="12 10" aria-hidden="true"><path d="M20 140 L40 95 Q60 70 110 62 L200 58 Q245 60 270 85 L305 100 Q318 110 315 140 Z"></path><circle cx="85" cy="145" r="26"></circle><circle cx="255" cy="145" r="26"></circle></svg>
+</div>
+<div style="height:52px;display:flex;align-items:center;justify-content:center"><span style="width:44px;height:44px;border-radius:22px;border:3px solid #fff;display:block"></span></div>
+</div>
+</aside>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1080}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { sel: 1, w: 66, bottom: 12 };
+  }
+  renderVals() {
+    const defs = [
+      { label: 'De face', ok: true },
+      { label: 'Avant gauche', ok: true },
+      { label: 'Avant droit', ok: true },
+      { label: 'Côté gauche', ok: true },
+      { label: 'Côté droit', ok: false },
+      { label: 'Arrière', ok: true }
+    ];
+    const sel = this.state.sel;
+    const vues = defs.map((v, i) => ({
+      ...v,
+      state: v.ok ? 'Réglé' : 'À régler',
+      stColor: v.ok ? '#0B5E39' : '#B45309',
+      on: i === sel ? 'true' : 'false',
+      ring: i === sel ? '#1F4FD8' : '#E4E4DF',
+      pick: () => this.setState({ sel: i })
+    }));
+    return {
+      vues,
+      cur: defs[sel],
+      w: this.state.w,
+      bottom: this.state.bottom,
+      setW: (e) => this.setState({ w: Number(e.target.value) }),
+      setBottom: (e) => this.setState({ bottom: Number(e.target.value) })
+    };
+  }
+}
+</script>
+</body>
+</html>

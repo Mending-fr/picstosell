@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Espace Mending</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F5F2}
+a{color:#1F4FD8}a:hover{color:#163A9E}
+.nl{display:flex;justify-content:space-between;align-items:center;color:#C9CDD4;text-decoration:none;border-radius:8px;padding:10px 12px;font-size:14px}
+.nl:hover{color:#fff;background:#22252C}
+.on{background:#2A2D35;color:#fff;font-weight:600}
+.stat{background:#fff;border:1px solid #E4E4DF;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:4px}
+.th{font-size:12px;color:#5B606B;font-weight:600;text-transform:uppercase;letter-spacing:.06em;text-align:left;padding:12px 14px;border-bottom:1px solid #E4E4DF;white-space:nowrap}
+.td{padding:12px 14px;border-bottom:1px solid #EFEFEA;font-size:14px;white-space:nowrap}
+.f{font:inherit;font-size:14px;height:40px;border:1px solid #CFCFC8;border-radius:8px;padding:0 10px;background:#fff;color:#15171C}
+.mono{font-family:'JetBrains Mono',monospace;font-size:12px}
+</style>
+</helmet>
+<div style="font-family:'Inter Tight',system-ui,sans-serif;color:#15171C;background:#F5F5F2;min-height:1080px;display:flex;flex-wrap:wrap;align-items:stretch">
+
+<nav aria-label="Navigation Mending" style="flex:1 1 220px;max-width:240px;background:#0B1A3D;color:#fff;padding:24px 16px;box-sizing:border-box;display:flex;flex-direction:column;gap:4px">
+<dc-import name="Switcher" start="all" bg="#0B1A3D" hint-size="100%,72px"></dc-import>
+<a href="Mending.dc.html" class="nl on" aria-current="page">Vue d'ensemble</a>
+<a href="Mending.dc.html" class="nl">Garages</a>
+<a href="Comparatif.dc.html" class="nl">Comparer les modèles</a>
+<a href="Mending.dc.html" class="nl">Coûts des photos</a>
+<a href="Mending.dc.html" class="nl">Erreurs</a>
+<a href="Main.dc.html" class="nl" style="margin-top:auto;font-size:13px">‹ Retour à l'espace garage</a>
+</nav>
+
+<main style="flex:999 1 560px;min-width:0;padding:32px 40px;box-sizing:border-box;display:flex;flex-direction:column;gap:22px;max-width:1200px">
+<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between">
+<h1 style="margin:0;font-size:28px">Vue d'ensemble, novembre</h1>
+<button type="button" style="font:inherit;font-size:15px;font-weight:700;height:44px;padding:0 18px;border-radius:10px;border:0;background:#1F4FD8;color:#fff;cursor:pointer">Ajouter un garage</button>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px">
+<div class="stat"><span style="font-size:13px;color:#5B606B">Garages actifs</span><span style="font-size:26px;font-weight:700">1</span><span style="font-size:12px;color:#5B606B">pilote</span></div>
+<div class="stat"><span style="font-size:13px;color:#5B606B">Voitures traitées</span><span style="font-size:26px;font-weight:700">21</span></div>
+<div class="stat"><span style="font-size:13px;color:#5B606B">Coût des photos IA</span><span style="font-size:26px;font-weight:700">8,40 €</span></div>
+<div class="stat"><span style="font-size:13px;color:#5B606B">Par voiture</span><span style="font-size:26px;font-weight:700;color:#0B5E39">0,40 €</span><span style="font-size:12px;color:#5B606B">objectif : moins de 0,50 €</span></div>
+<div class="stat"><span style="font-size:13px;color:#5B606B">Photos refaites</span><span style="font-size:26px;font-weight:700">18 %</span><span style="font-size:12px;color:#5B606B">objectif : moins de 20 %</span></div>
+</div>
+
+<section aria-labelledby="gar" style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><h2 id="gar" style="margin:0;font-size:18px">Garages</h2><a href="Comparatif.dc.html" style="font-size:14px;font-weight:600;padding:8px 0">Comparer les modèles avant de choisir</a></div>
+<div style="background:#fff;border:1px solid #E4E4DF;border-radius:14px;overflow-x:auto">
+<table style="border-collapse:collapse;width:100%;min-width:900px">
+<thead><tr><th class="th">Garage</th><th class="th">Voitures</th><th class="th">Coût IA</th><th class="th">Par voiture</th><th class="th">Refaites</th><th class="th">Modèle photo</th><th class="th">Méthode</th></tr></thead>
+<tbody>
+<tr>
+<td class="td"><div style="display:flex;flex-direction:column;gap:2px"><span style="font-weight:700">Valognes Automobiles</span><span style="font-size:12px;color:#5B606B">Pilote gratuit, fin le [DATE]</span></div></td>
+<td class="td">21 / [PLAFOND]</td>
+<td class="td">8,40 €</td>
+<td class="td">0,40 €</td>
+<td class="td">18 %</td>
+<td class="td"><label><span style="position:absolute;left:-9999px">Modèle photo</span><select class="f"><option>GPT Image 2.5</option><option>Nano Banana 2.1</option><option>Seedream 5.0 Lite</option></select></label></td>
+<td class="td"><label><span style="position:absolute;left:-9999px">Méthode</span><select class="f"><option>B : détourage puis décor</option><option>A : génération complète</option></select></label></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section aria-labelledby="err" style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><h2 id="err" style="margin:0;font-size:18px">Dernières erreurs</h2><a href="Mending.dc.html" style="font-size:14px;font-weight:600;padding:8px 0">Tout le journal</a></div>
+<div style="background:#fff;border:1px solid #E4E4DF;border-radius:14px;overflow-x:auto">
+<sc-for list="{{errs}}" as="e" hint-placeholder-count="3">
+<div style="display:flex;gap:16px;align-items:center;padding:12px 16px;border-bottom:1px solid #EFEFEA;min-width:720px">
+<span class="mono" style="color:#5B606B;width:96px">{{e.when}}</span>
+<span style="font-size:12px;font-weight:700;color:{{e.color}};background:{{e.bg}};border-radius:6px;padding:3px 8px;width:72px;text-align:center">{{e.level}}</span>
+<span style="font-size:14px;flex:1">{{e.msg}}</span>
+<span class="mono" style="color:#3D414A">{{e.ref}}</span>
+<button type="button" style="font:inherit;font-size:13px;font-weight:600;height:36px;padding:0 12px;border-radius:8px;border:1px solid #DCDCD6;background:#fff;color:#15171C;cursor:pointer">{{e.cta}}</button>
+</div>
+</sc-for>
+</div>
+</section>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1080}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const E = { color: '#9A1C1C', bg: '#FDECEC' };
+    const W = { color: '#8A4307', bg: '#FFF1DE' };
+    return {
+      errs: [
+        { when: '04/11 10:42', level: 'Alerte', msg: 'Le fournisseur photo n\'a pas répondu, relance automatique réussie', ref: 'DS-331-PC · côté droit', cta: 'Voir', ...W },
+        { when: '03/11 17:05', level: 'Erreur', msg: 'Plaque introuvable dans la base véhicules', ref: 'WW-418-QX', cta: 'Voir', ...E },
+        { when: '03/11 09:12', level: 'Alerte', msg: 'Photo floue refusée trois fois de suite sur le téléphone', ref: 'BV-114-JN · arrière', cta: 'Voir', ...W }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

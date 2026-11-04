@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Comparer les modèles</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F5F2}
+a{color:#1F4FD8}a:hover{color:#163A9E}
+.nl{display:flex;justify-content:space-between;align-items:center;color:#C9CDD4;text-decoration:none;border-radius:8px;padding:10px 12px;font-size:14px}
+.nl:hover{color:#fff;background:#22252C}
+.on{background:#2A2D35;color:#fff;font-weight:600}
+.card{background:#fff;border:1px solid #E4E4DF;border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:14px}
+.f{font:inherit;font-size:14px;height:40px;border:1px solid #CFCFC8;border-radius:8px;padding:0 10px;background:#fff;color:#15171C;width:100%;box-sizing:border-box}
+.lbl{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#3D414A;font-weight:600}
+.th{font-size:12px;color:#5B606B;font-weight:600;text-transform:uppercase;letter-spacing:.06em;text-align:left;padding:10px 12px;border-bottom:1px solid #E4E4DF;white-space:nowrap}
+.td{padding:12px;border-bottom:1px solid #EFEFEA;font-size:14px;white-space:nowrap}
+.mono{font-family:'JetBrains Mono',monospace;font-size:12px}
+</style>
+</helmet>
+<div style="font-family:'Inter Tight',system-ui,sans-serif;color:#15171C;background:#F5F5F2;min-height:1400px;display:flex;flex-wrap:wrap;align-items:stretch">
+
+<nav aria-label="Navigation Mending" style="flex:1 1 220px;max-width:240px;background:#0B1A3D;color:#fff;padding:24px 16px;box-sizing:border-box;display:flex;flex-direction:column;gap:4px">
+<dc-import name="Switcher" start="all" bg="#0B1A3D" hint-size="100%,72px"></dc-import>
+<a href="Mending.dc.html" class="nl">Vue d'ensemble</a>
+<a href="Mending.dc.html" class="nl">Garages</a>
+<a href="Comparatif.dc.html" class="nl on" aria-current="page">Comparer les modèles</a>
+<a href="Mending.dc.html" class="nl">Coûts des photos</a>
+<a href="Mending.dc.html" class="nl">Erreurs</a>
+<a href="Main.dc.html" class="nl" style="margin-top:auto;font-size:13px">‹ Retour à l'espace garage</a>
+</nav>
+
+<main style="flex:999 1 560px;min-width:0;padding:32px 40px;box-sizing:border-box;display:flex;flex-direction:column;gap:22px;max-width:1240px">
+<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between">
+<div style="display:flex;flex-direction:column;gap:4px">
+<h1 style="margin:0;font-size:28px">Comparer les modèles</h1>
+<p style="margin:0;color:#5B606B;font-size:15px">Mêmes photos, plusieurs modèles, notées côte à côte. Test « Pilote Valognes, 10 voitures ».</p>
+</div>
+<div style="display:flex;gap:10px;flex-wrap:wrap">
+<button type="button" style="font:inherit;font-size:14px;font-weight:600;height:44px;padding:0 16px;border-radius:10px;border:1px solid #DCDCD6;background:#fff;color:#15171C;cursor:pointer">Exporter les résultats</button>
+<button type="button" style="font:inherit;font-size:15px;font-weight:700;height:44px;padding:0 18px;border-radius:10px;border:0;background:#1F4FD8;color:#fff;cursor:pointer">Nouveau test</button>
+</div>
+</div>
+
+<section aria-labelledby="score" class="card">
+<div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px"><h2 id="score" style="margin:0;font-size:18px">Résultats</h2><span style="font-size:13px;color:#5B606B">{{rated}} photos notées sur {{total}}</span></div>
+<div style="overflow-x:auto">
+<table style="border-collapse:collapse;width:100%;min-width:720px">
+<thead><tr><th class="th">Modèle</th><th class="th">Réglage</th><th class="th">Publiables</th><th class="th">À refaire</th><th class="th">Inutilisables</th><th class="th">Coût par voiture</th><th class="th">Temps moyen</th></tr></thead>
+<tbody>
+<sc-for list="{{summary}}" as="s" hint-placeholder-count="3">
+<tr>
+<td class="td"><div style="display:flex;gap:10px;align-items:center"><span style="width:12px;height:12px;border-radius:3px;background:{{s.color}}"></span><span style="font-weight:700">{{s.name}}</span><sc-if value="{{s.best}}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:700;background:#E3F4EA;color:#0B5E39;border-radius:999px;padding:2px 8px">En tête</span></sc-if></div></td>
+<td class="td" style="color:#3D414A">{{s.setting}}</td>
+<td class="td"><div style="display:flex;gap:10px;align-items:center"><div style="width:90px;height:8px;background:#EEEEEA;border-radius:4px"><div style="width:{{s.pubPct}}%;height:8px;background:#0F7A4A;border-radius:4px"></div></div><span style="font-weight:700">{{s.pubPct}} %</span></div></td>
+<td class="td">{{s.redo}}</td>
+<td class="td">{{s.bad}}</td>
+<td class="td" style="font-weight:600">{{s.costCar}}</td>
+<td class="td">{{s.time}}</td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+<span style="font-size:13px;color:#5B606B">Objectif production : 80 % de photos publiables et moins de 0,50 € par voiture, refaites comprises. Prix indicatifs à revérifier chez chaque fournisseur.</span>
+</section>
+
+<section aria-labelledby="models" style="display:flex;flex-direction:column;gap:12px">
+<h2 id="models" style="margin:0;font-size:18px">Modèles comparés</h2>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px">
+<sc-for list="{{models}}" as="m" hint-placeholder-count="3">
+<div style="background:#fff;border:2px solid {{m.border}};border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px;opacity:{{m.opacity}}">
+<label style="display:flex;gap:10px;align-items:center;font-size:16px;font-weight:700;cursor:pointer"><input type="checkbox" checked="{{m.enabled}}" onChange="{{m.toggle}}" style="width:20px;height:20px;margin:0"><span style="width:12px;height:12px;border-radius:3px;background:{{m.color}}"></span>{{m.name}}</label>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
+<label class="lbl">Méthode<select class="f"><option>{{m.method}}</option><option>{{m.otherMethod}}</option></select></label>
+<label class="lbl">Qualité<select class="f"><option>{{m.quality}}</option><option>{{m.otherQuality}}</option></select></label>
+</div>
+<label class="lbl">Consigne envoyée au modèle<textarea class="f" rows="3" style="height:auto;padding:8px 10px;line-height:1.4;font-size:13px">{{m.prompt}}</textarea></label>
+<div style="display:flex;justify-content:space-between;font-size:13px;color:#3D414A"><span>Prix indicatif</span><span class="mono" style="font-size:13px">{{m.price}} / image</span></div>
+</div>
+</sc-for>
+</div>
+<div style="background:#fff;border:1px solid #E4E4DF;border-radius:14px;padding:16px;display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between">
+<span style="font-size:14px">10 voitures × 6 vues × {{enabledCount}} modèles = <strong>{{photoCount}} photos</strong>, environ <strong>{{estCost}}</strong></span>
+<button type="button" style="font:inherit;font-size:15px;font-weight:700;height:44px;padding:0 18px;border-radius:10px;border:0;background:#15171C;color:#fff;cursor:pointer">Relancer le test avec ces réglages</button>
+</div>
+</section>
+
+<section aria-labelledby="grid" style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+<h2 id="grid" style="margin:0;font-size:18px">Noter les photos</h2>
+<div role="tablist" aria-label="Voiture" style="display:flex;gap:8px;flex-wrap:wrap">
+<sc-for list="{{cars}}" as="c" hint-placeholder-count="4">
+<button type="button" role="tab" aria-selected="{{c.on}}" onClick="{{c.pick}}" style="font:inherit;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;height:40px;padding:0 12px;border-radius:8px;border:1.5px solid {{c.border}};background:{{c.bg}};color:{{c.fg}};cursor:pointer">{{c.plate}}</button>
+</sc-for>
+</div>
+</div>
+<div style="overflow-x:auto">
+<div style="display:flex;flex-direction:column;gap:12px;min-width:760px">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="3">
+<div style="display:grid;grid-template-columns:120px repeat({{colCount}},minmax(0,1fr));gap:10px;align-items:start">
+<div style="display:flex;flex-direction:column;gap:6px;padding-top:4px"><span style="font-size:14px;font-weight:700">{{r.vue}}</span><div style="aspect-ratio:4/3;border-radius:6px;background:repeating-linear-gradient(135deg,#E2E2DC 0 8px,#EAEAE5 8px 16px)"></div><span style="font-size:11px;color:#5B606B">Photo parking</span></div>
+<sc-for list="{{r.cells}}" as="x" hint-placeholder-count="3">
+<div style="background:#fff;border:1px solid #E4E4DF;border-top:4px solid {{x.color}};border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:8px">
+<div style="aspect-ratio:4/3;border-radius:6px;background:#DCE3F2;display:flex;align-items:center;justify-content:center;font-size:12px;color:#2A3A66;text-align:center;padding:6px">[Rendu {{x.name}}]</div>
+<div style="display:flex;justify-content:space-between;font-size:12px;color:#5B606B"><span>{{x.time}}</span><span class="mono">{{x.cost}}</span></div>
+<div role="radiogroup" aria-label="Note" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px">
+<button type="button" role="radio" aria-checked="{{x.isPub}}" onClick="{{x.setPub}}" style="font:inherit;font-size:12px;font-weight:600;height:36px;border-radius:6px;border:1px solid {{x.pubBorder}};background:{{x.pubBg}};color:{{x.pubFg}};cursor:pointer">Publiable</button>
+<button type="button" role="radio" aria-checked="{{x.isRedo}}" onClick="{{x.setRedo}}" style="font:inherit;font-size:12px;font-weight:600;height:36px;border-radius:6px;border:1px solid {{x.redoBorder}};background:{{x.redoBg}};color:{{x.redoFg}};cursor:pointer">À refaire</button>
+<button type="button" role="radio" aria-checked="{{x.isBad}}" onClick="{{x.setBad}}" style="font:inherit;font-size:12px;font-weight:600;height:36px;border-radius:6px;border:1px solid {{x.badBorder}};background:{{x.badBg}};color:{{x.badFg}};cursor:pointer">Inutilisable</button>
+</div>
+</div>
+</sc-for>
+</div>
+</sc-for>
+</div>
+</div>
+<span style="font-size:13px;color:#5B606B">À regarder en priorité : jantes, logos, reflets et vitres. Une photo où la voiture a changé est inutilisable.</span>
+</section>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1400}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      enabled: { nb: true, gpt: true, sd: true },
+      car: 0,
+      notes: {
+        '0-0-nb': 'pub', '0-0-gpt': 'pub', '0-0-sd': 'redo',
+        '0-1-nb': 'pub', '0-1-gpt': 'redo', '0-1-sd': 'pub',
+        '0-2-nb': 'bad', '0-2-gpt': 'pub', '0-2-sd': 'pub',
+        '1-0-nb': 'pub', '1-0-gpt': 'pub', '1-0-sd': 'bad',
+        '1-1-nb': 'pub', '1-1-gpt': 'pub'
+      }
+    };
+  }
+  renderVals() {
+    const M = [
+      { id: 'nb', name: 'Nano Banana 2.1', color: '#1F4FD8', method: 'A : génération complète', otherMethod: 'B : détourage puis décor', quality: '2K', otherQuality: '1K', unit: 0.05, price: '0,050 $', time: 14,
+        prompt: 'Place la voiture de la photo 2 dans le showroom de la photo 1, même angle. Ne modifie ni les jantes, ni les logos, ni la carrosserie.' },
+      { id: 'gpt', name: 'GPT Image 2.5', color: '#0F7A4A', method: 'B : détourage puis décor', otherMethod: 'A : génération complète', quality: '2K', otherQuality: '1K', unit: 0.014, price: '≈ 0,014 $', time: 22,
+        prompt: 'Ajoute l\'ombre au sol et les reflets du showroom autour de la voiture détourée. Ne touche pas à la zone masquée.' },
+      { id: 'sd', name: 'Seedream 5.0 Lite', color: '#A16207', method: 'A : génération complète', otherMethod: 'B : détourage puis décor', quality: '2K', otherQuality: '1K', unit: 0.035, price: '0,035 $', time: 11,
+        prompt: 'Intègre la voiture dans le showroom, perspective et lumière cohérentes. Voiture identique à la référence.' }
+    ];
+    const s = this.state;
+    const en = M.filter((m) => s.enabled[m.id]);
+    const vues = ['Avant gauche', 'Côté droit', 'Arrière'];
+    const plates = ['GH-512-KL', 'DS-331-PC', 'FT-208-AZ', 'GA-702-CE'];
+    const setNote = (k, v) => this.setState({ notes: { ...s.notes, [k]: v } });
+    const fmt = (n, d) => n.toFixed(d).replace('.', ',');
+    const btn = (on, fg, bg) => on ? { b: fg, bg: bg, fg: fg } : { b: '#DCDCD6', bg: '#fff', fg: '#3D414A' };
+
+    const rows = vues.map((v, vi) => ({
+      vue: v,
+      cells: en.map((m) => {
+        const k = s.car + '-' + vi + '-' + m.id;
+        const n = s.notes[k];
+        const p = btn(n === 'pub', '#0B5E39', '#E3F4EA');
+        const r = btn(n === 'redo', '#8A4307', '#FFF1DE');
+        const b = btn(n === 'bad', '#9A1C1C', '#FDECEC');
+        return {
+          name: m.name, color: m.color,
+          time: (m.time + vi * 2) + ' s', cost: fmt(m.unit, 3) + ' $',
+          isPub: n === 'pub' ? 'true' : 'false', isRedo: n === 'redo' ? 'true' : 'false', isBad: n === 'bad' ? 'true' : 'false',
+          pubBorder: p.b, pubBg: p.bg, pubFg: p.fg,
+          redoBorder: r.b, redoBg: r.bg, redoFg: r.fg,
+          badBorder: b.b, badBg: b.bg, badFg: b.fg,
+          setPub: () => setNote(k, 'pub'), setRedo: () => setNote(k, 'redo'), setBad: () => setNote(k, 'bad')
+        };
+      })
+    }));
+
+    let rated = 0;
+    const summary = en.map((m) => {
+      const vals = Object.keys(s.notes).filter((k) => k.endsWith('-' + m.id)).map((k) => s.notes[k]);
+      const pub = vals.filter((x) => x === 'pub').length;
+      const redo = vals.filter((x) => x === 'redo').length;
+      const bad = vals.filter((x) => x === 'bad').length;
+      rated += vals.length;
+      const pubPct = vals.length ? Math.round((pub / vals.length) * 100) : 0;
+      const retry = vals.length ? (redo + bad) / vals.length : 0;
+      const costCar = m.unit * 6 * (1 + retry);
+      return { name: m.name, color: m.color, setting: m.method.split(' :')[0] + ' · ' + m.quality, pub, redo, bad, pubPct, costCar: '≈ ' + fmt(costCar, 2) + ' $', time: m.time + ' s' };
+    });
+    const top = summary.reduce((a, b) => (b.pubPct > (a ? a.pubPct : -1) ? b : a), null);
+    summary.forEach((x) => { x.best = !!top && x === top && x.pubPct > 0; });
+
+    const est = en.reduce((t, m) => t + m.unit * 60, 0);
+    return {
+      summary,
+      rated,
+      total: en.length * 60,
+      enabledCount: en.length,
+      photoCount: en.length * 60,
+      estCost: fmt(est, 2) + ' $',
+      colCount: Math.max(en.length, 1),
+      rows,
+      models: M.map((m) => ({
+        ...m,
+        enabled: !!s.enabled[m.id],
+        border: s.enabled[m.id] ? m.color : '#E4E4DF',
+        opacity: s.enabled[m.id] ? '1' : '.6',
+        toggle: () => this.setState({ enabled: { ...s.enabled, [m.id]: !s.enabled[m.id] } })
+      })),
+      cars: plates.map((p, i) => ({
+        plate: p,
+        on: i === s.car ? 'true' : 'false',
+        border: '#15171C',
+        bg: i === s.car ? '#15171C' : '#fff',
+        fg: i === s.car ? '#fff' : '#15171C',
+        pick: () => this.setState({ car: i })
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>

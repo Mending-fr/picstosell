@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Ajouter une voiture</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F5F2}
+a{color:#1F4FD8}a:hover{color:#163A9E}
+.nl{display:flex;justify-content:space-between;align-items:center;color:#C9CDD4;text-decoration:none;border-radius:8px;padding:10px 12px;font-size:14px}
+.nl:hover{color:#fff;background:#22252C}
+.on{background:#2A2D35;color:#fff;font-weight:600}
+.badge{font-size:12px;font-weight:700;background:#B45309;color:#fff;border-radius:999px;padding:1px 8px}
+.f{font:inherit;font-size:15px;height:44px;border:1px solid #CFCFC8;border-radius:10px;padding:0 12px;background:#fff;color:#15171C;width:100%;box-sizing:border-box}
+.lbl{display:flex;flex-direction:column;gap:6px;font-size:13px;color:#3D414A;font-weight:600}
+.card{background:#fff;border:1px solid #E4E4DF;border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:16px}
+.step{width:28px;height:28px;border-radius:14px;background:#15171C;color:#fff;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+</style>
+</helmet>
+<div style="font-family:'Inter Tight',system-ui,sans-serif;color:#15171C;background:#F5F5F2;min-height:1080px;display:flex;flex-wrap:wrap;align-items:stretch">
+
+<nav aria-label="Navigation principale" style="flex:1 1 220px;max-width:240px;background:#15171C;color:#fff;padding:24px 16px;box-sizing:border-box;display:flex;flex-direction:column;gap:4px">
+<dc-import name="Switcher" start="val" hint-size="100%,72px"></dc-import>
+<a href="Main.dc.html" class="nl">Accueil</a>
+<a href="Stock.dc.html" class="nl on">Mon stock</a>
+<a href="Demandes.dc.html" class="nl">Demandes reçues<span class="badge">2</span></a>
+<a href="Showroom.dc.html" class="nl">Mon showroom</a>
+<a href="Site.dc.html" class="nl">Mon site</a>
+<a href="Reglages.dc.html" class="nl">Réglages</a>
+<a href="Mending.dc.html" class="nl" style="font-size:12px;margin-top:auto">Espace Mending</a>
+</nav>
+
+<main style="flex:999 1 560px;min-width:0;padding:32px 40px;box-sizing:border-box;display:flex;flex-direction:column;gap:20px;max-width:900px">
+<div style="display:flex;flex-direction:column;gap:6px">
+<a href="Stock.dc.html" style="font-size:14px;font-weight:600;padding:6px 0">‹ Mon stock</a>
+<h1 style="margin:0;font-size:28px">Ajouter une voiture</h1>
+</div>
+
+<section class="card" aria-labelledby="s1">
+<div style="display:flex;gap:12px;align-items:center"><span class="step">1</span><h2 id="s1" style="margin:0;font-size:18px">La plaque</h2></div>
+<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+<label class="lbl" style="flex:1 1 240px">Plaque ou numéro de série<input class="f" value="GA-702-CE" style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:18px;letter-spacing:.06em;height:52px"></label>
+<button type="button" onClick="{{find}}" style="font:inherit;font-size:15px;font-weight:700;height:52px;padding:0 22px;border-radius:10px;border:0;background:#1F4FD8;color:#fff;cursor:pointer">Chercher la voiture</button>
+</div>
+<sc-if value="{{notFound}}" hint-placeholder-val="{{ true }}">
+<span style="font-size:14px;color:#5B606B">On retrouve la marque, le modèle, la version et les caractéristiques. Vous n'avez plus qu'à ajouter le kilométrage et le prix.</span>
+</sc-if>
+</section>
+
+<sc-if value="{{found}}" hint-placeholder-val="{{ false }}">
+<section class="card" aria-labelledby="s2">
+<div style="display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+<div style="display:flex;gap:12px;align-items:center"><span class="step">2</span><h2 id="s2" style="margin:0;font-size:18px">La voiture</h2></div>
+<span style="font-size:13px;font-weight:600;color:#0B5E39;background:#E3F4EA;border-radius:999px;padding:4px 10px">Trouvée : vérifiez et complétez</span>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+<label class="lbl">Marque<input class="f" value="Renault"></label>
+<label class="lbl">Modèle<input class="f" value="Austral"></label>
+<label class="lbl">Version<input class="f" value="E-Tech 200 Techno"></label>
+<label class="lbl">1re mise en circulation<input class="f" value="04/2023"></label>
+<label class="lbl">Carburant<select class="f"><option>Hybride</option><option>Essence</option><option>Diesel</option><option>Électrique</option></select></label>
+<label class="lbl">Boîte<select class="f"><option>Automatique</option><option>Manuelle</option></select></label>
+<label class="lbl">Puissance<input class="f" value="200 ch"></label>
+<label class="lbl">Couleur<input class="f" value="Gris schiste"></label>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;background:#FFF7ED;border:1px solid #F3D9B5;border-radius:12px;padding:14px">
+<label class="lbl">Kilométrage<input class="f" placeholder="Ex. 19 300" inputmode="numeric"></label>
+<label class="lbl">Prix de vente TTC<input class="f" placeholder="Ex. 31 900 €" inputmode="numeric"></label>
+</div>
+<label class="lbl">Lien HistoVec envoyé par l'ancien propriétaire (facultatif)<input class="f" placeholder="Collez le lien ici"></label>
+</section>
+
+<section class="card" aria-labelledby="s3">
+<div style="display:flex;gap:12px;align-items:center"><span class="step">3</span><h2 id="s3" style="margin:0;font-size:18px">Les photos</h2></div>
+<div role="radiogroup" aria-label="Qui prend les photos" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px">
+<sc-for list="{{modes}}" as="m" hint-placeholder-count="2">
+<button type="button" role="radio" aria-checked="{{m.on}}" onClick="{{m.pick}}" style="font:inherit;text-align:left;border:2px solid {{m.border}};background:{{m.bg}};border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:6px;cursor:pointer;color:#15171C">
+<span style="font-size:16px;font-weight:700">{{m.title}}</span>
+<span style="font-size:14px;color:#3D414A">{{m.text}}</span>
+</button>
+</sc-for>
+</div>
+<sc-if value="{{byPhone}}" hint-placeholder-val="{{ true }}">
+<label class="lbl" style="max-width:360px">Qui s'en occupe ?<select class="f"><option>[EMPLOYÉ 1]</option><option>[EMPLOYÉ 2]</option><option>Moi</option></select></label>
+</sc-if>
+<sc-if value="{{byUpload}}" hint-placeholder-val="{{ false }}">
+<div style="border:2px dashed #CFCFC8;border-radius:12px;padding:28px;text-align:center;color:#3D414A;font-size:15px">Glissez les photos ici ou <button type="button" style="font:inherit;font-weight:700;color:#1F4FD8;background:none;border:0;text-decoration:underline;cursor:pointer;padding:0">choisissez-les</button></div>
+</sc-if>
+</section>
+
+<div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end">
+<a href="Stock.dc.html" style="text-decoration:none;font-size:15px;font-weight:600;height:48px;padding:0 18px;border-radius:10px;border:1px solid #DCDCD6;background:#fff;color:#15171C;display:flex;align-items:center">Annuler</a>
+<a href="Stock.dc.html" style="text-decoration:none;font-size:15px;font-weight:700;height:48px;padding:0 22px;border-radius:10px;background:#15171C;color:#fff;display:flex;align-items:center">{{saveLabel}}</a>
+</div>
+</sc-if>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1080}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { found: false, mode: 'phone' };
+  }
+  renderVals() {
+    const cur = this.state.mode;
+    const defs = [
+      { id: 'phone', title: 'Sur le parking, au téléphone', text: 'La voiture apparaît dans l\'appli de la personne choisie, avec les photos à faire.' },
+      { id: 'upload', title: 'J\'ai déjà les photos', text: 'Importez-les depuis l\'ordinateur. On les place quand même dans votre showroom.' }
+    ];
+    return {
+      found: this.state.found,
+      notFound: !this.state.found,
+      find: () => this.setState({ found: true }),
+      byPhone: cur === 'phone',
+      byUpload: cur === 'upload',
+      saveLabel: cur === 'phone' ? 'Enregistrer et demander les photos' : 'Enregistrer et préparer les photos',
+      modes: defs.map((m) => {
+        const on = m.id === cur;
+        return { ...m, on: on ? 'true' : 'false', border: on ? '#1F4FD8' : '#E4E4DF', bg: on ? '#F3F6FF' : '#fff', pick: () => this.setState({ mode: m.id }) };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

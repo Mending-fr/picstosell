@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Demandes reçues</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F5F2}
+a{color:#1F4FD8}a:hover{color:#163A9E}
+.nl{display:flex;justify-content:space-between;align-items:center;color:#C9CDD4;text-decoration:none;border-radius:8px;padding:10px 12px;font-size:14px}
+.nl:hover{color:#fff;background:#22252C}
+.on{background:#2A2D35;color:#fff;font-weight:600}
+.badge{font-size:12px;font-weight:700;background:#B45309;color:#fff;border-radius:999px;padding:1px 8px}
+</style>
+</helmet>
+<div style="font-family:'Inter Tight',system-ui,sans-serif;color:#15171C;background:#F5F5F2;min-height:1080px;display:flex;flex-wrap:wrap;align-items:stretch">
+
+<nav aria-label="Navigation principale" style="flex:1 1 220px;max-width:240px;background:#15171C;color:#fff;padding:24px 16px;box-sizing:border-box;display:flex;flex-direction:column;gap:4px">
+<dc-import name="Switcher" start="val" hint-size="100%,72px"></dc-import>
+<a href="Main.dc.html" class="nl">Accueil</a>
+<a href="Stock.dc.html" class="nl">Mon stock</a>
+<a href="Demandes.dc.html" class="nl on" aria-current="page">Demandes reçues<span class="badge">{{newCount}}</span></a>
+<a href="Showroom.dc.html" class="nl">Mon showroom</a>
+<a href="Site.dc.html" class="nl">Mon site</a>
+<a href="Reglages.dc.html" class="nl">Réglages</a>
+<a href="Mending.dc.html" class="nl" style="font-size:12px;margin-top:auto">Espace Mending</a>
+</nav>
+
+<main style="flex:999 1 560px;min-width:0;padding:32px 40px;box-sizing:border-box;display:flex;flex-direction:column;gap:20px;max-width:1200px">
+<div style="display:flex;flex-direction:column;gap:4px">
+<h1 style="margin:0;font-size:28px">Demandes reçues</h1>
+<p style="margin:0;color:#5B606B;font-size:15px">Les messages laissés sur votre site, du plus récent au plus ancien.</p>
+</div>
+
+<div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start">
+<div role="listbox" aria-label="Demandes" style="flex:1 1 320px;min-width:0;background:#fff;border:1px solid #E4E4DF;border-radius:14px;overflow:hidden">
+<sc-for list="{{leads}}" as="l" hint-placeholder-count="5">
+<button type="button" role="option" aria-selected="{{l.on}}" onClick="{{l.pick}}" style="font:inherit;width:100%;text-align:left;border:0;border-bottom:1px solid #EFEFEA;border-left:4px solid {{l.edge}};background:{{l.bg}};padding:14px 16px;display:flex;flex-direction:column;gap:4px;cursor:pointer;color:#15171C">
+<div style="display:flex;justify-content:space-between;gap:8px"><span style="font-size:15px;font-weight:{{l.weight}}">{{l.name}}</span><span style="font-size:12px;color:#5B606B;white-space:nowrap">{{l.when}}</span></div>
+<span style="font-size:13px;color:#3D414A">{{l.subject}}</span>
+<span style="font-size:12px;font-weight:600;color:{{l.stColor}}">{{l.state}}</span>
+</button>
+</sc-for>
+</div>
+
+<section aria-label="Détail de la demande" style="flex:2 1 420px;min-width:0;background:#fff;border:1px solid #E4E4DF;border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:18px">
+<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+<div style="display:flex;flex-direction:column;gap:4px"><h2 style="margin:0;font-size:22px">{{cur.name}}</h2><span style="font-size:14px;color:#5B606B">{{cur.when}} · depuis {{cur.source}}</span></div>
+<span style="font-size:13px;font-weight:600;color:{{cur.stColor}};background:#F5F5F2;border-radius:999px;padding:4px 10px">{{cur.state}}</span>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">
+<div style="background:#F5F5F2;border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;color:#5B606B">Téléphone</span><span style="font-size:16px;font-weight:700">{{cur.phone}}</span></div>
+<div style="background:#F5F5F2;border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;color:#5B606B">Voiture</span><a href="Validation.dc.html" style="font-size:16px;font-weight:700">{{cur.car}}</a></div>
+<div style="background:#F5F5F2;border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;color:#5B606B">Reprise</span><span style="font-size:16px;font-weight:700">{{cur.reprise}}</span></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;color:#5B606B;font-weight:600">Son message</span><p style="margin:0;font-size:16px;line-height:1.55;background:#FAFAF8;border:1px solid #EFEFEA;border-radius:10px;padding:14px">{{cur.message}}</p></div>
+<label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#3D414A;font-weight:600">Note pour l'équipe<textarea rows="2" placeholder="Ex. rappelé, essai prévu samedi 10 h" style="font:inherit;font-size:15px;border:1px solid #CFCFC8;border-radius:10px;padding:10px 12px;resize:vertical"></textarea></label>
+<div style="display:flex;gap:10px;flex-wrap:wrap">
+<a href="#" style="text-decoration:none;font-size:15px;font-weight:700;height:48px;padding:0 20px;border-radius:10px;background:#1F4FD8;color:#fff;display:flex;align-items:center">Appeler {{cur.phone}}</a>
+<button type="button" onClick="{{markDone}}" style="font:inherit;font-size:15px;font-weight:600;height:48px;padding:0 18px;border-radius:10px;border:1px solid #DCDCD6;background:#fff;color:#15171C;cursor:pointer">Marquer comme traitée</button>
+</div>
+</section>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1080}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { sel: 0, done: { 2: true, 3: true } };
+  }
+  renderVals() {
+    const data = [
+      { name: '[CLIENT 1]', when: 'Il y a 25 min', source: 'la fiche de la Zoe', subject: 'Renault Zoe · essai samedi', phone: '06 [NUMÉRO]', car: 'Renault Zoe, 14 900 €', reprise: 'Non', message: 'Bonjour, la Zoe est-elle toujours disponible ? Je pourrais passer l\'essayer samedi matin.' },
+      { name: '[CLIENT 2]', when: 'Il y a 2 h', source: 'le formulaire de contact', subject: 'Reprise d\'une Clio IV', phone: '07 [NUMÉRO]', car: 'Pas encore choisie', reprise: 'Clio IV, 112 000 km', message: 'Je cherche un SUV autour de 20 000 € et je voudrais faire reprendre ma Clio IV.' },
+      { name: '[CLIENT 3]', when: 'Hier', source: 'la fiche de la Mégane', subject: 'Renault Mégane IV Estate', phone: '06 [NUMÉRO]', car: 'Renault Mégane IV Estate', reprise: 'Non', message: 'Est-ce qu\'elle a encore sa garantie ?' },
+      { name: '[CLIENT 4]', when: 'Lundi', source: 'la fiche du Duster', subject: 'Dacia Duster · financement', phone: '06 [NUMÉRO]', car: 'Dacia Duster, 16 900 €', reprise: 'Non', message: 'Proposez-vous un financement sur 48 mois ?' }
+    ];
+    const sel = this.state.sel;
+    const done = this.state.done;
+    const decorate = (l, i) => {
+      const isDone = !!done[i];
+      return { ...l, state: isDone ? 'Traitée' : 'Nouvelle', stColor: isDone ? '#5B606B' : '#B45309', weight: isDone ? '500' : '700' };
+    };
+    const leads = data.map((l, i) => ({
+      ...decorate(l, i),
+      on: i === sel ? 'true' : 'false',
+      bg: i === sel ? '#F3F6FF' : '#fff',
+      edge: i === sel ? '#1F4FD8' : 'transparent',
+      pick: () => this.setState({ sel: i })
+    }));
+    return {
+      leads,
+      cur: decorate(data[sel], sel),
+      newCount: data.filter((_, i) => !done[i]).length,
+      markDone: () => this.setState({ done: { ...done, [sel]: true } })
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Mon stock</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F5F2}
+a{color:#1F4FD8}a:hover{color:#163A9E}
+.plate{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;letter-spacing:.04em;border:1.5px solid #15171C;border-radius:4px;padding:2px 8px;background:#fff;color:#15171C;white-space:nowrap}
+.nl{display:flex;justify-content:space-between;align-items:center;color:#C9CDD4;text-decoration:none;border-radius:8px;padding:10px 12px;font-size:14px}
+.nl:hover{color:#fff;background:#22252C}
+.on{background:#2A2D35;color:#fff;font-weight:600}
+.badge{font-size:12px;font-weight:700;background:#B45309;color:#fff;border-radius:999px;padding:1px 8px}
+.th{font-size:12px;color:#5B606B;font-weight:600;text-transform:uppercase;letter-spacing:.06em;text-align:left;padding:12px 14px;border-bottom:1px solid #E4E4DF;white-space:nowrap}
+.td{padding:12px 14px;border-bottom:1px solid #EFEFEA;font-size:14px;white-space:nowrap}
+</style>
+</helmet>
+<div style="font-family:'Inter Tight',system-ui,sans-serif;color:#15171C;background:#F5F5F2;min-height:1080px;display:flex;flex-wrap:wrap;align-items:stretch">
+
+<nav aria-label="Navigation principale" style="flex:1 1 220px;max-width:240px;background:#15171C;color:#fff;padding:24px 16px;box-sizing:border-box;display:flex;flex-direction:column;gap:4px">
+<dc-import name="Switcher" start="val" hint-size="100%,72px"></dc-import>
+<a href="Main.dc.html" class="nl">Accueil</a>
+<a href="Stock.dc.html" class="nl on" aria-current="page">Mon stock</a>
+<a href="Demandes.dc.html" class="nl">Demandes reçues<span class="badge">2</span></a>
+<a href="Showroom.dc.html" class="nl">Mon showroom</a>
+<a href="Site.dc.html" class="nl">Mon site</a>
+<a href="Reglages.dc.html" class="nl">Réglages</a>
+<a href="Mending.dc.html" class="nl" style="font-size:12px;margin-top:auto">Espace Mending</a>
+</nav>
+
+<main style="flex:999 1 560px;min-width:0;padding:32px 40px;box-sizing:border-box;display:flex;flex-direction:column;gap:20px;max-width:1200px">
+<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between">
+<h1 style="margin:0;font-size:28px">Mon stock</h1>
+<div style="display:flex;gap:10px;flex-wrap:wrap">
+<button type="button" style="font:inherit;font-size:14px;font-weight:600;height:44px;padding:0 16px;border-radius:10px;border:1px solid #DCDCD6;background:#fff;color:#15171C">Exporter la liste</button>
+<a href="Ajout.dc.html" style="text-decoration:none;font-size:15px;font-weight:700;height:44px;padding:0 18px;border-radius:10px;background:#1F4FD8;color:#fff;display:flex;align-items:center">Ajouter une voiture</a>
+</div>
+</div>
+
+<div role="tablist" aria-label="Filtrer par étape" style="display:flex;gap:8px;flex-wrap:wrap">
+<sc-for list="{{tabs}}" as="t" hint-placeholder-count="6">
+<button type="button" role="tab" aria-selected="{{t.on}}" onClick="{{t.pick}}" style="font:inherit;font-size:14px;font-weight:600;height:40px;padding:0 14px;border-radius:999px;border:1px solid {{t.border}};background:{{t.bg}};color:{{t.fg}};cursor:pointer;display:flex;gap:8px;align-items:center">{{t.label}}<span style="font-size:12px;opacity:.8">{{t.n}}</span></button>
+</sc-for>
+</div>
+
+<label style="display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #DCDCD6;border-radius:10px;padding:0 12px;height:44px;max-width:420px">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5B606B" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg>
+<span style="position:absolute;left:-9999px">Chercher dans le stock</span>
+<input type="search" value="{{q}}" onInput="{{setQ}}" placeholder="Plaque ou modèle" style="border:0;outline:0;flex:1;font:inherit;font-size:15px;background:transparent;min-width:0">
+</label>
+
+<div style="background:#fff;border:1px solid #E4E4DF;border-radius:14px;overflow-x:auto">
+<table style="border-collapse:collapse;width:100%;min-width:860px">
+<thead><tr><th class="th">Voiture</th><th class="th">Plaque</th><th class="th">Prix</th><th class="th">Km</th><th class="th">En stock</th><th class="th">Demandes</th><th class="th">Étape</th><th class="th"><span style="position:absolute;left:-9999px">Action</span></th></tr></thead>
+<tbody>
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="10">
+<tr>
+<td class="td"><div style="display:flex;gap:12px;align-items:center"><div style="width:56px;height:42px;border-radius:6px;background:{{r.thumb}};flex-shrink:0"></div><span style="font-weight:600">{{r.model}}</span></div></td>
+<td class="td"><span class="plate">{{r.plate}}</span></td>
+<td class="td" style="font-weight:600">{{r.prix}}</td>
+<td class="td">{{r.km}}</td>
+<td class="td" style="color:{{r.ageColor}}">{{r.age}}</td>
+<td class="td">{{r.leads}}</td>
+<td class="td"><span style="font-size:13px;font-weight:600;color:{{r.color}};background:{{r.bg}};border-radius:999px;padding:4px 10px">{{r.status}}</span></td>
+<td class="td" style="text-align:right"><a href="Validation.dc.html" style="font-weight:600;padding:10px 4px">{{r.cta}}</a></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+<sc-if value="{{empty}}" hint-placeholder-val="{{ false }}">
+<div style="padding:32px;text-align:center;color:#5B606B;font-size:15px">Aucune voiture ici pour l'instant.</div>
+</sc-if>
+</div>
+<span style="font-size:13px;color:#5B606B">En orange : en stock depuis plus de 45 jours. C'est peut-être le moment de revoir le prix.</span>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1080}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { tab: 'all', q: '' };
+  }
+  renderVals() {
+    const ST = {
+      photo: { status: 'À photographier', color: '#3D414A', bg: '#EEEEEA', cta: 'Demander les photos', thumb: '#E2E2DC' },
+      prep: { status: 'Photos en préparation', color: '#163A9E', bg: '#E4EBFF', cta: 'Voir', thumb: '#E2E2DC' },
+      check: { status: 'À vérifier', color: '#8A4307', bg: '#FFF1DE', cta: 'Vérifier', thumb: '#DCE3F2' },
+      ready: { status: 'Prête', color: '#0B5E39', bg: '#E3F4EA', cta: 'Mettre en ligne', thumb: '#DCE3F2' },
+      online: { status: 'En ligne', color: '#0B5E39', bg: '#E3F4EA', cta: 'Modifier', thumb: '#DCE3F2' },
+      sold: { status: 'Vendue', color: '#9A1C1C', bg: '#FDECEC', cta: 'Retirer l\'annonce', thumb: '#DCE3F2' }
+    };
+    const all = [
+      { plate: 'GH-512-KL', model: 'Renault Clio V', prix: '13 490 €', km: '38 200', days: 3, leads: '–', st: 'check' },
+      { plate: 'DS-331-PC', model: 'Dacia Sandero Stepway', prix: '15 490 €', km: '12 800', days: 2, leads: '–', st: 'check' },
+      { plate: 'FT-208-AZ', model: 'Dacia Duster', prix: '16 900 €', km: '61 000', days: 4, leads: '–', st: 'ready' },
+      { plate: 'EZ-947-MB', model: 'Renault Captur E-Tech', prix: '22 990 €', km: '24 500', days: 1, leads: '–', st: 'photo' },
+      { plate: 'BV-114-JN', model: 'Dacia Jogger', prix: '17 990 €', km: '33 100', days: 1, leads: '–', st: 'photo' },
+      { plate: 'GA-702-CE', model: 'Renault Austral', prix: '31 900 €', km: '19 300', days: 1, leads: '–', st: 'prep' },
+      { plate: 'CL-772-ZE', model: 'Renault Zoe', prix: '14 900 €', km: '41 700', days: 18, leads: '3', st: 'online' },
+      { plate: 'DM-205-LS', model: 'Renault Arkana', prix: '24 490 €', km: '29 900', days: 52, leads: '0', st: 'online' },
+      { plate: 'EB-880-TC', model: 'Dacia Spring', prix: '9 990 €', km: '15 200', days: 61, leads: '1', st: 'online' },
+      { plate: 'FK-640-RT', model: 'Renault Mégane IV Estate', prix: '11 990 €', km: '88 400', days: 34, leads: '4', st: 'sold' }
+    ];
+    const tabsDef = [
+      { id: 'all', label: 'Toutes' },
+      { id: 'photo', label: 'À photographier' },
+      { id: 'check', label: 'À vérifier' },
+      { id: 'ready', label: 'Prêtes' },
+      { id: 'online', label: 'En ligne' },
+      { id: 'sold', label: 'Vendues' }
+    ];
+    const cur = this.state.tab;
+    const q = this.state.q.trim().toLowerCase();
+    const rows = all
+      .filter((r) => (cur === 'all' || r.st === cur || (cur === 'photo' && r.st === 'prep')))
+      .filter((r) => !q || (r.plate + ' ' + r.model).toLowerCase().includes(q))
+      .map((r) => ({ ...r, ...ST[r.st], age: r.days + (r.days > 1 ? ' jours' : ' jour'), ageColor: r.days > 45 ? '#B45309' : '#15171C' }));
+    return {
+      rows,
+      empty: rows.length === 0,
+      q: this.state.q,
+      setQ: (e) => this.setState({ q: e.target.value }),
+      tabs: tabsDef.map((t) => {
+        const on = t.id === cur;
+        const n = t.id === 'all' ? all.length : all.filter((r) => r.st === t.id || (t.id === 'photo' && r.st === 'prep')).length;
+        return { ...t, n, on: on ? 'true' : 'false', bg: on ? '#15171C' : '#fff', fg: on ? '#fff' : '#15171C', border: on ? '#15171C' : '#DCDCD6', pick: () => this.setState({ tab: t.id }) };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

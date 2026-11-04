@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Contact</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#fff}
+a{color:#15171C}a:hover{color:#3D414A}
+.f{font:inherit;font-size:15px;height:46px;border:1px solid #CFCFC8;border-radius:10px;padding:0 12px;background:#fff;color:#15171C;width:100%;box-sizing:border-box}
+.lbl{display:flex;flex-direction:column;gap:6px;font-size:13px;color:#3D414A;font-weight:600}
+</style>
+</helmet>
+<div style="font-family:'Inter Tight',system-ui,sans-serif;color:#15171C;background:#fff;min-height:1200px;display:flex;flex-direction:column">
+
+<header style="border-bottom:1px solid #E4E4DF;background:#fff">
+<div style="max-width:1200px;margin:0 auto;padding:14px 24px;display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;justify-content:space-between">
+<a href="Vitrine.dc.html" style="text-decoration:none;font-size:20px;font-weight:700;color:{{brand}}">[LOGO] Valognes Automobiles</a>
+<nav aria-label="Menu" style="display:flex;gap:24px;flex-wrap:wrap;font-size:15px">
+<a href="Vitrine.dc.html" style="text-decoration:none;padding:12px 0">Nos occasions</a>
+<a href="Garage.dc.html" style="text-decoration:none;padding:12px 0">Le garage</a>
+<a href="Contact.dc.html" aria-current="page" style="text-decoration:none;padding:12px 0;font-weight:700;border-bottom:2px solid {{brand}}">Contact</a>
+</nav>
+<a href="Contact.dc.html" style="text-decoration:none;font-weight:700;color:#fff;background:{{brand}};border-radius:10px;padding:0 16px;height:44px;display:flex;align-items:center">Appeler [TÉLÉPHONE]</a>
+</div>
+</header>
+
+<main style="max-width:1200px;width:100%;margin:0 auto;padding:40px 24px 64px;box-sizing:border-box;display:flex;flex-direction:column;gap:28px">
+<div style="display:flex;flex-direction:column;gap:8px">
+<h1 style="margin:0;font-size:34px">Nous contacter</h1>
+<p style="margin:0;font-size:16px;color:#5B606B">Le plus rapide reste le téléphone. Sinon, écrivez-nous, on répond dans la journée.</p>
+</div>
+
+<div style="display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start">
+<form aria-label="Formulaire de contact" style="flex:999 1 520px;min-width:0;border:1px solid #E4E4DF;border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:16px">
+<div role="radiogroup" aria-label="C'est à propos de" style="display:flex;flex-direction:column;gap:8px">
+<span style="font-size:13px;color:#3D414A;font-weight:600">C'est à propos de</span>
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<sc-for list="{{sujets}}" as="s" hint-placeholder-count="3">
+<button type="button" role="radio" aria-checked="{{s.on}}" onClick="{{s.pick}}" style="font:inherit;font-size:15px;font-weight:600;height:44px;padding:0 16px;border-radius:999px;border:1px solid {{s.border}};background:{{s.bg}};color:{{s.fg}};cursor:pointer">{{s.label}}</button>
+</sc-for>
+</div>
+</div>
+
+<sc-if value="{{isReprise}}" hint-placeholder-val="{{ false }}">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;background:#F5F5F2;border-radius:12px;padding:14px">
+<label class="lbl">Plaque de votre voiture<input class="f" placeholder="AB-123-CD"></label>
+<label class="lbl">Kilométrage<input class="f" inputmode="numeric" placeholder="85 000"></label>
+</div>
+</sc-if>
+<sc-if value="{{isVoiture}}" hint-placeholder-val="{{ true }}">
+<label class="lbl">Quelle voiture ?<select class="f"><option>Renault Clio V, 13 490 €</option><option>Dacia Duster, 16 900 €</option><option>Renault Captur, 22 990 €</option><option>Une autre</option></select></label>
+</sc-if>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+<label class="lbl">Votre nom<input class="f" autocomplete="name"></label>
+<label class="lbl">Votre téléphone<input class="f" type="tel" autocomplete="tel"></label>
+</div>
+<label class="lbl">Votre e-mail (facultatif)<input class="f" type="email" autocomplete="email"></label>
+<label class="lbl">Votre message<textarea class="f" rows="4" style="height:auto;padding:10px 12px;line-height:1.45"></textarea></label>
+<label style="display:flex;gap:10px;align-items:flex-start;font-size:14px;color:#3D414A"><input type="checkbox" style="width:20px;height:20px;margin:0;flex-shrink:0"><span>J'accepte d'être recontacté au sujet de ma demande. <a href="Legal.dc.html" style="color:#3D414A">Ce que vous faites de mes données</a></span></label>
+<a href="Merci.dc.html" style="text-decoration:none;font-weight:700;font-size:16px;color:#fff;background:{{brand}};border-radius:12px;height:52px;display:flex;align-items:center;justify-content:center">Envoyer ma demande</a>
+</form>
+
+<aside aria-label="Coordonnées" style="flex:1 1 300px;min-width:0;display:flex;flex-direction:column;gap:20px">
+<div style="background:#F5F5F2;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:13px;color:#5B606B;font-weight:600">Téléphone</span><a href="#" style="font-size:22px;font-weight:700;text-decoration:none">[TÉLÉPHONE]</a></div>
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:13px;color:#5B606B;font-weight:600">Adresse</span><span style="font-size:16px">[ADRESSE]</span><span style="font-size:16px">50700 Valognes</span></div>
+<div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;color:#5B606B;font-weight:600">Horaires</span>
+<div style="display:grid;grid-template-columns:auto 1fr;gap:4px 16px;font-size:15px"><span>Lun. au ven.</span><span>[HORAIRES]</span><span>Samedi</span><span>[HORAIRES]</span><span>Dimanche</span><span>Fermé</span></div>
+</div>
+</div>
+<div style="min-height:220px;border-radius:16px;background:repeating-linear-gradient(135deg,#E8E8E3 0 16px,#EFEFEA 16px 32px);display:flex;align-items:center;justify-content:center;color:#5B606B;font-size:15px">[Carte]</div>
+</aside>
+</div>
+</main>
+
+<footer style="margin-top:auto;background:#15171C;color:#C9CDD4">
+<div style="max-width:1200px;margin:0 auto;padding:36px 24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:28px;font-size:14px;line-height:1.6">
+<div style="display:flex;flex-direction:column;gap:4px"><span style="color:#fff;font-weight:700;font-size:15px">Valognes Automobiles</span><span>Agent Renault et Dacia</span><span>[ADRESSE]</span><span>[TÉLÉPHONE]</span></div>
+<div style="display:flex;flex-direction:column;gap:4px"><span style="color:#fff;font-weight:700;font-size:15px">Horaires</span><span>[HORAIRES DE LA SEMAINE]</span><span>[HORAIRES DU SAMEDI]</span></div>
+<div style="display:flex;flex-direction:column;gap:4px"><a href="Vitrine.dc.html" style="color:#fff">Nos occasions</a><a href="Garage.dc.html" style="color:#fff">Le garage</a><a href="Contact.dc.html" style="color:#fff">Contact</a></div>
+<div style="display:flex;flex-direction:column;gap:4px"><a href="Legal.dc.html" style="color:#fff">Mentions légales</a><a href="Legal.dc.html" style="color:#fff">Confidentialité</a><a href="Legal.dc.html" style="color:#fff">Cookies</a></div>
+</div>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"brand":{"editor":"color","default":"#B8222A","options":["#B8222A","#1F4FD8","#15171C"]},"$preview":{"width":1440,"height":1200}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { sujet: 'voiture' };
+  }
+  renderVals() {
+    const brand = this.props.brand ?? '#B8222A';
+    const cur = this.state.sujet;
+    const list = [
+      { id: 'voiture', label: 'Une voiture du stock' },
+      { id: 'reprise', label: 'Faire reprendre ma voiture' },
+      { id: 'autre', label: 'Autre chose' }
+    ];
+    return {
+      brand,
+      isVoiture: cur === 'voiture',
+      isReprise: cur === 'reprise',
+      sujets: list.map((s) => {
+        const on = s.id === cur;
+        return { ...s, on: on ? 'true' : 'false', bg: on ? '#15171C' : '#fff', fg: on ? '#fff' : '#15171C', border: on ? '#15171C' : '#CFCFC8', pick: () => this.setState({ sujet: s.id }) };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>
