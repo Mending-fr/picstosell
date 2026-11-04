@@ -5,6 +5,7 @@ import { ApiError, get, patch, post, errorMessage } from '../../api'
 import { METHODS, SHOTS, duration, shotLabel, usd } from '../../labels'
 import { session, toast } from '../../session'
 import type { AiConfig, Comparison, Render, RenderRating } from '../../types'
+import ImageViewer, { type ViewerItem } from '../../components/ImageViewer.vue'
 
 const route = useRoute()
 const id = Number(route.params.id)
@@ -117,6 +118,24 @@ const rows = computed(() => {
     .sort(([a], [b]) => order(a) - order(b))
     .map(([key, cell]) => ({ key, label: SHOTS.some((s) => s.key === key) ? shotLabel(key) : 'Photo', source: cell.source_url, renders: cell.renders }))
 })
+
+// ---------- photos en grand : pour chaque angle, la photo du parking puis le rendu de chaque modèle ----------
+const viewerItems = computed(() => {
+  const items: (ViewerItem & { key: string })[] = []
+  for (const r of rows.value) {
+    if (r.source) items.push({ key: `${r.key}-src`, url: r.source, label: `${r.label} · photo du parking` })
+    for (const c of shownConfigs.value) {
+      const x = r.renders[c.id]
+      if (x?.url && !isPending(x)) items.push({ key: `${r.key}-${c.id}`, url: x.url, label: `${r.label} · ${c.name}`, sub: [duration(x.duration_ms), usd(x.cost_usd, 3)].filter(Boolean).join(' · ') })
+    }
+  }
+  return items
+})
+const viewerAt = ref<number | null>(null)
+function zoom(key: string) {
+  const i = viewerItems.value.findIndex((x) => x.key === key)
+  viewerAt.value = i >= 0 ? i : 0
+}
 
 const totals = computed(() => {
   let total = 0
@@ -305,15 +324,15 @@ const isPending = (r: Render | null) => !!r && (r.status === 'pending' || r.stat
           <div v-for="r in rows" :key="r.key" class="grow-row" :style="{ gridTemplateColumns: `120px repeat(${Math.max(shownConfigs.length, 1)}, minmax(0, 1fr))` }">
             <div class="col" style="gap: 6px; padding-top: 4px">
               <span style="font-size: 14px; font-weight: 500">{{ r.label }}</span>
-              <a v-if="r.source" :href="r.source" target="_blank" rel="noopener"><img :src="r.source" alt="Photo parking" class="src" /></a>
+              <button v-if="r.source" type="button" class="zoom" aria-label="Voir la photo du parking en grand" @click="zoom(`${r.key}-src`)"><img :src="r.source" alt="Photo parking" class="src" /></button>
               <div v-else class="src ph" />
               <span class="muted" style="font-size: 11px">Photo parking</span>
             </div>
             <div v-for="c in shownConfigs" :key="c.id" class="cell" :style="{ borderTopColor: colorOf(c.id) }">
               <template v-if="r.renders[c.id]">
-                <a v-if="r.renders[c.id]!.url && !isPending(r.renders[c.id])" :href="r.renders[c.id]!.url!" target="_blank" rel="noopener">
+                <button v-if="r.renders[c.id]!.url && !isPending(r.renders[c.id])" type="button" class="zoom" :aria-label="`Voir le rendu ${c.name} en grand`" @click="zoom(`${r.key}-${c.id}`)">
                   <img :src="r.renders[c.id]!.url!" :alt="`Rendu ${c.name}, ${r.label}`" class="rimg" loading="lazy" />
-                </a>
+                </button>
                 <div v-else-if="isPending(r.renders[c.id])" class="rimg wait"><span class="spinner" aria-hidden="true" /> En cours…</div>
                 <div v-else class="rimg wait ko">{{ r.renders[c.id]!.error || 'Échec' }}</div>
                 <div class="row between" style="font-size: 12px; color: var(--muted)">
@@ -342,9 +361,22 @@ const isPending = (r: Render | null) => !!r && (r.status === 'pending' || r.stat
       <span class="muted" style="font-size: 13px">À regarder en priorité : jantes, logos, reflets et vitres. Une photo où la voiture a changé est inutilisable.</span>
     </section>
   </template>
+  <ImageViewer v-if="viewerAt !== null" :items="viewerItems" :start="viewerAt" @close="viewerAt = null" />
 </template>
 
 <style scoped>
+.zoom {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+  display: block;
+  width: 100%;
+}
+.zoom:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
 .dot {
   width: 12px;
   height: 12px;

@@ -9,6 +9,7 @@ import { isManager, toast, refreshSidebar } from '../session'
 import StatusPill from '../components/StatusPill.vue'
 import PhotoPicker, { type PickedPhoto } from '../components/PhotoPicker.vue'
 import EquipmentEditor from '../components/EquipmentEditor.vue'
+import ImageViewer, { type ViewerItem } from '../components/ImageViewer.vue'
 import { uploadPhotos } from '../uploads'
 import type { EquipmentGroup, Photo, Render, Vehicle } from '../types'
 
@@ -405,6 +406,26 @@ const nextVehicle = computed(() => {
   return after ?? others[0]
 })
 
+// ---------- photos en grand ----------
+// Pour chaque angle : la photo du parking puis sa version showroom, pour passer de l'une à l'autre avec les flèches.
+const viewerItems = computed(() => {
+  const items: (ViewerItem & { key: string })[] = []
+  for (const p of photos.value) {
+    const name = p.kind === 'exterior' ? shotLabel(p.shot_key) : p.kind === 'interior' ? 'Intérieur' : 'Détail'
+    items.push({ key: `${p.id}-p`, url: p.url, label: p.kind === 'exterior' ? `${name} · sur le parking` : name })
+    const r = renderOf.value.get(p.id)
+    if (p.kind === 'exterior' && r?.url && r.status !== 'pending' && r.status !== 'processing' && r.status !== 'failed') {
+      items.push({ key: `${p.id}-s`, url: r.url, label: `${name} · dans le showroom`, sub: stateOf(p).label })
+    }
+  }
+  return items
+})
+const viewerAt = ref<number | null>(null)
+function zoom(photoId: number, which: 'p' | 's') {
+  const i = viewerItems.value.findIndex((x) => x.key === `${photoId}-${which}`)
+  viewerAt.value = i >= 0 ? i : 0
+}
+
 // ---------- clavier ----------
 function onKey(e: KeyboardEvent) {
   const t = e.target as HTMLElement
@@ -544,7 +565,7 @@ onBeforeRouteLeave(() => {
 
               <!-- photo telle quelle -->
               <figure v-if="cur.kind !== 'exterior'" class="fig">
-                <img :src="cur.url" :alt="cur.kind === 'interior' ? 'Intérieur' : 'Détail'" class="img" />
+                <button type="button" class="zoom" aria-label="Voir en grand" @click="zoom(cur.id, 'p')"><img :src="cur.url" :alt="cur.kind === 'interior' ? 'Intérieur' : 'Détail'" class="img" /></button>
                 <figcaption>Cette photo est publiée telle quelle.</figcaption>
               </figure>
 
@@ -556,17 +577,20 @@ onBeforeRouteLeave(() => {
                   <span class="ov-line" :style="{ left: split + '%' }" aria-hidden="true" />
                   <span class="tag l">Parking</span><span class="tag r">Showroom</span>
                 </div>
-                <label class="lbl"><span class="sr-only">Glisser pour comparer avant et après</span><input v-model.number="split" type="range" min="0" max="100" /></label>
+                <div class="row" style="gap: 12px; flex-wrap: nowrap">
+                  <label class="lbl grow"><span class="sr-only">Glisser pour comparer avant et après</span><input v-model.number="split" type="range" min="0" max="100" /></label>
+                  <button type="button" class="btn btn-sm" @click="zoom(cur.id, 's')">Voir en grand</button>
+                </div>
               </div>
 
               <!-- côte à côte -->
               <div v-else class="pair">
                 <figure class="fig">
-                  <img :src="cur.url" alt="Avant : sur le parking" class="img" />
+                  <button type="button" class="zoom" aria-label="Voir la photo du parking en grand" @click="zoom(cur.id, 'p')"><img :src="cur.url" alt="Avant : sur le parking" class="img" /></button>
                   <figcaption>Avant : sur le parking</figcaption>
                 </figure>
                 <figure class="fig">
-                  <img v-if="curRender?.url && curRender.status !== 'pending' && curRender.status !== 'processing'" :src="curRender.url" alt="Après : dans votre showroom" class="img" />
+                  <button v-if="curRender?.url && curRender.status !== 'pending' && curRender.status !== 'processing'" type="button" class="zoom" aria-label="Voir la photo showroom en grand" @click="zoom(cur.id, 's')"><img :src="curRender.url" alt="Après : dans votre showroom" class="img" /></button>
                   <div v-else-if="curRender && (curRender.status === 'pending' || curRender.status === 'processing')" class="img wait">
                     <span class="spinner" aria-hidden="true" /> En préparation…
                   </div>
@@ -741,6 +765,7 @@ onBeforeRouteLeave(() => {
       </div>
     </template>
   </div>
+  <ImageViewer v-if="viewerAt !== null" :items="viewerItems" :start="viewerAt" @close="viewerAt = null" />
 </template>
 
 <style scoped>
@@ -795,6 +820,19 @@ onBeforeRouteLeave(() => {
 .viewer {
   padding: 16px;
   gap: 14px;
+}
+.zoom {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+  display: block;
+  width: 100%;
+  border-radius: 10px;
+}
+.zoom:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 .pair {
   display: grid;
