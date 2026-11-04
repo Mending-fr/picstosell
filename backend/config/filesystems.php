@@ -28,6 +28,8 @@ return [
     |
     */
 
+    'media_disk' => env('MEDIA_DISK', 'local'),
+
     'disks' => [
 
         'local' => [

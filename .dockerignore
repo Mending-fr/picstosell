@@ -1,0 +1,14 @@
+**/node_modules
+**/.expo
+backend/vendor
+backend/.env
+backend/database/database.sqlite
+backend/storage/logs/*
+backend/storage/app/*
+backend/storage/framework/cache/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+backend/public/app
+mobile
+docs
+.git
