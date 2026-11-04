@@ -50,7 +50,7 @@ Chaque service est limité à 0,5 vCPU et 0,5 Go.
 | `OPENAI_API_KEY` | GPT Image |
 | `GEMINI_API_KEY` | Nano Banana (Gemini) |
 | `FAL_KEY` | Seedream (fal) et détourage BiRefNet |
-| `PLATE_PROVIDER`, `PLATE_API_KEY` | Données par la plaque. `fake` renvoie des données d'exemple tant que le fournisseur n'est pas branché |
+| `PLATE_API_KEY` | Jeton apiplaqueimmatriculation.com (`PLATE_PROVIDER=apiplaque`). Sans jeton, la fiche se remplit à la main |
 | `VIGIE_SCRIPT` | Balise de mesure d'audience des sites garages |
 
 Les identifiants exacts des modèles se règlent dans l'espace Mending (Modèles IA), sans redéploiement.
@@ -65,6 +65,5 @@ Les identifiants exacts des modèles se règlent dans l'espace Mending (Modèles
 ## Limites connues
 
 - Le floutage automatique de la plaque n'est pas encore fait : il demande un modèle de détection de plaque.
-- La recherche par plaque renvoie des données d'exemple (`PLATE_PROVIDER=fake`) en attendant le contrat avec le fournisseur.
 - Le texte d'annonce est rédigé à partir des seules données saisies, sans IA pour l'instant.
 - Les sites garages sont servis sous `/s/{slug}`. Le branchement d'un domaine propre à chaque garage reste à faire.

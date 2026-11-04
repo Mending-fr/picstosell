@@ -107,4 +107,22 @@ class PlatformTest extends TestCase
         $this->assertSame('manuelle', Vehicle::normalizeGearbox('MANUEL'));
         $this->assertSame('automatique', Vehicle::normalizeGearbox('EDC'));
     }
+
+    public function test_la_recherche_par_plaque_lit_la_reponse_du_fournisseur(): void
+    {
+        config(['services.plate.provider' => 'apiplaque', 'services.plate.api_key' => 'test']);
+        \Illuminate\Support\Facades\Http::fake(['*' => \Illuminate\Support\Facades\Http::response(['data' => [
+            'erreur' => '', 'marque' => 'FIAT', 'modele' => 'PANDA', 'sra_commercial' => 'ALESSI 1.2 8V', 'energie' => 1, 'energieNGC' => 'ESSENCE',
+            'date1erCir_us' => '2009-06-02', 'boite_vitesse' => 'M', 'puisFisc' => '4', 'puisFiscReel' => '60', 'couleur' => 'JAUNE CLAIR',
+            'nb_portes' => 4, 'nr_passagers' => 4, 'vin' => 'ZFA16900001426851',
+        ]])]);
+        Sanctum::actingAs(User::create(['name' => 'G', 'email' => 'g@a.fr', 'password' => 'x', 'role' => 'manager', 'garage_id' => Garage::first()->id]));
+
+        $this->getJson('/api/v1/lookup/plate/AA123ZE')->assertOk()
+            ->assertJsonPath('data.make', 'Fiat')->assertJsonPath('data.fuel', 'essence')
+            ->assertJsonPath('data.gearbox', 'manuelle')->assertJsonPath('data.first_registration', '2009-06-02');
+        // Deuxième appel : servi par le cache, pas de nouvel appel payant.
+        $this->getJson('/api/v1/lookup/plate/AA-123-ZE')->assertOk();
+        \Illuminate\Support\Facades\Http::assertSentCount(1);
+    }
 }

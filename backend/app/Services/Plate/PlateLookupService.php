@@ -7,8 +7,7 @@ use App\Models\Vehicle;
 
 /**
  * Données techniques à partir de la plaque, mises en cache : on ne paie jamais deux fois le même véhicule.
- * PLATE_PROVIDER=fake renvoie des données d'exemple (développement, démo). Le fournisseur réel sera branché
- * quand le contrat et la documentation de l'API seront disponibles.
+ * PLATE_PROVIDER=apiplaque (apiplaqueimmatriculation.com, jeton dans PLATE_API_KEY) ou fake (données d'exemple).
  */
 class PlateLookupService
 {
@@ -22,8 +21,8 @@ class PlateLookupService
 
         $provider = config('services.plate.provider', 'fake');
         $data = match ($provider) {
-            'fake' => $this->fake($plate),
-            default => null,
+            'apiplaque' => (new ApiPlaqueProvider)->lookup($plate),
+            default => $this->fake($plate),
         };
 
         PlateLookup::create(['plate' => $plate, 'provider' => $provider, 'found' => $data !== null, 'payload' => $data]);

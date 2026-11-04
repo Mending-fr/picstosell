@@ -34,9 +34,16 @@ class VehicleController extends Controller
 
     public function lookup(string $plate, PlateLookupService $service)
     {
-        $r = $service->lookup($plate);
+        try {
+            $r = $service->lookup($plate);
+        } catch (\Throwable $e) {
+            report($e);
 
-        return ['found' => $r['found'], 'plate' => Vehicle::normalizePlate($plate), 'data' => $r['data']];
+            // Le service est indisponible : on laisse saisir à la main plutôt que de bloquer.
+            return ['found' => false, 'plate' => Vehicle::normalizePlate($plate), 'data' => (object) [], 'message' => 'Recherche indisponible, complétez les informations à la main.'];
+        }
+
+        return ['found' => $r['found'], 'plate' => Vehicle::normalizePlate($plate), 'data' => (object) $r['data']];
     }
 
     public function store(Request $request)

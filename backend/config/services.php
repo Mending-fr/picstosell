@@ -58,6 +58,7 @@ return [
     'plate' => [
         'provider' => env('PLATE_PROVIDER', 'fake'),
         'api_key' => env('PLATE_API_KEY'),
+        'url' => env('PLATE_API_URL', 'https://api.apiplaqueimmatriculation.com/carte-grise'),
     ],
 
 ];
