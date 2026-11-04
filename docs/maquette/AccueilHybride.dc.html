@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Accueil hybride</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F8F8F6}
+a{color:#0A626A}a:hover{color:#084E55}
+.plate{font-family:'JetBrains Mono',monospace;font-weight:500;font-size:12px;letter-spacing:.04em;border:1px solid #D5D8DF;border-radius:5px;padding:2px 7px;background:#fff;color:#3B4150;white-space:nowrap}
+.nl{display:flex;justify-content:space-between;align-items:center;color:#5A6172;text-decoration:none;border-radius:9px;padding:9px 12px;font-size:14px}
+.nl:hover{color:#1C2230;background:#E7EEEF}
+.kbd{font-family:'JetBrains Mono',monospace;font-size:11px;border-radius:5px;padding:1px 6px}
+.card{transition:transform .12s ease, box-shadow .12s ease}
+.card:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(28,34,48,.08)}
+.row:hover{background:#fff;box-shadow:0 1px 2px rgba(28,34,48,.05)}
+</style>
+</helmet>
+<div style="font-family:'Inter Tight',system-ui,sans-serif;color:#1C2230;background:#F8F8F6;min-height:960px;display:flex;flex-wrap:wrap;align-items:stretch">
+
+<nav aria-label="Navigation principale" style="flex:1 1 220px;max-width:220px;background:#F0F4F4;border-right:1px solid #E2E9EA;padding:28px 14px;box-sizing:border-box;display:flex;flex-direction:column;gap:2px">
+<div style="display:flex;align-items:center;gap:10px;padding:0 10px 28px">
+<span style="width:28px;height:28px;border-radius:8px;background:#DAEFF0;color:#0A626A;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px">VA</span>
+<span style="font-weight:500;font-size:14px;line-height:1.25">Valognes Automobiles</span>
+</div>
+<a href="#" class="nl" aria-current="page" style="color:#0A626A;font-weight:500;background:#DAEFF0">Accueil</a>
+<a href="#" class="nl">Mon stock</a>
+<a href="#" class="nl">Demandes<span style="font-size:11px;font-weight:600;color:#5B3FC4;background:#EFEBFD;border-radius:999px;padding:1px 8px">1</span></a>
+<a href="#" class="nl">Mon showroom</a>
+<a href="#" class="nl">Mon site</a>
+<a href="#" class="nl">Réglages</a>
+<span style="margin-top:auto;padding:0 12px;font-size:12px;color:#8A90A0">Romain · Se déconnecter</span>
+</nav>
+
+<main style="flex:999 1 560px;min-width:0;padding:56px 56px 64px;box-sizing:border-box;display:flex;justify-content:center">
+<div style="width:100%;max-width:960px;display:flex;flex-direction:column;gap:40px">
+
+<header style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap">
+<div style="display:flex;flex-direction:column;gap:10px">
+<span style="font-size:14px;color:#8A90A0">Mercredi 4 novembre</span>
+<h1 style="margin:0;font-size:28px;line-height:1.25;font-weight:400;letter-spacing:-.01em;color:#1C2230">Bonjour Romain. <span style="color:#7A8090">3 voitures à vérifier et une demande de rappel.</span></h1>
+</div>
+<label style="display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #E2E5EA;border-radius:999px;padding:0 16px;height:44px;width:300px;max-width:100%;box-sizing:border-box">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A90A0" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg>
+<span style="position:absolute;left:-9999px">Rechercher</span>
+<input placeholder="Plaque, modèle, client" style="border:0;outline:0;flex:1;min-width:0;font:inherit;font-size:14px;background:transparent">
+<span class="kbd" style="border:1px solid #E2E5EA;color:#8A90A0">/</span>
+</label>
+</header>
+
+<section aria-label="Actions principales" style="display:grid;grid-template-columns:1.25fr repeat(3,minmax(0,1fr));gap:14px">
+
+<button type="button" class="card" onClick="{{openAdd}}" style="font:inherit;text-align:left;border:0;border-radius:20px;padding:22px;background:#0E7C86;color:#fff;display:flex;flex-direction:column;gap:16px;cursor:pointer;min-height:184px;box-shadow:0 8px 22px rgba(14,124,134,.24)">
+<div style="display:flex;justify-content:space-between;align-items:center;width:100%">
+<span style="width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></span>
+<span class="kbd" style="background:rgba(255,255,255,.16);color:#E6F6F7">N</span>
+</div>
+<span style="font-size:19px;font-weight:500;margin-top:auto">Ajouter une voiture</span>
+<span style="font-size:14px;color:#CFEDEF;line-height:1.4">Par la plaque ou le numéro de série</span>
+</button>
+
+<sc-for list="{{cards}}" as="c" hint-placeholder-count="3">
+<button type="button" class="card" onClick="{{c.go}}" style="font:inherit;text-align:left;border:1px solid {{c.line}};border-radius:20px;padding:22px;background:{{c.tint}};color:#1C2230;display:flex;flex-direction:column;gap:16px;cursor:pointer;min-height:184px">
+<div style="display:flex;justify-content:space-between;align-items:center;width:100%">
+<span style="min-width:44px;height:44px;padding:0 10px;box-sizing:border-box;border-radius:14px;background:#fff;color:{{c.ink}};display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:600">{{c.count}}</span>
+<span class="kbd" style="background:#fff;color:{{c.ink}}">{{c.key}}</span>
+</div>
+<span style="font-size:17px;font-weight:500;margin-top:auto">{{c.title}}</span>
+<span style="font-size:14px;color:#5A6172;line-height:1.4">{{c.text}}</span>
+</button>
+</sc-for>
+</section>
+
+<section aria-labelledby="todo" style="display:flex;flex-direction:column;gap:4px">
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px">
+<h2 id="todo" style="margin:0;font-size:13px;font-weight:500;color:#8A90A0">À faire aujourd'hui</h2>
+<a href="#" style="font-size:13px;text-decoration:none">Tout voir</a>
+</div>
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="4">
+<a href="#" class="row" style="text-decoration:none;color:#1C2230;display:flex;align-items:center;gap:16px;padding:14px 16px;margin:0 -16px;border-radius:14px">
+<span style="font-size:12px;font-weight:500;color:{{r.ink}};background:{{r.tint}};border-radius:999px;padding:4px 10px;width:96px;text-align:center;flex-shrink:0">{{r.tag}}</span>
+<div style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:0">
+<span style="font-size:15px;font-weight:500">{{r.title}}</span>
+<span style="font-size:14px;color:#7A8090">{{r.detail}}</span>
+</div>
+<span class="plate">{{r.plate}}</span>
+<span style="font-size:14px;font-weight:500;color:{{r.ink}};width:130px;text-align:right">{{r.cta}}</span>
+</a>
+</sc-for>
+</section>
+
+<section aria-label="Votre stock" style="display:flex;flex-wrap:wrap;gap:8px 24px;font-size:14px;color:#7A8090;border-top:1px solid #ECEEF2;padding-top:20px">
+<sc-for list="{{stock}}" as="s" hint-placeholder-count="5">
+<a href="#" style="text-decoration:none;color:#7A8090;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:4px;background:{{s.dot}}"></span><strong style="color:#1C2230;font-weight:500">{{s.n}}</strong> {{s.label}}</a>
+</sc-for>
+</section>
+</div>
+</main>
+
+<sc-if value="{{addOpen}}" hint-placeholder-val="{{ false }}">
+<dc-import name="AjoutStepper" palette="sarcelle" on-close="{{close}}" hint-size="100%,100%"></dc-import>
+</sc-if>
+<sc-if value="{{priceOpen}}" hint-placeholder-val="{{ false }}">
+<dc-import name="PrixStepper" palette="sarcelle" on-close="{{close}}" hint-size="100%,100%"></dc-import>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { modal: null }; }
+  renderVals() {
+    const amber = { ink: '#A55A0B', tint: '#FCF1E3', line: '#F4E0C5', dot: '#E5A04B' };
+    const green = { ink: '#1E7A50', tint: '#E9F5EE', line: '#D2EADC', dot: '#4CAF7D' };
+    const slate = { ink: '#4A5263', tint: '#F1F3F6', line: '#E3E6EC', dot: '#A3A9B6' };
+    const violet = { ink: '#5B3FC4', tint: '#EFEBFD', dot: '#8C76E6' };
+    const teal = { ink: '#0A626A', tint: '#E2F3F4', dot: '#0E7C86' };
+    return {
+      addOpen: this.state.modal === 'add',
+      priceOpen: this.state.modal === 'price',
+      openAdd: () => this.setState({ modal: 'add' }),
+      close: () => this.setState({ modal: null }),
+      cards: [
+        { title: 'Vérifier les photos', text: 'Clio V, Sandero Stepway, Austral', count: 3, key: 'V', go: () => {}, ...amber },
+        { title: 'Mettre en ligne', text: 'Duster, Jogger', count: 2, key: 'P', go: () => {}, ...green },
+        { title: 'Prix ou vendue', text: 'Par la plaque ou le modèle', count: '€', key: 'S', go: () => this.setState({ modal: 'price' }), ...slate }
+      ],
+      rows: [
+        { tag: 'À vérifier', title: 'Renault Clio V', detail: 'Photos prêtes, la jante avant est à regarder de près.', plate: 'GH-512-KL', cta: 'Vérifier', ...amber },
+        { tag: 'Demande', title: 'Rappeler pour la Zoe', detail: "Un client veut l'essayer samedi.", plate: 'CL-772-ZE', cta: 'Voir', ...violet },
+        { tag: 'Prête', title: 'Dacia Duster', detail: 'Photos vérifiées, texte écrit.', plate: 'FT-208-AZ', cta: 'Mettre en ligne', ...green },
+        { tag: 'Sans photo', title: 'Renault Captur', detail: 'Arrivée hier, pas encore photographiée.', plate: 'EZ-947-MB', cta: 'Voir', ...slate }
+      ],
+      stock: [
+        { n: 4, label: 'à photographier', ...slate }, { n: 3, label: 'à vérifier', ...amber }, { n: 2, label: 'prêtes', ...green },
+        { n: 31, label: 'en ligne', ...teal }, { n: 9, label: 'vendues ce mois', ...violet }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

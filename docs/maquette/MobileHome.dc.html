@@ -9,50 +9,43 @@
 <x-dc>
 <helmet>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet">
 <style>
 body{margin:0}
-a{color:#1F4FD8}a:hover{color:#163A9E}
-.plate{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;letter-spacing:.04em;border:1.5px solid #15171C;border-radius:4px;padding:2px 7px;background:#fff;color:#15171C}
+a{color:#0A626A}a:hover{color:#084E55}
+.plate{font-family:'JetBrains Mono',monospace;font-weight:500;font-size:13px;letter-spacing:.04em;border:1px solid #D5D8DF;border-radius:5px;padding:2px 7px;background:#fff;color:#3B4150}
 </style>
 </helmet>
-<div style="width:390px;height:844px;box-sizing:border-box;font-family:'Inter Tight',system-ui,sans-serif;color:#15171C;background:#F5F5F2;padding:56px 20px 24px;display:flex;flex-direction:column;gap:20px;overflow:hidden">
+<div style="width:390px;height:844px;box-sizing:border-box;font-family:'Inter Tight',system-ui,sans-serif;color:#1C2230;background:#F8F8F6;padding:56px 20px 24px;display:flex;flex-direction:column;gap:22px;overflow:hidden">
 
 <div style="display:flex;justify-content:space-between;align-items:center">
-<div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:13px;color:#5B606B">Valognes Automobiles</span><span style="font-size:24px;font-weight:700">Photos du jour</span></div>
-<button type="button" aria-label="Mon compte" style="width:44px;height:44px;border-radius:12px;border:1px solid #DCDCD6;background:#fff;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15171C" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1-4 4-6 8-6s7 2 8 6"></path></svg></button>
+<div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:13px;color:#7A8090">Valognes Automobiles</span><span style="font-size:24px;font-weight:500">Photos du jour</span></div>
+<button type="button" aria-label="Mon compte" style="width:44px;height:44px;border-radius:22px;border:1px solid #E3E6EC;background:#fff;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5A6172" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1-4 4-6 8-6s7 2 8 6"></path></svg></button>
 </div>
 
-<a href="MobileCapture.dc.html" style="text-decoration:none;background:#1F4FD8;color:#fff;border-radius:20px;padding:22px;display:flex;flex-direction:column;gap:16px">
-<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg>
-<span style="font-size:24px;font-weight:700;line-height:1.15">Scanner une plaque</span>
-<span style="font-size:15px;color:#DCE5FF">Visez la plaque : la voiture est reconnue et l'appli vous guide pour les photos.</span>
+<a href="MobileCapture.dc.html" style="text-decoration:none;background:#0E7C86;color:#fff;border-radius:24px;padding:22px;display:flex;flex-direction:column;gap:14px;box-shadow:0 8px 22px rgba(14,124,134,.24)">
+<span style="width:48px;height:48px;border-radius:16px;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></span>
+<span style="font-size:22px;font-weight:500;line-height:1.15">Nouvelle voiture</span>
+<span style="font-size:15px;color:#CFEDEF">Par la plaque ou le numéro de série</span>
 </a>
 
-<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px">
-<button type="button" style="font:inherit;text-align:left;background:#fff;border:1px solid #E4E4DF;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:8px;min-height:96px">
-<span style="font-size:15px;font-weight:700">Taper la plaque</span><span style="font-size:13px;color:#5B606B">ou le numéro de série</span>
-</button>
-<button type="button" style="font:inherit;text-align:left;background:#fff;border:1px solid #E4E4DF;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:8px;min-height:96px">
-<span style="font-size:15px;font-weight:700">Finir une voiture</span><span style="font-size:13px;color:#5B606B">il manque des photos</span>
-</button>
-</div>
+<a href="#" style="text-decoration:none;color:#0A626A;background:#DAEFF0;border:1px solid #B9E0E3;border-radius:999px;min-height:56px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:500">Finir une voiture commencée</a>
 
 <div style="display:flex;flex-direction:column;gap:10px">
-<span style="font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#5B606B;font-weight:600">À photographier</span>
-<div style="background:#fff;border:1px solid #E4E4DF;border-radius:16px;display:flex;flex-direction:column">
-<div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid #EFEFEA"><span class="plate">EZ-947-MB</span><span style="flex:1;font-size:14px;font-weight:600">Captur E-Tech</span><span style="font-size:13px;color:#5B606B">0 / 8</span></div>
-<div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid #EFEFEA"><span class="plate">BV-114-JN</span><span style="flex:1;font-size:14px;font-weight:600">Jogger</span><span style="font-size:13px;color:#5B606B">0 / 8</span></div>
-<div style="display:flex;align-items:center;gap:12px;padding:14px 16px"><span class="plate">GA-702-CE</span><span style="flex:1;font-size:14px;font-weight:600">Austral</span><span style="font-size:13px;color:#8A4307">5 / 8</span></div>
+<span style="font-size:13px;color:#8A90A0;font-weight:500">À photographier</span>
+<div style="background:#fff;border:1px solid #E3E6EC;border-radius:18px;display:flex;flex-direction:column">
+<div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid #ECEEF2"><span class="plate">EZ-947-MB</span><span style="flex:1;font-size:15px;font-weight:500">Captur E-Tech</span><span style="font-size:13px;color:#4A5263;background:#F1F3F6;border-radius:999px;padding:3px 9px">0 / 6</span></div>
+<div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid #ECEEF2"><span class="plate">BV-114-JN</span><span style="flex:1;font-size:15px;font-weight:500">Jogger</span><span style="font-size:13px;color:#4A5263;background:#F1F3F6;border-radius:999px;padding:3px 9px">0 / 6</span></div>
+<div style="display:flex;align-items:center;gap:12px;padding:14px 16px"><span class="plate">GA-702-CE</span><span style="flex:1;font-size:15px;font-weight:500">Austral</span><span style="font-size:13px;color:#A55A0B;background:#FCF1E3;border-radius:999px;padding:3px 9px">4 / 6</span></div>
 </div>
 </div>
 
 <div style="display:flex;flex-direction:column;gap:10px">
-<span style="font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#5B606B;font-weight:600">Photos en cours d'envoi</span>
-<div style="background:#fff;border:1px solid #E4E4DF;border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:10px">
-<div style="display:flex;justify-content:space-between;font-size:14px"><span style="font-weight:600">GH-512-KL, 8 photos</span><span style="color:#0B5E39">Envoyées</span></div>
-<div style="display:flex;justify-content:space-between;font-size:14px"><span style="font-weight:600">DS-331-PC, 8 photos</span><span style="color:#1F4FD8">6 sur 8, ça reprend seul</span></div>
-<div style="height:6px;background:#EEEEEA;border-radius:3px"><div style="width:75%;height:6px;background:#1F4FD8;border-radius:3px"></div></div>
+<span style="font-size:13px;color:#8A90A0;font-weight:500">Envois en cours</span>
+<div style="background:#fff;border:1px solid #E3E6EC;border-radius:18px;padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;justify-content:space-between;font-size:14px"><span style="font-weight:500">GH-512-KL, 8 photos</span><span style="color:#1E7A50">Envoyées</span></div>
+<div style="display:flex;justify-content:space-between;font-size:14px"><span style="font-weight:500">DS-331-PC, 8 photos</span><span style="color:#0A626A">6 sur 8, reprise automatique</span></div>
+<div style="height:6px;background:#ECEEF2;border-radius:3px"><div style="width:75%;height:6px;background:#0E7C86;border-radius:3px"></div></div>
 </div>
 </div>
 </div>

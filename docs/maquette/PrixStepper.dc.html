@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Changer un prix ou marquer vendue</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="font-family:'Inter Tight',system-ui,sans-serif;color:#1C2230;position:fixed;inset:0;min-height:900px;background:rgba(28,34,48,.26);display:flex;align-items:flex-start;justify-content:center;padding:72px 16px;box-sizing:border-box;z-index:20">
+<div role="dialog" aria-modal="true" aria-labelledby="px-title" style="width:100%;max-width:560px;background:#fff;border-radius:20px;box-shadow:0 24px 60px rgba(28,34,48,.16);display:flex;flex-direction:column;overflow:hidden">
+
+<div style="padding:24px 28px 20px;display:flex;flex-direction:column;gap:18px;background:linear-gradient(180deg,{{p.band}} 0%,#FFFFFF 100%);border-bottom:1px solid #EEF0F5">
+<div style="display:flex;justify-content:space-between;align-items:center">
+<h2 id="px-title" style="margin:0;font-size:20px;font-weight:500">{{title}}</h2>
+<button type="button" aria-label="Fermer" onClick="{{close}}" style="width:40px;height:40px;border-radius:10px;border:0;background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5B606B" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+</div>
+<sc-if value="{{notDone}}" hint-placeholder-val="{{ true }}">
+<ol aria-label="Étapes" style="list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px">
+<sc-for list="{{steps}}" as="s" hint-placeholder-count="3">
+<li aria-current="{{s.current}}" style="display:flex;align-items:center;gap:8px;background:{{s.chipBg}};border-radius:999px;padding:6px 10px 6px 6px;min-width:0">
+<span style="width:22px;height:22px;border-radius:11px;background:{{s.dotBg}};color:{{s.dotInk}};font-size:12px;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0">{{s.mark}}</span>
+<span style="font-size:12.5px;font-weight:{{s.weight}};color:{{s.color}};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{s.label}}</span>
+</li>
+</sc-for>
+</ol>
+</sc-if>
+</div>
+
+<div style="padding:26px 32px 8px;min-height:220px;box-sizing:border-box;display:flex;flex-direction:column;gap:16px">
+<sc-if value="{{is1}}" hint-placeholder-val="{{ true }}">
+<label style="display:flex;flex-direction:column;gap:10px;font-size:14px;color:#5B606B">Plaque ou modèle
+<input value="duster" style="font:inherit;font-size:18px;height:56px;border:1px solid #C9CED8;background:#FAFBFC;border-radius:12px;padding:0 16px;color:#1C2230">
+</label>
+<button type="button" onClick="{{next}}" style="font:inherit;text-align:left;border:1px solid {{p.line}};background:{{p.tint}};border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;color:#1C2230">
+<span style="width:56px;height:42px;border-radius:10px;background:linear-gradient(135deg,#DCE6FB,#EEF2FD);flex-shrink:0"></span>
+<span style="display:flex;flex-direction:column;gap:2px;flex:1"><span style="font-size:15px;font-weight:500">Dacia Duster</span><span style="font-size:13px;color:#6B707A">FT-208-AZ · en ligne depuis 23 jours · 16 900 €</span></span>
+</button>
+</sc-if>
+
+<sc-if value="{{is2}}" hint-placeholder-val="{{ false }}">
+<span style="font-size:14px;color:#5B606B">Dacia Duster · FT-208-AZ</span>
+<div role="radiogroup" aria-label="Action" style="display:flex;flex-direction:column;gap:10px">
+<sc-for list="{{actions}}" as="a" hint-placeholder-count="3">
+<button type="button" role="radio" aria-checked="{{a.on}}" onClick="{{a.pick}}" style="font:inherit;text-align:left;border:1px solid {{a.border}};background:{{a.bg}};border-radius:14px;padding:14px 18px;display:flex;flex-direction:column;gap:2px;cursor:pointer;color:#1C2230">
+<span style="display:flex;align-items:center;gap:10px"><span style="width:10px;height:10px;border-radius:5px;background:{{a.dot}}"></span><span style="font-size:15px;font-weight:500">{{a.title}}</span></span><span style="font-size:14px;color:#6B707A;padding-left:20px">{{a.text}}</span>
+</button>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{is3Price}}" hint-placeholder-val="{{ false }}">
+<label style="display:flex;flex-direction:column;gap:8px;font-size:14px;color:#5B606B">Nouveau prix
+<span style="display:flex;align-items:center;border:1px solid #D5D9E1;background:#FAFBFC;border-radius:12px;padding:0 16px;height:60px;gap:8px"><input value="16 490" style="font:inherit;font-size:24px;font-weight:500;border:0;outline:0;flex:1;min-width:0;color:#1C2230"><span style="color:#8A8F99">€ TTC</span></span>
+</label>
+<span style="font-size:14px;color:#6B707A">Prix actuel : 16 900 €. Votre site affiche le nouveau prix dès l'enregistrement.</span>
+</sc-if>
+<sc-if value="{{is3Sold}}" hint-placeholder-val="{{ false }}">
+<span style="font-size:17px;font-weight:500">Le Duster est vendu ?</span>
+<span style="font-size:15px;color:#6B707A;line-height:1.5">L'annonce disparaît de votre site. Pensez à la retirer aussi de Leboncoin et La Centrale.</span>
+</sc-if>
+
+<sc-if value="{{isDone}}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px;padding:12px 0 8px">
+<span style="width:56px;height:56px;border-radius:28px;background:#E3F4EA;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0F7A4A" stroke-width="2.5" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg></span>
+<span style="font-size:20px;font-weight:500">{{doneText}}</span>
+</div>
+</sc-if>
+</div>
+
+<div style="padding:20px 32px 28px;display:flex;align-items:center;gap:10px">
+<sc-if value="{{canBack}}" hint-placeholder-val="{{ false }}">
+<button type="button" onClick="{{back}}" style="font:inherit;font-size:15px;font-weight:500;height:48px;padding:0 16px;border-radius:12px;border:0;background:transparent;color:#3D414A;cursor:pointer">Retour</button>
+</sc-if>
+<sc-if value="{{showNext}}" hint-placeholder-val="{{ true }}">
+<button type="button" onClick="{{next}}" style="font:inherit;font-size:15px;font-weight:500;height:48px;padding:0 24px;border-radius:12px;border:0;background:{{nextBg}};color:#fff;cursor:pointer;margin-left:auto;box-shadow:0 2px 8px rgba(28,34,48,.14)">{{nextLabel}}</button>
+</sc-if>
+<sc-if value="{{isDone}}" hint-placeholder-val="{{ false }}">
+<button type="button" onClick="{{close}}" style="font:inherit;font-size:15px;font-weight:500;height:48px;padding:0 24px;border-radius:12px;border:0;background:{{p.accent}};color:#fff;cursor:pointer;margin-left:auto">Fermer</button>
+</sc-if>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"onClose":{"editor":null},"palette":{"editor":"enum","options":["bleu","indigo","sarcelle","terracotta","sapin"],"default":"bleu"},"$preview":{"width":1440,"height":900}}'>
+const PALETTES = {
+  bleu: { accent: '#2F5BEA', ink: '#2346C2', soft: '#E3E9FB', tint: '#EEF2FD', band: '#F3F6FD', line: '#BCC9F5', glow: 'rgba(47,91,234,.22)' },
+  indigo: { accent: '#5B4BDB', ink: '#4536B8', soft: '#E8E5FB', tint: '#F1EFFD', band: '#F5F4FE', line: '#CFC8F6', glow: 'rgba(91,75,219,.22)' },
+  sarcelle: { accent: '#0E7C86', ink: '#0A626A', soft: '#DAEFF0', tint: '#EAF6F7', band: '#F1F9F9', line: '#B9E0E3', glow: 'rgba(14,124,134,.2)' },
+  terracotta: { accent: '#C8553D', ink: '#A3432F', soft: '#F8E3DC', tint: '#FCF1ED', band: '#FDF5F2', line: '#F0CBBF', glow: 'rgba(200,85,61,.2)' },
+  sapin: { accent: '#2F7A55', ink: '#235E41', soft: '#DDEFE5', tint: '#EDF6F1', band: '#F3F9F5', line: '#C2E2D0', glow: 'rgba(47,122,85,.2)' }
+};
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { step: 1, action: 'price' }; }
+  renderVals() {
+    const p = PALETTES[this.props.palette] || PALETTES.bleu;
+    const { step, action } = this.state;
+    const go = (n) => this.setState({ step: n });
+    const close = () => { this.setState({ step: 1 }); if (this.props.onClose) this.props.onClose(); };
+    const defs = [
+      { id: 'price', title: 'Changer le prix', text: 'Actuellement 16 900 €', dot: p.accent },
+      { id: 'sold', title: 'Marquer vendue', text: "L'annonce est retirée de votre site", dot: '#D9534F' }
+    ];
+    const sold = action === 'sold';
+    return {
+      p,
+      title: 'Changer un prix ou marquer vendue',
+      is1: step === 1, is2: step === 2, is3Price: step === 3 && !sold, is3Sold: step === 3 && sold, isDone: step === 4,
+      notDone: step < 4, canBack: step > 1 && step < 4, showNext: step > 1 && step < 4,
+      nextLabel: step === 2 ? 'Continuer' : sold ? 'Oui, elle est vendue' : 'Enregistrer le prix',
+      nextBg: step === 3 && sold ? '#C0392B' : p.accent,
+      doneText: sold ? 'Le Duster est vendu, son annonce est retirée de votre site' : 'Nouveau prix enregistré : 16 490 €',
+      next: () => go(step + 1), back: () => go(step - 1), close,
+      steps: ['La voiture', 'Que faire', 'Confirmer'].map((label, i) => {
+        const n = i + 1, done = n < step, cur = n === step;
+        return { label, current: cur ? 'step' : 'false', mark: done ? '✓' : String(n),
+          chipBg: cur ? p.soft : 'transparent', dotBg: cur ? p.accent : done ? '#DCF0E5' : '#ECEEF2',
+          dotInk: cur ? '#fff' : done ? '#1E7A50' : '#8A90A0', color: cur ? p.ink : done ? '#1E7A50' : '#9AA0AE', weight: cur ? '500' : '400' };
+      }),
+      actions: defs.map((a) => { const on = a.id === action; return { ...a, on: on ? 'true' : 'false', border: on ? p.accent : '#E3E6EC', bg: on ? p.tint : '#fff', pick: () => this.setState({ action: a.id }) }; })
+    };
+  }
+}
+</script>
+</body>
+</html>

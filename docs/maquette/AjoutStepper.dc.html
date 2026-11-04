@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Ajouter une voiture</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="font-family:'Inter Tight',system-ui,sans-serif;color:#1C2230;position:fixed;inset:0;min-height:900px;background:rgba(28,34,48,.26);display:flex;align-items:flex-start;justify-content:center;padding:72px 16px;box-sizing:border-box;z-index:20">
+<div role="dialog" aria-modal="true" aria-labelledby="add-title" style="width:100%;max-width:620px;background:#fff;border-radius:20px;box-shadow:0 24px 60px rgba(28,34,48,.16);display:flex;flex-direction:column;overflow:hidden">
+
+<div style="padding:24px 28px 20px;display:flex;flex-direction:column;gap:18px;background:linear-gradient(180deg,{{p.band}} 0%,#FFFFFF 100%);border-bottom:1px solid #EEF0F5">
+<div style="display:flex;justify-content:space-between;align-items:center">
+<h2 id="add-title" style="margin:0;font-size:20px;font-weight:500">Ajouter une voiture</h2>
+<button type="button" aria-label="Fermer" onClick="{{close}}" style="width:40px;height:40px;border-radius:10px;border:0;background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5B606B" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+</div>
+<sc-if value="{{notDone}}" hint-placeholder-val="{{ true }}">
+<ol aria-label="Étapes" style="list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px">
+<sc-for list="{{steps}}" as="s" hint-placeholder-count="4">
+<li aria-current="{{s.current}}" style="display:flex;align-items:center;gap:8px;background:{{s.chipBg}};border-radius:999px;padding:6px 10px 6px 6px;min-width:0">
+<span style="width:22px;height:22px;border-radius:11px;background:{{s.dotBg}};color:{{s.dotInk}};font-size:12px;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0">{{s.mark}}</span>
+<span style="font-size:12.5px;font-weight:{{s.weight}};color:{{s.color}};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{s.label}}</span>
+</li>
+</sc-for>
+</ol>
+</sc-if>
+</div>
+
+<div style="padding:26px 32px 8px;min-height:260px;box-sizing:border-box;display:flex;flex-direction:column;gap:18px">
+
+<sc-if value="{{is1}}" hint-placeholder-val="{{ true }}">
+<label style="display:flex;flex-direction:column;gap:10px;font-size:14px;color:#5B606B">Quelle est la plaque ?
+<input value="GA-702-CE" style="font-family:'JetBrains Mono',monospace;font-weight:500;font-size:24px;letter-spacing:.08em;height:62px;border:1px solid #C9CED8;background:#FAFBFC;border-radius:12px;padding:0 18px;color:#1C2230;text-transform:uppercase">
+</label>
+<span style="font-size:14px;color:#8A8F99">On retrouve le modèle et la version. Vous pouvez aussi taper le numéro de série.</span>
+</sc-if>
+
+<sc-if value="{{is2}}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;gap:16px;align-items:center;background:#F1F9F4;border:1px solid #D6EEDF;border-radius:16px;padding:18px">
+<span style="width:52px;height:52px;border-radius:14px;background:#DCF0E5;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1E7A50" stroke-width="1.8" aria-hidden="true"><path d="M5 16l1.5-5h11L19 16"></path><rect x="3" y="16" width="18" height="4" rx="1"></rect><circle cx="7.5" cy="18" r=".5"></circle><circle cx="16.5" cy="18" r=".5"></circle></svg></span>
+<div style="display:flex;flex-direction:column;gap:4px;min-width:0">
+<span style="font-size:12px;color:#1E7A50;font-weight:500">Voiture trouvée</span>
+<span style="font-size:22px;font-weight:500">Renault Austral <span style="color:#5A6172;font-weight:400;font-size:16px">E-Tech 200 Techno</span></span>
+<span style="font-size:14px;color:#5A6172">Avril 2023 · Hybride · Automatique · 200 ch</span>
+</div>
+</div>
+<button type="button" style="font:inherit;font-size:14px;font-weight:500;color:{{p.ink}};background:none;border:0;padding:8px 0;align-self:flex-start;cursor:pointer">Ce n'est pas ça ? Corriger les informations</button>
+</sc-if>
+
+<sc-if value="{{is3}}" hint-placeholder-val="{{ false }}">
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">
+<label style="display:flex;flex-direction:column;gap:8px;font-size:14px;color:#5B606B">Kilométrage
+<span style="display:flex;align-items:center;border:1px solid #D5D9E1;background:#FAFBFC;border-radius:12px;padding:0 16px;height:56px;gap:8px"><input value="19 300" style="font:inherit;font-size:20px;font-weight:500;border:0;outline:0;flex:1;min-width:0;color:#1C2230"><span style="color:#8A8F99">km</span></span>
+</label>
+<label style="display:flex;flex-direction:column;gap:8px;font-size:14px;color:#5B606B">Prix de vente
+<span style="display:flex;align-items:center;border:1px solid #D5D9E1;background:#FAFBFC;border-radius:12px;padding:0 16px;height:56px;gap:8px"><input value="31 900" style="font:inherit;font-size:20px;font-weight:500;border:0;outline:0;flex:1;min-width:0;color:#1C2230"><span style="color:#8A8F99">€ TTC</span></span>
+</label>
+</div>
+<button type="button" style="font:inherit;font-size:14px;font-weight:500;color:{{p.ink}};background:none;border:0;padding:8px 0;align-self:flex-start;cursor:pointer">+ Ajouter le lien HistoVec (facultatif)</button>
+</sc-if>
+
+<sc-if value="{{is4}}" hint-placeholder-val="{{ false }}">
+<span style="font-size:14px;color:#5B606B">Qui fait les photos ?</span>
+<div role="radiogroup" aria-label="Photos" style="display:flex;flex-direction:column;gap:10px">
+<sc-for list="{{modes}}" as="m" hint-placeholder-count="2">
+<button type="button" role="radio" aria-checked="{{m.on}}" onClick="{{m.pick}}" style="font:inherit;text-align:left;border:1px solid {{m.border}};background:{{m.bg}};border-radius:14px;padding:16px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;color:#1C2230">
+<span style="width:44px;height:44px;border-radius:12px;background:{{m.iconBg}};color:{{m.iconInk}};display:flex;align-items:center;justify-content:center;flex-shrink:0" aria-hidden="true"><sc-if value="{{m.isPhone}}" hint-placeholder-val="{{ true }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{m.iconInk}}" stroke-width="1.8"><rect x="7" y="3" width="10" height="18" rx="2"></rect><path d="M11 18h2"></path></svg></sc-if><sc-if value="{{m.isUpload}}" hint-placeholder-val="{{ false }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5B3FC4" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="9" cy="10" r="1.5"></circle><path d="M21 16l-5-5-8 8"></path></svg></sc-if></span>
+<span style="display:flex;flex-direction:column;gap:2px"><span style="font-size:15px;font-weight:500">{{m.title}}</span><span style="font-size:14px;color:#6B707A">{{m.text}}</span></span>
+</button>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{isDone}}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px;padding:12px 0 8px">
+<span style="width:56px;height:56px;border-radius:28px;background:#E3F4EA;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0F7A4A" stroke-width="2.5" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg></span>
+<span style="font-size:20px;font-weight:500">L'Austral est dans votre stock</span>
+<span style="font-size:15px;color:#6B707A;max-width:420px;line-height:1.5">{{doneText}}</span>
+</div>
+</sc-if>
+</div>
+
+<div style="padding:20px 32px 28px;display:flex;align-items:center;gap:10px">
+<sc-if value="{{notDone}}" hint-placeholder-val="{{ true }}">
+<sc-if value="{{canBack}}" hint-placeholder-val="{{ false }}">
+<button type="button" onClick="{{back}}" style="font:inherit;font-size:15px;font-weight:500;height:48px;padding:0 16px;border-radius:12px;border:0;background:transparent;color:#3D414A;cursor:pointer">Retour</button>
+</sc-if>
+<span style="margin-left:auto;font-size:13px;color:#8A8F99">Étape {{stepNum}} sur 4</span>
+<button type="button" onClick="{{next}}" style="font:inherit;font-size:15px;font-weight:500;height:48px;padding:0 24px;border-radius:12px;border:0;background:{{p.accent}};color:#fff;cursor:pointer;box-shadow:0 4px 12px {{p.glow}}">{{nextLabel}}</button>
+</sc-if>
+<sc-if value="{{isDone}}" hint-placeholder-val="{{ false }}">
+<button type="button" onClick="{{restart}}" style="font:inherit;font-size:15px;font-weight:500;height:48px;padding:0 18px;border-radius:12px;border:0;background:{{p.tint}};color:{{p.ink}};cursor:pointer;margin-left:auto">Ajouter une autre</button>
+<button type="button" onClick="{{close}}" style="font:inherit;font-size:15px;font-weight:500;height:48px;padding:0 22px;border-radius:12px;border:0;background:{{p.accent}};color:#fff;cursor:pointer">Voir la voiture</button>
+</sc-if>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"onClose":{"editor":null},"palette":{"editor":"enum","options":["bleu","indigo","sarcelle","terracotta","sapin"],"default":"bleu"},"$preview":{"width":1440,"height":900}}'>
+const PALETTES = {
+  bleu: { accent: '#2F5BEA', ink: '#2346C2', soft: '#E3E9FB', tint: '#EEF2FD', band: '#F3F6FD', line: '#BCC9F5', glow: 'rgba(47,91,234,.22)' },
+  indigo: { accent: '#5B4BDB', ink: '#4536B8', soft: '#E8E5FB', tint: '#F1EFFD', band: '#F5F4FE', line: '#CFC8F6', glow: 'rgba(91,75,219,.22)' },
+  sarcelle: { accent: '#0E7C86', ink: '#0A626A', soft: '#DAEFF0', tint: '#EAF6F7', band: '#F1F9F9', line: '#B9E0E3', glow: 'rgba(14,124,134,.2)' },
+  terracotta: { accent: '#C8553D', ink: '#A3432F', soft: '#F8E3DC', tint: '#FCF1ED', band: '#FDF5F2', line: '#F0CBBF', glow: 'rgba(200,85,61,.2)' },
+  sapin: { accent: '#2F7A55', ink: '#235E41', soft: '#DDEFE5', tint: '#EDF6F1', band: '#F3F9F5', line: '#C2E2D0', glow: 'rgba(47,122,85,.2)' }
+};
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { step: 1, mode: 'phone' }; }
+  renderVals() {
+    const p = PALETTES[this.props.palette] || PALETTES.bleu;
+    const step = this.state.step;
+    const labels = ['La plaque', 'La voiture', 'Prix et km', 'Les photos'];
+    const go = (n) => this.setState({ step: n });
+    const close = () => { this.setState({ step: 1 }); if (this.props.onClose) this.props.onClose(); };
+    const modes = [
+      { id: 'phone', title: 'Sur le parking, au téléphone', text: 'La voiture apparaît dans l\'appli de Photographe démo.', isPhone: true, isUpload: false, iconBg: p.soft, iconInk: p.ink },
+      { id: 'upload', title: "J'ai déjà les photos", text: 'Vous les importez depuis l\'ordinateur.', isPhone: false, isUpload: true, iconBg: '#EFEBFD', iconInk: '#5B3FC4' }
+    ];
+    return {
+      p,
+      is1: step === 1, is2: step === 2, is3: step === 3, is4: step === 4, isDone: step === 5, notDone: step < 5,
+      canBack: step > 1, stepNum: step,
+      nextLabel: step === 1 ? 'Chercher la voiture' : step === 4 ? 'Ajouter la voiture' : 'Continuer',
+      next: () => go(step + 1), back: () => go(step - 1), restart: () => go(1), close,
+      doneText: this.state.mode === 'phone'
+        ? 'Photographe démo a reçu la demande. Les photos apparaîtront dans « Vérifier les photos » une fois traitées.'
+        : 'Importez les photos depuis la fiche de la voiture, on les place dans votre showroom.',
+      steps: labels.map((label, i) => {
+        const n = i + 1;
+        const done = n < step, cur = n === step;
+        return { label, current: cur ? 'step' : 'false', mark: done ? '✓' : String(n),
+          chipBg: cur ? p.soft : 'transparent', dotBg: cur ? p.accent : done ? '#DCF0E5' : '#ECEEF2',
+          dotInk: cur ? '#fff' : done ? '#1E7A50' : '#8A90A0', color: cur ? p.ink : done ? '#1E7A50' : '#9AA0AE', weight: cur ? '500' : '400' };
+      }),
+      modes: modes.map((m) => {
+        const on = m.id === this.state.mode;
+        return { ...m, on: on ? 'true' : 'false', border: on ? p.accent : '#E3E6EC', bg: on ? p.tint : '#fff', dot: on ? p.accent : 'transparent', pick: () => this.setState({ mode: m.id }) };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>
