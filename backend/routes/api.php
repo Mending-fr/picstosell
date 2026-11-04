@@ -58,6 +58,8 @@ Route::prefix('v1')->group(function () {
             Route::post('vehicles/{id}/uploads', [PhotoController::class, 'uploads'])->whereNumber('id');
             Route::post('vehicles/{id}/photos', [PhotoController::class, 'store'])->whereNumber('id');
             Route::post('vehicles/{id}/renders', [PhotoController::class, 'renders'])->whereNumber('id');
+            // Une photo ratée se supprime depuis l'appli, juste après la prise de vue.
+            Route::delete('photos/{id}', [PhotoController::class, 'destroy'])->whereNumber('id');
 
             Route::middleware('role:manager')->group(function () {
                 Route::patch('vehicles/{id}', [VehicleController::class, 'update'])->whereNumber('id');
@@ -70,7 +72,6 @@ Route::prefix('v1')->group(function () {
                 Route::post('vehicles/{id}/description', [VehicleController::class, 'description'])->whereNumber('id');
                 Route::post('vehicles/{id}/approve-all', [RenderController::class, 'approveAll'])->whereNumber('id');
                 Route::get('vehicles/{id}/export', [VehicleController::class, 'export'])->whereNumber('id');
-                Route::delete('photos/{id}', [PhotoController::class, 'destroy'])->whereNumber('id');
                 Route::patch('photos/{id}', [PhotoController::class, 'update'])->whereNumber('id');
 
                 Route::post('renders/{id}/approve', [RenderController::class, 'approve'])->whereNumber('id');

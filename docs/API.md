@@ -19,7 +19,8 @@ Dates : ISO 8601.
 - `vehicle.status` : `to_photograph`, `processing`, `to_review`, `ready`, `online`, `sold`, `archived`
 - `fuel` : `essence`, `diesel`, `hybride`, `hybride_rechargeable`, `electrique`, `gpl`, `autre`
 - `gearbox` : `manuelle`, `automatique`
-- `shot_key` (angles extérieurs) : `front`, `front_left`, `front_right`, `left`, `right`, `rear`, `rear_left`, `rear_right`
+- `shot_key` (angles extérieurs) : `front_left`, `front`, `front_right`, `right`, `rear_right`, `rear`, `rear_left`, `left` (ordre d'affichage)
+- `kind` d'une photo : `exterior` (passe par le showroom), `interior`, `detail` (publiées telles quelles). À l'envoi, `auto` laisse l'IA décider.
 - `photo.kind` : `exterior` (lié à un angle), `interior`, `detail`
 - `render.status` : `pending`, `processing`, `to_review`, `approved`, `failed`, `kept_original`
 - `render.rating` : `publishable`, `redo`, `unusable` (ou null)
@@ -52,7 +53,8 @@ Dates : ISO 8601.
  "photos":[Photo], "renders":[Render]}          // photos/renders seulement sur GET /vehicles/{id}
 
 // Photo
-{"id":5,"vehicle_id":12,"shot_key":"front_left","kind":"exterior","url":"https://…","thumb_url":"https://…","position":1}
+{"id":5,"vehicle_id":12,"shot_key":"front_left","kind":"exterior","label":null,"display_label":"Avant gauche","classified":"ai","url":"https://…","thumb_url":"https://…","position":0}
+// classified : "ai" (reconnue par l'IA), "user" (corrigée à la main), null (non rangée)
 
 // Render
 {"id":9,"photo_id":5,"vehicle_id":12,"shot_key":"front_left","status":"to_review","url":"https://…",
@@ -97,7 +99,10 @@ Dates : ISO 8601.
 - `POST /vehicles/{id}/description` → `{description}` (proposition, non enregistrée)
 - `POST /vehicles/{id}/uploads` `{files:[{shot_key|null, kind, content_type}]}` → `{uploads:[{path, upload_url, headers}]}` (PUT direct vers le bucket)
 - `POST /vehicles/{id}/photos` soit JSON `{path, shot_key, kind}` après un upload signé, soit multipart `file`, `shot_key`, `kind` → Photo
-- `DELETE /photos/{id}` → 204
+- `DELETE /photos/{id}` → 204 (aussi pour les employés photo : photo ratée)
+- `PATCH /photos/{id}` `{kind, shot_key?, label?}` → Photo (correction à la main ; une photo qui quitte l'extérieur perd ses rendus)
+- Prise de vue libre : envoyer `kind: "auto"` sans `shot_key`. Le serveur reconnaît la photo (Claude, `ANTHROPIC_VISION_MODEL`, Haiku par défaut). Sans clé ou en cas d'échec : `exterior`, `classified: null`.
+- Showroom : un seul décor (`shots[0]`, clé `main`) ; `placement` = `{height, bottom, offset_x}` en % (hauteur de la voiture, distance au bas, décalage).
 - `POST /vehicles/{id}/renders` → `{data: Render[]}` (lance un rendu par photo extérieure sans rendu actif)
 - `GET /vehicles/{id}/export` → archive ZIP des photos validées
 
@@ -129,7 +134,7 @@ Dates : ISO 8601.
 - `GET /admin/ai-configs` → `{data: AiConfig[]}` ; `POST /admin/ai-configs` ; `PATCH /admin/ai-configs/{id}`
 - `GET /admin/comparisons` → `{data:[{id,name,status,created_at,ai_config_ids,vehicle_ids}]}`
 - `POST /admin/comparisons` `{name, garage_id, ai_config_ids:[], vehicle_ids:[]}` → Comparison (lance les rendus)
-- `GET /admin/comparisons/{id}` → `{id,name,status, configs:AiConfig[], vehicles:[{id,plate,label}], summary:[{ai_config_id, rated, publishable, redo, unusable, publishable_pct, cost_per_vehicle_usd, avg_duration_ms}], estimate_usd, grid:{<vehicle_id>:{<shot_key>:{source_url, renders:{<ai_config_id>: Render}}}}}`
+- `GET /admin/comparisons/{id}` → `{id,name,status, configs:AiConfig[], vehicles:[{id,plate,label}], summary:[{ai_config_id, rated, publishable, redo, unusable, publishable_pct, cost_per_vehicle_usd, avg_duration_ms}], estimate_usd, grid:{<vehicle_id>:{"p<photo_id>":{label, source_url, renders:{<ai_config_id>: Render}}}}}`
 - `POST /admin/comparisons/{id}/run` → relance avec les réglages actuels
 
 ### Public (sans authentification)
