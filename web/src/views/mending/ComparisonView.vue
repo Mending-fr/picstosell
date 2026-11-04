@@ -214,7 +214,7 @@ const isPending = (r: Render | null) => !!r && (r.status === 'pending' || r.stat
     <section aria-labelledby="score" class="card">
       <div class="row between" style="align-items: baseline">
         <h2 id="score" style="font-size: 18px">Résultats</h2>
-        <span class="muted" style="font-size: 13px">{{ totals.rated }} photos notées sur {{ totals.total }}</span>
+        <span class="muted" style="font-size: 13px">{{ totals.rated }} photo{{ totals.rated > 1 ? 's' : '' }} notée{{ totals.rated > 1 ? 's' : '' }} sur {{ totals.total }}</span>
       </div>
       <div style="overflow-x: auto">
         <table class="t" style="min-width: 760px">

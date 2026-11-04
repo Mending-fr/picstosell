@@ -18,7 +18,7 @@ async function load() {
     const [l, c] = await Promise.all([get<{ data: ComparisonListItem[] }>('/admin/comparisons'), get<{ data: AiConfig[] }>('/admin/ai-configs')])
     list.value = l.data
     configs.value = c.data
-    if (!l.data.length) creating.value = true
+    if (!l.data.length) startCreate()
   } catch (e) {
     error.value = errorMessage(e)
   }
@@ -52,14 +52,13 @@ watch(
     if (g && !form.name) form.name = `Test ${g.name}`
   },
 )
-watch(creating, (c) => {
-  if (c) {
-    if (!form.configs.length) form.configs = configs.value.filter((x) => x.active).slice(0, 3).map((x) => x.id)
-    if (!vehicles.value) loadVehicles()
-    const g = session.garages.find((x) => x.id === form.garage_id)
-    if (g && !form.name) form.name = `Test ${g.name}`
-  }
-})
+function startCreate() {
+  creating.value = true
+  if (!form.configs.length) form.configs = configs.value.filter((x) => x.active).slice(0, 3).map((x) => x.id)
+  if (!vehicles.value) loadVehicles()
+  const g = session.garages.find((x) => x.id === form.garage_id)
+  if (g && !form.name) form.name = `Test ${g.name}`
+}
 
 const estimate = computed(() => {
   const unit = configs.value.filter((c) => form.configs.includes(c.id)).reduce((t, c) => t + Number(c.unit_cost_usd), 0)
@@ -106,7 +105,7 @@ const statusLabel = (s: string) => (s === 'running' ? 'En cours' : s === 'done' 
       <h1>Comparer les modèles</h1>
       <p class="lead" style="margin: 0">Mêmes photos, plusieurs réglages, notés côte à côte avant de choisir celui d'un garage.</p>
     </div>
-    <button v-if="!creating" type="button" class="btn btn-primary" @click="creating = true">Nouveau test</button>
+    <button v-if="!creating" type="button" class="btn btn-primary" @click="startCreate">Nouveau test</button>
   </div>
 
   <p v-if="error" class="alert alert-error" role="alert">{{ error }} <button type="button" class="btn-link" @click="load">Réessayer</button></p>
@@ -168,7 +167,7 @@ const statusLabel = (s: string) => (s === 'running' ? 'En cours' : s === 'done' 
     <p v-if="errors.form" class="alert alert-error" role="alert" style="margin: 0">{{ errors.form }}</p>
     <div class="est">
       <span style="font-size: 14px">Environ <strong>{{ estimate.photos }} photos</strong> à générer, soit <strong>{{ usd(estimate.cost) }}</strong></span>
-      <button type="submit" class="btn btn-dark" :disabled="saving"><span v-if="saving" class="spinner" aria-hidden="true" />Lancer le test</button>
+      <button type="submit" class="btn btn-dark" :disabled="saving || !vehicles"><span v-if="saving" class="spinner" aria-hidden="true" />Lancer le test</button>
     </div>
   </form>
 

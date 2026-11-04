@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import GarageSwitcher from './GarageSwitcher.vue'
-import { session, isSuper, isManager, logout } from '../session'
+import { session, isSuper, isManager, logout, clearSession } from '../session'
 
 const props = defineProps<{ variant: 'garage' | 'mending' }>()
 const route = useRoute()
@@ -56,7 +56,8 @@ const usagePct = computed(() => {
 
 async function doLogout() {
   await logout()
-  router.replace('/login')
+  await router.replace('/login')
+  clearSession()
 }
 </script>
 
@@ -107,6 +108,7 @@ async function doLogout() {
   gap: 4px;
   position: sticky;
   top: 0;
+  align-self: flex-start;
   height: 100vh;
   overflow-y: auto;
 }

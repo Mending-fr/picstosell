@@ -116,13 +116,14 @@ export async function login(email: string, password: string): Promise<void> {
   await loadMe()
 }
 
+/** Ferme la session côté serveur ; l'appelant navigue vers /login puis appelle clearSession(). */
 export async function logout(): Promise<void> {
   try {
     await post('/auth/logout')
   } catch {
     /* le jeton est peut-être déjà invalide */
   }
-  clearSession()
+  auth.setToken(null)
 }
 
 export function clearSession() {
