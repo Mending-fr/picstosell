@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { onThousandsInput } from '../inputs'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { ApiError, del, download, get, patch, post, errorMessage } from '../api'
@@ -617,8 +618,8 @@ onBeforeRouteLeave(() => {
           </div>
           <template v-if="v">
             <div class="two">
-              <label class="lbl">Prix TTC (€)<input id="v-price" v-model="form.price" class="f" inputmode="numeric" :aria-invalid="!!fieldErrors.price" /><span v-if="fieldErrors.price" class="err">{{ fieldErrors.price }}</span></label>
-              <label class="lbl">Kilométrage<input v-model="form.mileage" class="f" inputmode="numeric" :aria-invalid="!!fieldErrors.mileage" /></label>
+              <label class="lbl">Prix TTC (€)<input id="v-price" :value="form.price" class="f" inputmode="numeric" @input="form.price = onThousandsInput($event)" :aria-invalid="!!fieldErrors.price" /><span v-if="fieldErrors.price" class="err">{{ fieldErrors.price }}</span></label>
+              <label class="lbl">Kilométrage<input :value="form.mileage" class="f" inputmode="numeric" @input="form.mileage = onThousandsInput($event)" :aria-invalid="!!fieldErrors.mileage" /></label>
               <label class="lbl">
                 Boîte
                 <select v-model="form.gearbox" class="f">

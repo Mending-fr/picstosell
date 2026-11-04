@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { onThousandsInput } from '../inputs'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import AppModal from './AppModal.vue'
 import { get, post, errorMessage } from '../api'
@@ -220,7 +221,7 @@ const doneText = computed(() => {
           <label class="lbl big-lbl">
             Nouveau prix
             <span class="unit-f" :class="{ bad: !!priceErr }">
-              <input v-model="price" inputmode="numeric" placeholder="Ex. 16 490" :aria-invalid="!!priceErr" />
+              <input :value="price" inputmode="numeric" placeholder="Ex. 16 490" @input="price = onThousandsInput($event)" :aria-invalid="!!priceErr" />
               <span>€ TTC</span>
             </span>
             <span v-if="priceErr" class="err" role="alert">{{ priceErr }}</span>

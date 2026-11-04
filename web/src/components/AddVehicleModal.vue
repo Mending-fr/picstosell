@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { onPlateInput, onThousandsInput } from '../inputs'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import AppModal from './AppModal.vue'
@@ -341,8 +342,10 @@ const doneTitle = computed(() => {
         <label class="lbl big-lbl">
           Quelle est la plaque ?
           <input
-            v-model="plate"
+            :value="plate"
             class="f f-plate plate-in"
+            :class="{ complete: /^[A-Z]{2}-\d{3}-[A-Z]{2}$/.test(plate) }"
+            @input="plate = onPlateInput($event)"
             autocomplete="off"
             autocapitalize="characters"
             spellcheck="false"
@@ -380,7 +383,7 @@ const doneTitle = computed(() => {
         <div v-show="editing" id="car-fields" class="grid2">
           <label v-if="byVin || errors.plate" class="lbl">
             Plaque
-            <input v-model="plate" class="f f-plate" autocomplete="off" placeholder="AB-123-CD" :aria-invalid="!!errors.plate" />
+            <input :value="plate" class="f f-plate" autocomplete="off" placeholder="AB-123-CD" @input="plate = onPlateInput($event)" :aria-invalid="!!errors.plate" />
             <span v-if="errors.plate" class="err">{{ errors.plate }}</span>
           </label>
           <label class="lbl">Marque<input v-model="form.make" class="f" :aria-invalid="!!errors.make" /><span v-if="errors.make" class="err">{{ errors.make }}</span></label>
@@ -419,7 +422,7 @@ const doneTitle = computed(() => {
           <label class="lbl big-lbl">
             Kilométrage
             <span class="unit-f" :class="{ bad: !!errors.mileage }">
-              <input v-model="form.mileage" inputmode="numeric" placeholder="Ex. 19 300" :aria-invalid="!!errors.mileage" />
+              <input :value="form.mileage" inputmode="numeric" placeholder="Ex. 19 300" @input="form.mileage = onThousandsInput($event)" :aria-invalid="!!errors.mileage" />
               <span>km</span>
             </span>
             <span v-if="errors.mileage" class="err">{{ errors.mileage }}</span>
@@ -427,7 +430,7 @@ const doneTitle = computed(() => {
           <label class="lbl big-lbl">
             Prix de vente
             <span class="unit-f" :class="{ bad: !!errors.price }">
-              <input v-model="form.price" inputmode="numeric" placeholder="Ex. 31 900" :aria-invalid="!!errors.price" />
+              <input :value="form.price" inputmode="numeric" placeholder="Ex. 31 900" @input="form.price = onThousandsInput($event)" :aria-invalid="!!errors.price" />
               <span>€ TTC</span>
             </span>
             <span v-if="errors.price" class="err">{{ errors.price }}</span>
@@ -706,5 +709,12 @@ const doneTitle = computed(() => {
   .found-t {
     font-size: 19px;
   }
+}
+.plate-in.complete {
+  border-color: var(--green-ink, #1E7A50);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='%231E7A50' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12l5 5 9-10'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 18px center;
+  transition: border-color 0.15s ease;
 }
 </style>
