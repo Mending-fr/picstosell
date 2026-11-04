@@ -1,5 +1,5 @@
 // Modales globales de l'espace garage : « Ajouter une voiture » et « Changer un prix ou marquer vendue ».
-// Ouvertes depuis l'accueil, Mon stock ou les raccourcis N et S ; montées une seule fois dans App.vue.
+// Ouvertes depuis l'accueil, Mon parc ou les raccourcis N et S ; montées une seule fois dans App.vue.
 import { reactive } from 'vue'
 
 export const modals = reactive({

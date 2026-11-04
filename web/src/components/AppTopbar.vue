@@ -39,7 +39,7 @@ const links = computed<Link[]>(() => {
   }
   const l: Link[] = [
     { to: '/', label: 'Accueil', exact: true },
-    { to: '/vehicles', label: 'Mon stock' },
+    { to: '/vehicles', label: 'Mon parc' },
   ]
   if (isManager.value) {
     l.push(

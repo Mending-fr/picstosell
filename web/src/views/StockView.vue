@@ -144,7 +144,7 @@ function exportCsv() {
 
 <template>
   <div class="page-head">
-    <h1>Mon stock</h1>
+    <h1>Mon parc</h1>
     <div role="tablist" aria-label="Filtrer par étape" class="tabs grow">
       <button v-for="t in TABS" :key="t.id" type="button" role="tab" class="tab" :aria-selected="tab === t.id" @click="tab = t.id">
         {{ t.label }}<span class="n">{{ all ? count(t) : '' }}</span>
