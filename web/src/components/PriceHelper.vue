@@ -47,7 +47,7 @@ const aw = () => advice.value?.sources.find((s) => s.provider === 'autoways')
 </script>
 
 <template>
-  <div class="ph">
+  <div class="pricehelp">
     <button v-if="!advice && !loading" type="button" class="btn ph-btn" @click="run()">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
       M'aider à fixer le prix
@@ -97,7 +97,7 @@ const aw = () => advice.value?.sources.find((s) => s.provider === 'autoways')
 </template>
 
 <style scoped>
-.ph {
+.pricehelp {
   display: flex;
   flex-direction: column;
   gap: 10px;

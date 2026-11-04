@@ -478,6 +478,12 @@ onBeforeRouteLeave(() => {
           </template>
         </div>
         <div v-if="v && isManager" class="row">
+          <template v-if="dirty">
+            <span class="unsaved">Modifications non enregistrées</span>
+            <button type="button" class="btn btn-primary" :disabled="saving" @click="saveListing()">
+              <span v-if="saving" class="spinner" aria-hidden="true" />Enregistrer
+            </button>
+          </template>
           <button type="button" class="btn" :disabled="exporting" @click="exportZip">
             <span v-if="exporting" class="spinner" aria-hidden="true" />Télécharger les photos
           </button>
@@ -622,12 +628,11 @@ onBeforeRouteLeave(() => {
           </template>
         </section>
 
-        <!-- annonce -->
-        <aside v-if="isManager" aria-label="L'annonce" class="card side">
+        <!-- la voiture -->
+        <section v-if="isManager" aria-label="La voiture" class="card side">
           <div class="row between">
-            <h2 style="font-size: 18px">L'annonce</h2>
-            <span v-if="dirty" class="muted" style="font-size: 13px; color: #A55A0B; font-weight: 500">Modifications non enregistrées</span>
-            <span v-else-if="v" class="muted" style="font-size: 13px">{{ STATUS[v.status].label }}</span>
+            <h2 class="side-t">La voiture</h2>
+            <span v-if="v" class="muted" style="font-size: 13px">{{ STATUS[v.status].label }}</span>
           </div>
           <template v-if="v">
             <div class="two">
@@ -649,7 +654,7 @@ onBeforeRouteLeave(() => {
               </label>
               <label class="lbl">1re immatriculation<input v-model="form.first_registration" class="f" type="month" /></label>
               <div class="two-in">
-                <label class="lbl">Puissance (ch)<input v-model="form.power_hp" class="f" inputmode="numeric" /></label>
+                <label class="lbl">Puissance<input v-model="form.power_hp" class="f" inputmode="numeric" placeholder="ch" aria-label="Puissance en chevaux" /></label>
                 <label class="lbl">CV<input v-model="form.fiscal_hp" class="f" inputmode="numeric" /></label>
               </div>
             </div>
@@ -683,17 +688,25 @@ onBeforeRouteLeave(() => {
                 <span v-if="fieldErrors.history_url" class="err">{{ fieldErrors.history_url }}</span>
               </label>
             </div>
+          </template>
+          <template v-else>
+            <div v-for="i in 5" :key="i" class="skel" style="height: 44px" />
+          </template>
+        </section>
 
+        <!-- annonce -->
+        <section v-if="isManager" aria-label="L'annonce" class="card side">
+          <div class="row between">
+            <h2 class="side-t">L'annonce</h2>
+            <span class="muted" style="font-size: 12px">Texte écrit par l'IA, à relire</span>
+          </div>
+          <template v-if="v">
             <label class="lbl">Description<textarea v-model="form.description" class="f" rows="7" placeholder="Quelques phrases sur la voiture : entretien, propriétaires, points forts." /></label>
             <div class="row">
               <button type="button" class="btn btn-sm" :disabled="rewriting" @click="rewrite"><span v-if="rewriting" class="spinner" aria-hidden="true" />Réécrire le texte</button>
               <button type="button" class="btn btn-sm" :aria-expanded="showEquipment" @click="showEquipment = !showEquipment">Équipements ({{ equipmentCount }})</button>
             </div>
             <EquipmentEditor v-if="showEquipment" v-model="equipment" />
-
-            <button type="button" class="btn" :class="{ 'btn-primary': dirty }" :disabled="!dirty || saving" @click="saveListing()">
-              <span v-if="saving" class="spinner" aria-hidden="true" />{{ dirty ? 'Enregistrer les modifications' : 'Annonce enregistrée' }}
-            </button>
 
             <div class="where">
               <span class="muted" style="font-size: 13px; font-weight: 500">Où la mettre en ligne</span>
@@ -722,9 +735,9 @@ onBeforeRouteLeave(() => {
             </div>
           </template>
           <template v-else>
-            <div v-for="i in 5" :key="i" class="skel" style="height: 44px" />
+            <div v-for="i in 4" :key="i" class="skel" style="height: 44px" />
           </template>
-        </aside>
+        </section>
       </div>
     </template>
   </div>
@@ -732,35 +745,52 @@ onBeforeRouteLeave(() => {
 
 <style scoped>
 .page {
-  padding: 24px 40px 48px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  max-width: 1600px;
-  margin: 0 auto;
+  gap: 18px;
 }
 .title {
-  font-size: 24px;
+  font-size: 22px;
 }
+.unsaved {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--amber-ink);
+}
+/* trois colonnes : photos, la voiture, l'annonce */
 .layout {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px 380px;
+  gap: 18px;
+  align-items: start;
 }
 .photos {
-  flex: 999 1 620px;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 .side {
-  flex: 1 1 380px;
   min-width: 0;
-  padding: 20px;
-  position: sticky;
-  top: 16px;
+  padding: 18px 20px;
+  gap: 14px;
+}
+.side-t {
+  font-size: 15px;
+  font-weight: 500;
+}
+@media (max-width: 1280px) {
+  .layout {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .photos {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 800px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 .viewer {
   padding: 16px;
@@ -836,8 +866,8 @@ onBeforeRouteLeave(() => {
 }
 .strip {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 8px;
 }
 .th {
   text-align: left;

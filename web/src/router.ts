@@ -21,7 +21,7 @@ const router = createRouter({
     { path: '/vehicles', component: () => import('./views/StockView.vue'), meta: { layout: 'garage', title: 'Mon stock' } },
     // Ancien lien : l'ajout se fait désormais dans une modale, ouverte par-dessus Mon stock.
     { path: '/vehicles/new', redirect: { path: '/vehicles', query: { ajouter: '1' } } },
-    { path: '/vehicles/:id(\\d+)', component: () => import('./views/VehicleView.vue'), meta: { layout: 'bare', title: 'Vérifier et mettre en ligne' } },
+    { path: '/vehicles/:id(\\d+)', component: () => import('./views/VehicleView.vue'), meta: { layout: 'garage', title: 'Vérifier et mettre en ligne' } },
     { path: '/leads', component: () => import('./views/LeadsView.vue'), meta: { layout: 'garage', role: 'manager', title: 'Demandes reçues' } },
     { path: '/showroom', component: () => import('./views/ShowroomView.vue'), meta: { layout: 'garage', role: 'manager', title: 'Mon showroom' } },
     { path: '/site', component: () => import('./views/SiteView.vue'), meta: { layout: 'garage', role: 'manager', title: 'Mon site' } },

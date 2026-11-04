@@ -3,21 +3,27 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { get, post, errorMessage } from '../api'
 import { session, isManager, toast, refreshSidebar } from '../session'
-import { todayLabel, vehicleTitle } from '../labels'
+import { relative, todayLabel, vehicleTitle } from '../labels'
 import { modals, openAdd, openPrice, typingIn } from '../modals'
-import type { Dashboard, TodoAction, TodoItem, Vehicle } from '../types'
+import type { Dashboard, Lead, TodoAction, TodoItem, Vehicle } from '../types'
 
 const router = useRouter()
 const data = ref<Dashboard | null>(null)
 const names = ref<Record<number, string>>({})
 const error = ref('')
 const busyRow = ref<string | null>(null)
+const leads = ref<Lead[] | null>(null)
 
 async function load() {
   error.value = ''
   try {
-    const [d, list] = await Promise.all([get<Dashboard>('/dashboard'), get<{ data: Vehicle[] }>('/vehicles').catch(() => null)])
+    const [d, list, l] = await Promise.all([
+      get<Dashboard>('/dashboard'),
+      get<{ data: Vehicle[] }>('/vehicles').catch(() => null),
+      isManager.value ? get<{ data: Lead[] }>('/leads').catch(() => null) : Promise.resolve(null),
+    ])
     data.value = d
+    leads.value = l ? l.data.slice(0, 4) : []
     session.usage = d.usage
     if (list) names.value = Object.fromEntries(list.data.map((v) => [v.id, v.model || vehicleTitle(v, false)]))
   } catch (e) {
@@ -129,6 +135,8 @@ const stockLine = computed(() => {
   return items.filter((i) => !i.hide)
 })
 
+const stockTotal = computed(() => stockLine.value.reduce((a, s) => a + s.n, 0))
+
 // ---------- raccourcis (la recherche « / » est dans la barre du haut) ----------
 function onKey(e: KeyboardEvent) {
   if (e.metaKey || e.ctrlKey || e.altKey || modals.add || modals.price || typingIn(e)) return
@@ -153,14 +161,12 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
 <template>
   <div class="home">
     <header class="hello">
-      <div class="col hello-t">
-        <span class="date">{{ todayLabel() }}</span>
-        <h1>
-          Bonjour{{ firstName ? ` ${firstName}` : '' }}.
-          <span v-if="data" class="sum">{{ summary }}</span>
-          <span v-else-if="!error" class="skel sum-skel" aria-hidden="true" />
-        </h1>
-      </div>
+      <h1>
+        Bonjour{{ firstName ? ` ${firstName}` : '' }}.
+        <span v-if="data" class="sum">{{ summary }}</span>
+        <span v-else-if="!error" class="skel sum-skel" aria-hidden="true" />
+      </h1>
+      <span class="date">{{ todayLabel() }}</span>
     </header>
 
     <p v-if="error" class="alert alert-error" role="alert" style="margin: 0">
@@ -169,55 +175,41 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
 
     <section aria-label="Actions principales" class="cards" :class="{ few: !isManager }">
       <button type="button" class="ac ac-add" aria-keyshortcuts="N" @click="openAdd">
-        <span class="ac-top">
-          <span class="ac-ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M12 5v14M5 12h14" /></svg></span>
-          <span class="kbd-inv" aria-hidden="true">N</span>
-        </span>
-        <span class="ac-t big">Ajouter une voiture</span>
-        <span class="ac-x">Par la plaque ou le numéro de série</span>
+        <span class="ac-ico" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M12 5v14M5 12h14" /></svg></span>
+        <span class="ac-txt"><span class="ac-t big">Ajouter une voiture</span><span class="ac-x">Par la plaque ou le numéro de série</span></span>
+        <span class="kbd-inv" aria-hidden="true">N</span>
       </button>
 
       <template v-if="isManager">
         <RouterLink :to="reviewTo" class="ac amber" aria-keyshortcuts="V">
-          <span class="ac-top">
-            <span class="ac-n">{{ c ? c.to_review : '' }}<span v-if="!c" class="skel" style="width: 20px; height: 20px" /></span>
-            <span class="ac-k" aria-hidden="true">V</span>
-          </span>
-          <span class="ac-t">Vérifier les photos</span>
-          <span class="ac-x">{{ !c ? 'Chargement…' : c.to_review ? carNames('review') : 'Rien à vérifier pour le moment' }}</span>
+          <span class="ac-n">{{ c ? c.to_review : '' }}<span v-if="!c" class="skel" style="width: 20px; height: 20px" /></span>
+          <span class="ac-txt"><span class="ac-t">Vérifier les photos</span><span class="ac-x">{{ !c ? 'Chargement…' : c.to_review ? carNames('review') : 'Rien à vérifier pour le moment' }}</span></span>
+          <span class="ac-k" aria-hidden="true">V</span>
         </RouterLink>
 
         <RouterLink :to="publishTo" class="ac green" aria-keyshortcuts="P">
-          <span class="ac-top">
-            <span class="ac-n">{{ c ? c.ready : '' }}<span v-if="!c" class="skel" style="width: 20px; height: 20px" /></span>
-            <span class="ac-k" aria-hidden="true">P</span>
-          </span>
-          <span class="ac-t">Mettre en ligne</span>
-          <span class="ac-x">{{ !c ? 'Chargement…' : c.ready ? carNames('publish') : 'Aucune voiture prête' }}</span>
+          <span class="ac-n">{{ c ? c.ready : '' }}<span v-if="!c" class="skel" style="width: 20px; height: 20px" /></span>
+          <span class="ac-txt"><span class="ac-t">Mettre en ligne</span><span class="ac-x">{{ !c ? 'Chargement…' : c.ready ? carNames('publish') : 'Aucune voiture prête' }}</span></span>
+          <span class="ac-k" aria-hidden="true">P</span>
         </RouterLink>
 
         <button type="button" class="ac slate" aria-keyshortcuts="S" @click="openPrice">
-          <span class="ac-top">
-            <span class="ac-n">€</span>
-            <span class="ac-k" aria-hidden="true">S</span>
-          </span>
-          <span class="ac-t">Prix ou vendue</span>
-          <span class="ac-x">Par la plaque ou le modèle</span>
+          <span class="ac-n">€</span>
+          <span class="ac-txt"><span class="ac-t">Prix ou vendue</span><span class="ac-x">Par la plaque ou le modèle</span></span>
+          <span class="ac-k" aria-hidden="true">S</span>
         </button>
       </template>
       <RouterLink v-else to="/vehicles?status=to_photograph" class="ac slate">
-        <span class="ac-top">
           <span class="ac-n">{{ c ? c.to_photograph : '' }}<span v-if="!c" class="skel" style="width: 20px; height: 20px" /></span>
-        </span>
-        <span class="ac-t">À photographier</span>
-        <span class="ac-x">{{ !c ? 'Chargement…' : c.to_photograph ? carNames('request_photos') : 'Aucune voiture en attente' }}</span>
+          <span class="ac-txt"><span class="ac-t">À photographier</span><span class="ac-x">{{ !c ? 'Chargement…' : c.to_photograph ? carNames('request_photos') : 'Aucune voiture en attente' }}</span></span>
       </RouterLink>
     </section>
 
-    <section aria-labelledby="todo" class="todo">
+    <div class="split" :class="{ solo: !isManager }">
+    <section aria-labelledby="todo" class="todo panel">
       <div class="todo-head">
         <h2 id="todo" class="section-title">À faire aujourd'hui</h2>
-        <RouterLink to="/vehicles" class="all">Tout voir</RouterLink>
+        <RouterLink to="/vehicles" class="all">Tout voir dans le stock</RouterLink>
       </div>
       <template v-if="!data && !error">
         <div v-for="i in 3" :key="i" class="tr">
@@ -250,38 +242,56 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
       </template>
     </section>
 
-    <section aria-label="Votre stock" class="stockline">
-      <template v-if="c">
-        <RouterLink v-for="s in stockLine" :key="s.label" :to="s.to" class="sl" :title="s.title || undefined">
-          <span class="dot" :style="{ background: s.dot }" /><strong>{{ s.n }}</strong> {{ s.label }}
+    <div class="aside">
+      <section aria-labelledby="stk" class="panel">
+        <h2 id="stk" class="section-title">Votre stock</h2>
+        <template v-if="c">
+          <div v-if="stockTotal" class="sbar" aria-hidden="true">
+            <span v-for="s in stockLine.filter((x) => x.n > 0)" :key="s.label" :style="{ flex: s.n, background: s.dot }" />
+          </div>
+          <div class="sgrid" :class="{ gap: !stockTotal }">
+            <RouterLink v-for="s in stockLine" :key="s.label" :to="s.to" class="sl" :title="s.title || undefined">
+              <span class="dot" :style="{ background: s.dot }" /><strong>{{ s.n }}</strong> {{ s.label }}
+            </RouterLink>
+          </div>
+        </template>
+        <span v-else class="skel" style="display: block; width: 80%; height: 16px; margin-top: 12px" />
+      </section>
+
+      <section v-if="isManager" aria-labelledby="dem" class="panel">
+        <div class="todo-head">
+          <h2 id="dem" class="section-title">Dernières demandes</h2>
+          <RouterLink to="/leads" class="all">Toutes</RouterLink>
+        </div>
+        <span v-if="!leads" class="skel" style="display: block; width: 70%; height: 16px" />
+        <p v-else-if="!leads.length" class="none">Pas encore de demande. Elles arrivent ici depuis votre site.</p>
+        <RouterLink v-for="l in leads ?? []" :key="l.id" :to="{ path: '/leads', query: { id: String(l.id) } }" class="ld">
+          <span class="ld-top"><span class="ld-who">{{ l.name }}</span><span class="ld-when">{{ relative(l.created_at) }}</span></span>
+          <span class="ld-msg">{{ [l.vehicle?.label, l.message].filter(Boolean).join(' · ') || 'Demande de rappel' }}</span>
         </RouterLink>
-      </template>
-      <span v-else class="skel" style="width: 60%; height: 16px" />
-    </section>
+      </section>
+    </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
 .home {
   width: 100%;
-  max-width: 960px;
-  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 40px;
-  padding-top: 12px;
+  gap: 20px;
 }
 .hello {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: baseline;
   gap: 16px;
   flex-wrap: wrap;
 }
-.hello-t {
-  gap: 10px;
+.hello h1 {
+  font-size: 24px;
   min-width: 0;
-  flex: 1 1 440px;
 }
 .date {
   font-size: 14px;
@@ -311,14 +321,14 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
   text-align: left;
   text-decoration: none;
   border: 1px solid var(--line);
-  border-radius: 20px;
-  padding: 22px;
+  border-radius: 18px;
+  padding: 18px 20px;
   background: #fff;
   color: var(--ink);
   display: flex;
-  flex-direction: column;
-  gap: 14px;
-  min-height: 184px;
+  align-items: center;
+  gap: 16px;
+  min-height: 104px;
   transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 .ac:hover {
@@ -351,15 +361,26 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
   background: #285079;
   box-shadow: 0 10px 26px rgba(46, 90, 136, 0.3);
 }
-.ac-top {
+.ac-txt {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+.ac-txt .ac-x {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ac-k,
+.ac .kbd-inv {
+  align-self: flex-start;
 }
 .ac-ico {
-  width: 44px;
-  height: 44px;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.16);
   display: flex;
@@ -367,8 +388,9 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
   justify-content: center;
 }
 .ac-n {
-  min-width: 44px;
-  height: 44px;
+  flex-shrink: 0;
+  min-width: 48px;
+  height: 48px;
   padding: 0 10px;
   border-radius: 14px;
   background: #fff;
@@ -387,15 +409,14 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
   line-height: 1.5;
 }
 .ac-t {
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 500;
-  margin-top: auto;
 }
 .ac-t.big {
   font-size: 19px;
 }
 .ac-x {
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.4;
   color: var(--muted);
 }
@@ -442,17 +463,43 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
   color: var(--t-ink);
 }
 
+/* deux colonnes : à faire, et à droite le stock et les demandes */
+.split.solo {
+  grid-template-columns: minmax(0, 1fr) 320px;
+}
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 400px;
+  gap: 20px;
+  align-items: start;
+}
+.panel {
+  background: #fff;
+  border: 1px solid #e6e7ea;
+  border-radius: 16px;
+  padding: 18px 22px;
+}
+.aside {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.section-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
 /* à faire aujourd'hui */
 .todo {
   display: flex;
   flex-direction: column;
-  gap: 4px;
 }
 .todo-head {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
 }
 .all {
   font-size: 13px;
@@ -461,21 +508,25 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
 .tr {
   font: inherit;
   text-align: left;
-  width: calc(100% + 32px);
+  width: calc(100% + 20px);
   background: transparent;
   border: 0;
+  border-bottom: 1px solid #f0f1f3;
   text-decoration: none;
   color: var(--ink);
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 14px 16px;
-  margin: 0 -16px;
-  border-radius: 14px;
+  gap: 14px;
+  min-height: 56px;
+  padding: 8px 10px;
+  margin: 0 -10px;
+  border-radius: 10px;
+}
+.tr:last-child {
+  border-bottom-color: transparent;
 }
 .tr:hover {
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(28, 34, 48, 0.05);
+  background: var(--ground);
   color: var(--ink);
 }
 .tag {
@@ -485,7 +536,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
   background: var(--t-tint);
   border-radius: 999px;
   padding: 4px 10px;
-  width: 96px;
+  width: 88px;
   text-align: center;
   flex-shrink: 0;
 }
@@ -497,15 +548,18 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
   min-width: 0;
 }
 .tt {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .td {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--muted-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .cta {
   font-size: 14px;
@@ -527,15 +581,23 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
   color: var(--ink);
 }
 
-/* ligne du stock */
-.stockline {
+/* stock */
+.sbar {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px 24px;
+  gap: 2px;
+  height: 10px;
+  border-radius: 5px;
+  overflow: hidden;
+  margin: 12px 0 14px;
+}
+.sgrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 16px;
   font-size: 14px;
-  color: var(--muted-2);
-  border-top: 1px solid var(--line-2);
-  padding-top: 20px;
+}
+.sgrid.gap {
+  margin-top: 12px;
 }
 .sl {
   text-decoration: none;
@@ -552,41 +614,84 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
 .sl:hover {
   color: var(--ink);
 }
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
 
-@media (max-width: 1100px) {
+/* dernières demandes */
+.ld {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 11px 0;
+  border-bottom: 1px solid #f0f1f3;
+  text-decoration: none;
+  color: var(--ink);
+}
+.ld:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.ld:hover .ld-who {
+  text-decoration: underline;
+}
+.ld-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.ld-who {
+  font-size: 14px;
+  font-weight: 500;
+}
+.ld-when {
+  font-size: 12px;
+  color: var(--muted-3);
+  white-space: nowrap;
+}
+.ld-msg {
+  font-size: 13px;
+  color: var(--muted-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 1200px) {
   .cards {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+@media (max-width: 1000px) {
+  .split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
 @media (max-width: 640px) {
-  .home {
-    gap: 28px;
-    padding-top: 0;
+  .cards,
+  .cards.few {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
   }
   .ac {
-    min-height: 150px;
-    padding: 18px;
-  }
-  .cards:not(.few) .ac-add,
-  .cards:not(.few) .ac:last-child {
-    grid-column: 1 / -1;
-    min-height: 0;
-  }
-  .cards:not(.few) .ac:last-child .ac-t {
-    margin-top: 0;
+    min-height: 76px;
+    padding: 14px 16px;
   }
   .ac-k,
   .kbd,
   .kbd-inv {
     display: none;
   }
-  .ac-add .ac-t {
-    margin-top: 0;
+  .panel {
+    padding: 14px 16px;
   }
   .tr {
     flex-wrap: wrap;
     gap: 6px 12px;
-    padding: 14px 16px;
+    padding: 12px 10px;
   }
   .tx {
     order: 3;
