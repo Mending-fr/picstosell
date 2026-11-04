@@ -1,0 +1,42 @@
+<?php
+
+return [
+    'accepted' => 'Le champ :attribute doit être accepté.',
+    'array' => 'Le champ :attribute doit être une liste.',
+    'boolean' => 'Le champ :attribute doit être vrai ou faux.',
+    'date' => "Le champ :attribute n'est pas une date valide.",
+    'email' => 'Le champ :attribute doit être une adresse e-mail valide.',
+    'exists' => "La valeur de :attribute n'existe pas.",
+    'file' => 'Le champ :attribute doit être un fichier.',
+    'image' => 'Le fichier :attribute doit être une image.',
+    'in' => "La valeur de :attribute n'est pas acceptée.",
+    'integer' => 'Le champ :attribute doit être un nombre entier.',
+    'max' => [
+        'numeric' => 'Le champ :attribute ne doit pas dépasser :max.',
+        'file' => 'Le fichier :attribute ne doit pas dépasser :max kilo-octets.',
+        'string' => 'Le champ :attribute ne doit pas dépasser :max caractères.',
+        'array' => 'Le champ :attribute ne doit pas contenir plus de :max éléments.',
+    ],
+    'min' => [
+        'numeric' => 'Le champ :attribute doit être au moins :min.',
+        'file' => 'Le fichier :attribute doit faire au moins :min kilo-octets.',
+        'string' => 'Le champ :attribute doit contenir au moins :min caractères.',
+        'array' => 'Le champ :attribute doit contenir au moins :min éléments.',
+    ],
+    'numeric' => 'Le champ :attribute doit être un nombre.',
+    'regex' => "Le format de :attribute n'est pas valide.",
+    'required' => 'Le champ :attribute est obligatoire.',
+    'required_with' => 'Le champ :attribute est obligatoire.',
+    'required_without' => 'Le champ :attribute est obligatoire.',
+    'string' => 'Le champ :attribute doit être un texte.',
+    'unique' => 'Cette valeur de :attribute est déjà utilisée.',
+    'uploaded' => "L'envoi de :attribute a échoué.",
+    'url' => 'Le champ :attribute doit être une adresse web valide.',
+
+    'attributes' => [
+        'email' => 'e-mail', 'password' => 'mot de passe', 'name' => 'nom', 'phone' => 'téléphone',
+        'plate' => 'plaque', 'price' => 'prix', 'mileage' => 'kilométrage', 'file' => 'photo',
+        'kind' => 'type de photo', 'shot_key' => 'angle', 'url' => 'lien', 'role' => 'rôle',
+        'message' => 'message', 'brand_color' => 'couleur',
+    ],
+];

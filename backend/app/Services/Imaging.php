@@ -153,7 +153,7 @@ class Imaging
         $front = '<path d="M60 150 L60 95 Q70 60 110 52 L220 52 Q260 60 270 95 L270 150 Z"/><rect x="95" y="62" width="140" height="38" rx="6"/><circle cx="90" cy="118" r="12"/><circle cx="240" cy="118" r="12"/><rect x="70" y="150" width="40" height="22" rx="4"/><rect x="220" y="150" width="40" height="22" rx="4"/>';
         $body = match ($key) {
             'front', 'rear' => $front,
-            'right', 'front_right', 'rear_left' => '<g transform="translate(330,0) scale(-1,1)">'.$side.'</g>',
+            'left', 'front_left', 'rear_right' => '<g transform="translate(330,0) scale(-1,1)">'.$side.'</g>', // capot à gauche
             default => $side,
         };
 

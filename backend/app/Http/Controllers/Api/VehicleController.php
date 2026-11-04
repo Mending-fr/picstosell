@@ -14,7 +14,7 @@ class VehicleController extends Controller
 {
     public function index(Request $request)
     {
-        $q = $this->garage()->vehicles()->withCount(['leads', 'photos'])->with(['photos', 'renders.photo'])->latest();
+        $q = $this->garage()->vehicles()->withCount(['leads', 'photos', 'photos as exterior_photos_count' => fn ($q) => $q->where('kind', 'exterior')])->with(['photos', 'renders.photo'])->latest();
         if ($s = $request->query('status')) {
             $s === 'to_photograph' ? $q->whereIn('status', ['to_photograph', 'processing']) : $q->where('status', $s);
         }

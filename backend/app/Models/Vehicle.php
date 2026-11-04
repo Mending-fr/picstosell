@@ -215,6 +215,7 @@ class Vehicle extends Model
             'days_in_stock' => $this->daysInStock(),
             'leads_count' => $this->leads_count ?? $this->leads()->count(),
             'photos_count' => $this->photos_count ?? $this->photos()->count(),
+            'exterior_photos_count' => $this->exterior_photos_count ?? $this->photos()->where('kind', 'exterior')->count(),
             'cover_url' => Media::url($this->coverPath()),
             'published_at' => $this->published_at?->toIso8601String(),
             'sold_at' => $this->sold_at?->toIso8601String(),

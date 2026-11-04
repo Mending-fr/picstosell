@@ -47,7 +47,7 @@ Dates : ISO 8601.
  "first_registration":"2021-03-01","fuel":"essence","gearbox":"manuelle","power_hp":90,"fiscal_hp":5,
  "color":"Gris","doors":5,"seats":5,"mileage":38200,"price":13490,"description":"…",
  "equipment":[{"group":"Confort","items":["Climatisation"]}],
- "history_url":null,"status":"to_review","days_in_stock":3,"leads_count":0,
+ "history_url":null,"status":"to_review","days_in_stock":3,"leads_count":0,"photos_count":8,"exterior_photos_count":6,
  "cover_url":"https://…","published_at":null,"sold_at":null,"created_at":"…",
  "photos":[Photo], "renders":[Render]}          // photos/renders seulement sur GET /vehicles/{id}
 
