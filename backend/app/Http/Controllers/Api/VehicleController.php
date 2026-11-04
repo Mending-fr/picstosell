@@ -181,7 +181,8 @@ class VehicleController extends Controller
             'equipment.*.items' => 'array',
             'equipment.*.items.*' => 'string|max:120',
             'history_url' => 'nullable|url|max:500',
-            'photographer_id' => ['nullable', Rule::exists('users', 'id')->where('garage_id', $this->garage()->id)],
+            // Un employé du garage, ou un compte Mending qui fait les photos lui-même.
+            'photographer_id' => ['nullable', Rule::exists('users', 'id')->where(fn ($q) => $q->where('garage_id', $this->garage()->id)->orWhere('role', 'super_admin'))],
         ]);
     }
 }

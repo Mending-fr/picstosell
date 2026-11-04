@@ -241,7 +241,9 @@ async function save() {
       }
       if (target === 2) editing.value = true
       if (target === 3 && errors.value.history_url) showHistory.value = true
-      stepError.value = 'Certaines informations sont à corriger.'
+      // On reprend le message du serveur : certains champs n'ont pas d'emplacement visible à l'étape affichée.
+      const msgs = [...new Set(Object.values(e.errors).map((m) => m[0]))]
+      stepError.value = msgs.length ? msgs.join(' ') : 'Certaines informations sont à corriger.'
       step.value = target
     } else stepError.value = errorMessage(e)
     saving.value = false

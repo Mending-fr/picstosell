@@ -140,4 +140,15 @@ class PlatformTest extends TestCase
         $this->assertDatabaseMissing('plate_lookups', ['plate' => 'WW123AA']);
         $this->get("/s/{$g->slug}/")->assertOk()->assertSee('noindex', false)->assertSee('Site de démonstration');
     }
+
+    public function test_un_compte_mending_peut_se_designer_pour_les_photos(): void
+    {
+        $g = Garage::first();
+        $admin = User::create(['name' => 'M', 'email' => 'm2@a.fr', 'password' => 'x', 'role' => 'super_admin']);
+        Sanctum::actingAs($admin);
+        $this->postJson('/api/v1/vehicles', ['plate' => 'AB-321-CD', 'photographer_id' => $admin->id], ['X-Garage-Id' => $g->id])->assertCreated();
+        $other = Garage::create(['name' => 'Autre']);
+        $stranger = User::create(['name' => 'S', 'email' => 's@a.fr', 'password' => 'x', 'role' => 'manager', 'garage_id' => $other->id]);
+        $this->postJson('/api/v1/vehicles', ['plate' => 'AB-322-CD', 'photographer_id' => $stranger->id], ['X-Garage-Id' => $g->id])->assertStatus(422);
+    }
 }
