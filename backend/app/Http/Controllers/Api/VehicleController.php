@@ -46,6 +46,26 @@ class VehicleController extends Controller
         return ['found' => $r['found'], 'plate' => Vehicle::normalizePlate($plate), 'data' => (object) $r['data'], 'demo' => $r['demo'] ?? false];
     }
 
+    /** Aide au prix : fourchette à partir d'annonces comparables (Claude + recherche web) et d'Auto-ways. */
+    public function priceAdvice(Request $request, \App\Services\Pricing\PriceAdvisor $advisor)
+    {
+        $car = $request->validate([
+            'plate' => 'nullable|string|max:20',
+            'make' => 'required|string|max:80',
+            'model' => 'required|string|max:80',
+            'version' => 'nullable|string|max:120',
+            'first_registration' => 'nullable|string|max:10',
+            'mileage' => 'nullable|integer|min:0|max:2000000',
+            'fuel' => 'nullable|string|max:30',
+            'gearbox' => 'nullable|string|max:20',
+            'power_hp' => 'nullable|integer|min:0|max:2000',
+            'color' => 'nullable|string|max:60',
+        ]);
+        set_time_limit(170);
+
+        return $advisor->advise($car, $this->garage());
+    }
+
     public function store(Request $request)
     {
         $data = $this->validated($request, creating: true);

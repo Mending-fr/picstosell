@@ -63,6 +63,7 @@ Route::prefix('v1')->group(function () {
                 Route::post('vehicles/{id}/sold', [VehicleController::class, 'sold'])->whereNumber('id');
                 Route::post('vehicles/{id}/publish', [VehicleController::class, 'publish'])->whereNumber('id');
                 Route::post('vehicles/{id}/history', [VehicleController::class, 'history'])->whereNumber('id');
+                Route::post('pricing/advice', [VehicleController::class, 'priceAdvice'])->middleware('throttle:20,1');
                 Route::post('vehicles/{id}/description', [VehicleController::class, 'description'])->whereNumber('id');
                 Route::post('vehicles/{id}/approve-all', [RenderController::class, 'approveAll'])->whereNumber('id');
                 Route::get('vehicles/{id}/export', [VehicleController::class, 'export'])->whereNumber('id');

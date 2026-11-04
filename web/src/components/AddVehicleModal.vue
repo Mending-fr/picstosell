@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { isFullPlate, onPlateInput, onThousandsInput } from '../inputs'
+import PriceHelper from './PriceHelper.vue'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import AppModal from './AppModal.vue'
 import PhotoPicker, { type PickedPhoto } from './PhotoPicker.vue'
 import { ApiError, get, post, errorMessage } from '../api'
-import { FUELS, GEARBOXES, fuelLabel, gearboxLabel, parseNum, plateNormalize } from '../labels'
+import { FUELS, GEARBOXES, fuelLabel, gearboxLabel, num, parseNum, plateNormalize } from '../labels'
 import { session, isManager, refreshSidebar } from '../session'
 import { stockChanged } from '../modals'
 import { uploadPhotos } from '../uploads'
@@ -220,6 +221,21 @@ function payload() {
   }
 }
 
+const priceCar = computed(() => ({
+  plate: plate.value || null,
+  make: form.make,
+  model: form.model,
+  version: form.version || null,
+  first_registration: form.first_registration || null,
+  mileage: parseNum(form.mileage),
+  fuel: form.fuel || null,
+  gearbox: form.gearbox || null,
+  power_hp: parseNum(form.power_hp),
+  color: form.color || null,
+}))
+function usePrice(p: number) {
+  form.price = num(p)
+}
 const STEP_OF: Record<string, number> = { plate: 1, mileage: 3, price: 3, history_url: 3, photographer_id: 4 }
 
 async function save() {
@@ -441,6 +457,7 @@ const doneTitle = computed(() => {
             <span v-if="errors.price" class="err">{{ errors.price }}</span>
           </label>
         </div>
+        <PriceHelper :car="priceCar" @use="usePrice" />
         <button v-if="!showHistory" type="button" class="btn-link fix" @click="showHistory = true">+ Ajouter le lien HistoVec (facultatif)</button>
         <label v-else class="lbl">
           Lien HistoVec envoyé par l'ancien propriétaire (facultatif)

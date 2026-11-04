@@ -151,4 +151,25 @@ class PlatformTest extends TestCase
         $stranger = User::create(['name' => 'S', 'email' => 's@a.fr', 'password' => 'x', 'role' => 'manager', 'garage_id' => $other->id]);
         $this->postJson('/api/v1/vehicles', ['plate' => 'AB-322-CD', 'photographer_id' => $stranger->id], ['X-Garage-Id' => $g->id])->assertStatus(422);
     }
+
+    public function test_l_aide_au_prix_combine_la_recherche_web_et_auto_ways(): void
+    {
+        config(['services.anthropic.key' => 'test', 'services.autoways.token' => 'tok']);
+        $this->app->instance(\App\Services\Pricing\WebPriceEstimator::class, new class extends \App\Services\Pricing\WebPriceEstimator {
+            public function estimate(array $car): array
+            {
+                return ['low' => 29000, 'high' => 32000, 'suggested' => 30500, 'confidence' => 'medium', 'comment' => 'Cinq annonces proches.', 'comparables' => [['title' => 'Austral', 'url' => 'https://exemple.fr/a', 'price' => 30900, 'year' => 2023, 'mileage' => 20000, 'site' => 'exemple.fr']]];
+            }
+        });
+        \Illuminate\Support\Facades\Http::fake(['app.auto-ways.net/*' => \Illuminate\Support\Facades\Http::response(['data' => ['marque' => 'RENAULT', 'cote_argus' => '31 800']])]);
+        $g = Garage::first();
+        Sanctum::actingAs(User::create(['name' => 'G', 'email' => 'p@a.fr', 'password' => 'x', 'role' => 'manager', 'garage_id' => $g->id]));
+
+        $r = $this->postJson('/api/v1/pricing/advice', ['plate' => 'GA-702-CE', 'make' => 'Renault', 'model' => 'Austral', 'mileage' => 19300])->assertOk()->json();
+        $this->assertTrue($r['available']);
+        $this->assertSame(29000, $r['low']);
+        $this->assertSame(32000, $r['high']);
+        $this->assertSame(31200, $r['suggested']); // (30 500 + 31 800) / 2, arrondi à la centaine
+        $this->assertSame(['web', 'autoways'], array_column($r['sources'], 'provider'));
+    }
 }

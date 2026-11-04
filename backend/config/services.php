@@ -56,6 +56,11 @@ return [
         'model' => env('ANTHROPIC_MODEL', 'claude-opus-5-5'),
     ],
 
+    'autoways' => [
+        'token' => env('AUTOWAYS_TOKEN'),
+        'url' => env('AUTOWAYS_URL', 'https://app.auto-ways.net/api/v1/fr'),
+    ],
+
     'vigie' => [
         'script' => env('VIGIE_SCRIPT'),
     ],

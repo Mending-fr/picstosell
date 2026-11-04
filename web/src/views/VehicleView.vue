@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onThousandsInput } from '../inputs'
+import PriceHelper from '../components/PriceHelper.vue'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { ApiError, del, download, get, patch, post, errorMessage } from '../api'
@@ -211,6 +212,18 @@ const form = reactive({
   description: '',
   history_url: '',
 })
+const priceCar = computed(() => ({
+  plate: v.value?.plate ?? null,
+  make: form.make,
+  model: form.model,
+  version: form.version || null,
+  first_registration: form.first_registration || null,
+  mileage: parseNum(form.mileage),
+  fuel: form.fuel || null,
+  gearbox: form.gearbox || null,
+  power_hp: parseNum(form.power_hp),
+  color: form.color || null,
+}))
 const equipment = ref<EquipmentGroup[]>([])
 const original = ref('')
 const fieldErrors = ref<Record<string, string>>({})
@@ -640,6 +653,7 @@ onBeforeRouteLeave(() => {
                 <label class="lbl">CV<input v-model="form.fiscal_hp" class="f" inputmode="numeric" /></label>
               </div>
             </div>
+            <PriceHelper :car="priceCar" @use="(p) => (form.price = num(p))" />
             <details class="more">
               <summary>Marque, modèle, couleur…</summary>
               <div class="two" style="margin-top: 12px">
