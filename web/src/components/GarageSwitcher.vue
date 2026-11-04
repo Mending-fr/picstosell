@@ -3,7 +3,7 @@ const DEMO_HINT = "La recherche par plaque renvoie des données d'exemple. Les p
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { session, isSuper, currentGarage, switchGarage, refreshGarages } from '../session'
-import { garageStatusLabel } from '../labels'
+import { garageStatusShort } from '../labels'
 
 const props = defineProps<{ mending: boolean }>()
 const router = useRouter()
@@ -26,7 +26,7 @@ interface Item {
 
 const all = computed<Item[]>(() => [
   { id: 'all', ini: 'M', name: 'Tous les garages', sub: 'Espace Mending', color: '#5B4BDB', todo: 0 },
-  ...session.garages.map((g) => ({ id: g.id, ini: g.initials, name: g.name, sub: garageStatusLabel(g.status), color: g.color, todo: g.todo_count })),
+  ...session.garages.map((g) => ({ id: g.id, ini: g.initials, name: g.name, sub: garageStatusShort(g.status), color: g.color, todo: g.todo_count })),
 ])
 
 const items = computed(() => {
@@ -164,7 +164,7 @@ function addGarage() {
       <span class="ini" :style="{ background: currentGarage.color }">{{ currentGarage.initials }}</span>
       <span class="txt">
         <span class="name">{{ currentGarage.name }}</span>
-        <span class="sub" :title="currentGarage.is_demo ? DEMO_HINT : undefined">{{ garageStatusLabel(currentGarage.status) }}</span>
+        <span class="sub" :title="currentGarage.is_demo ? DEMO_HINT : undefined">{{ garageStatusShort(currentGarage.status) }}</span>
       </span>
     </div>
   </div>
@@ -261,7 +261,6 @@ function addGarage() {
   right: 0;
   z-index: 30;
   box-shadow: var(--shadow-pop);
-  min-width: 240px;
 }
 .sw-search {
   display: flex;

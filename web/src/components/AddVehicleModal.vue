@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onPlateInput, onThousandsInput } from '../inputs'
+import { isFullPlate, onPlateInput, onThousandsInput } from '../inputs'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import AppModal from './AppModal.vue'
@@ -23,6 +23,8 @@ const looking = ref(false)
 const lookup = ref<'idle' | 'found' | 'notfound'>('idle')
 const lookupMsg = ref('')
 const lookupDemo = ref(false)
+// 7 caractères qui n'ont pas la forme AB-123-CD : on le signale sans bloquer (ancienne plaque possible).
+const plateOdd = computed(() => plate.value.replace(/-/g, '').length === 7 && !isFullPlate(plate.value))
 /** Saisie d'un numéro de série à la place de la plaque : pas de recherche, la plaque se saisit ensuite. */
 const byVin = ref(false)
 
@@ -344,7 +346,7 @@ const doneTitle = computed(() => {
           <input
             :value="plate"
             class="f f-plate plate-in"
-            :class="{ complete: /^[A-Z]{2}-\d{3}-[A-Z]{2}$/.test(plate) }"
+            :class="{ complete: isFullPlate(plate), odd: plateOdd }"
             @input="plate = onPlateInput($event)"
             autocomplete="off"
             autocapitalize="characters"
@@ -355,6 +357,7 @@ const doneTitle = computed(() => {
             :disabled="looking"
           />
           <span v-if="errors.plate" class="err" role="alert">{{ errors.plate }}</span>
+          <span v-else-if="plateOdd" class="odd-hint">Une plaque récente a la forme AB-123-CD : 2 lettres, 3 chiffres, 2 lettres.</span>
         </label>
         <span id="plate-help" class="help">
           On retrouve le modèle et la version. Vous pouvez aussi taper le numéro de série.
@@ -709,6 +712,13 @@ const doneTitle = computed(() => {
   .found-t {
     font-size: 19px;
   }
+}
+.plate-in.odd {
+  border-color: #E5A04B;
+}
+.odd-hint {
+  font-size: 13px;
+  color: var(--amber-ink, #A55A0B);
 }
 .plate-in.complete {
   border-color: var(--green-ink, #1E7A50);

@@ -3,18 +3,21 @@
 
 const THIN = ' ' // même espace que Intl.NumberFormat('fr-FR')
 
-/** Plaque au format actuel (AB-123-CD) : tirets ajoutés au fil de la saisie. Autre format (numéro de série, ancienne plaque) : laissé tel quel, en majuscules. */
+/**
+ * Plaque : jusqu'à 7 caractères, découpage automatique en 2-3-2 avec tirets (AB-123-CD), quoi qu'on tape.
+ * Au-delà de 7 caractères, c'est un numéro de série : on retire les tirets.
+ */
 export function formatPlate(raw: string): string {
-  const up = raw.toUpperCase()
-  const c = up.replace(/[^A-Z0-9]/g, '')
-  if (/^[A-Z]{0,2}$/.test(c) || /^[A-Z]{2}\d{1,3}$/.test(c) || /^[A-Z]{2}\d{3}[A-Z]{1,2}$/.test(c)) {
-    if (c.length <= 2) return c
-    if (c.length <= 5) return `${c.slice(0, 2)}-${c.slice(2)}`
-    return `${c.slice(0, 2)}-${c.slice(2, 5)}-${c.slice(5)}`
-  }
-  // Numéro de série (17 caractères) : sans séparateur. Ancienne plaque (123 ABC 50) : on garde les espaces tapés.
-  if (c.length > 9) return c.slice(0, 17)
-  return up.replace(/[^A-Z0-9 ]/g, '').slice(0, 12)
+  const c = raw.toUpperCase().replace(/[^A-Z0-9]/g, '')
+  if (c.length > 7) return c.slice(0, 17)
+  if (c.length <= 2) return c
+  if (c.length <= 5) return `${c.slice(0, 2)}-${c.slice(2)}`
+  return `${c.slice(0, 2)}-${c.slice(2, 5)}-${c.slice(5)}`
+}
+
+/** Vrai si la plaque a la forme AB-123-CD. */
+export function isFullPlate(v: string): boolean {
+  return /^[A-Z]{2}-\d{3}-[A-Z]{2}$/.test(v)
 }
 
 /** Nombre entier avec espaces des milliers (19 300). */

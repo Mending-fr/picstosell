@@ -94,6 +94,11 @@ export const GARAGE_STATUSES: { value: string; label: string }[] = [
   { value: 'active', label: 'Actif' },
   { value: 'paused', label: 'En pause' },
 ]
+/** Libellé court pour les petits espaces (sélecteur de garage). */
+export function garageStatusShort(s: string): string {
+  return s === 'demo' ? 'Démo' : garageStatusLabel(s)
+}
+
 export function garageStatusLabel(s: string) {
   return GARAGE_STATUSES.find((x) => x.value === s)?.label ?? s
 }
