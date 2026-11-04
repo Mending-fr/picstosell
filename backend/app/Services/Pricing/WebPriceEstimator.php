@@ -13,11 +13,13 @@ class WebPriceEstimator
 {
     private const SYSTEM = <<<'TXT'
 Tu aides un garage français à fixer le prix de vente d'une voiture d'occasion.
-Cherche sur le web des annonces de voitures comparables à vendre en France : même marque et modèle, version proche, année à un an près, kilométrage proche.
-Retiens de 3 à 8 annonces réelles que tu as vues dans tes résultats, avec leur lien et leur prix. N'invente aucune annonce, aucun prix, aucun lien.
-Déduis-en une fourchette réaliste pour un garage (prix affiché TTC), et un prix conseillé dans cette fourchette.
+Cherche sur le web des annonces individuelles de voitures comparables à vendre en France : même marque et modèle, version ou motorisation proche, année à un an près, kilométrage proche.
+Fais plusieurs recherches et varie les sites : La Centrale, AutoScout24, Leboncoin, ParuVendu, Aramisauto, Spoticar, Renew (Renault), réseaux de concessionnaires.
+Une page de liste de résultats ne compte pas comme une annonce : retiens des annonces précises, avec leur lien, leur prix, et si possible l'année et le kilométrage.
+Retiens de 3 à 8 annonces réelles que tu as vues dans tes résultats. N'invente aucune annonce, aucun prix, aucun lien.
+Déduis-en une fourchette réaliste pour un garage (prix affiché TTC), et un prix conseillé dans cette fourchette, en tenant compte du kilométrage et de la version.
 Si tu trouves moins de 3 annonces comparables, dis-le dans le commentaire et mets la confiance à « low ».
-Termine toujours en appelant l'outil report_estimate. Le commentaire est en français simple, 2 phrases maximum, sans tiret cadratin.
+Termine toujours en appelant l'outil report_estimate. Le commentaire est en français simple, 2 phrases maximum, sans tiret cadratin, sans parler de toi.
 TXT;
 
     private const TOOL = [
@@ -64,7 +66,7 @@ TXT;
     {
         $client = new Client(apiKey: config('services.anthropic.key'));
         $tools = [
-            ['type' => 'web_search_20260209', 'name' => 'web_search', 'maxUses' => 6, 'userLocation' => ['type' => 'approximate', 'country' => 'FR']],
+            ['type' => 'web_search_20260209', 'name' => 'web_search', 'maxUses' => 10, 'userLocation' => ['type' => 'approximate', 'country' => 'FR']],
             self::TOOL,
         ];
         $messages = [['role' => 'user', 'content' => "Voiture à estimer :\n".json_encode($car, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)]];
@@ -74,7 +76,7 @@ TXT;
                 model: config('services.anthropic.model'),
                 maxTokens: 8000,
                 system: self::SYSTEM,
-                outputConfig: ['effort' => 'low'],
+                outputConfig: ['effort' => 'medium'],
                 tools: $tools,
                 messages: $messages,
             );
