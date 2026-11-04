@@ -135,7 +135,7 @@ const providerLabel = (p: string) => PROVIDERS.find((x) => x.value === p)?.label
             <option v-for="p in PROVIDERS" :key="p.value" :value="p.value">{{ p.label }}</option>
           </select>
         </label>
-        <label class="lbl">Identifiant du modèle<input v-model="form.model" class="f mono" style="font-size: 14px" placeholder="gpt-image-1" :aria-invalid="!!errors.model" /><span v-if="errors.model" class="err">{{ errors.model }}</span></label>
+        <label class="lbl">Identifiant du modèle<input v-model="form.model" class="f mono" style="font-size: 14px" placeholder="gpt-image-2.5-flare" :aria-invalid="!!errors.model" /><span v-if="errors.model" class="err">{{ errors.model }}</span></label>
         <label class="lbl">
           Méthode
           <select v-model="form.method" class="f">

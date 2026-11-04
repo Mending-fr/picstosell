@@ -17,7 +17,8 @@ class DatabaseSeeder extends Seeder
     {
         $configs = [
             ['Test sans IA (composition simple)', 'fake', 'fake-composite', 'B', '2K', 0, true],
-            ['GPT Image 2.5, méthode B', 'openai', 'gpt-image-2.5', 'B', '2K', 0.014, true],
+            ['GPT Image 2.5 Flare, méthode B', 'openai', 'gpt-image-2.5-flare', 'B', '2K', 0.014, true],
+            ['GPT Image 2.5 Sunburst, méthode B', 'openai', 'gpt-image-2.5-sunburst', 'B', '2K', 0.03, true],
             ['Nano Banana 2.1, méthode A', 'gemini', 'gemini-2.5-flash-image', 'A', '2K', 0.05, true],
             ['Seedream 5.0 Lite, méthode A', 'fal', 'fal-ai/bytedance/seedream/v4/edit', 'A', '2K', 0.035, true],
         ];

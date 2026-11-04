@@ -68,7 +68,7 @@ Dates : ISO 8601.
  "trade_in":{"plate":"AB-123-CD","mileage":112000}|null,"status":"new","note":null,"source":"fiche","created_at":"…"}
 
 // AiConfig
-{"id":1,"name":"GPT Image 2.5, méthode B","provider":"openai","model":"gpt-image-2.5","method":"B","quality":"2K",
+{"id":1,"name":"GPT Image 2.5 Flare, méthode B","provider":"openai","model":"gpt-image-2.5-flare","method":"B","quality":"2K",
  "prompt":"…","unit_cost_usd":"0.014","active":true}
 ```
 
