@@ -147,7 +147,7 @@ onMounted(() => {
           <span class="muted" style="font-size: 13px; word-break: break-all">{{ u.invited ? `${u.email} · pas encore connecté` : u.email }}</span>
         </div>
         <div class="row">
-          <span class="pill" :style="u.role === 'manager' ? { background: '#EAF6F7', color: '#0A626A' } : { background: '#F1F3F6', color: '#3B4150' }">{{ roleLabel(u.role) }}</span>
+          <span class="pill" :style="u.role === 'manager' ? { background: '#EEF3F9', color: '#234670' } : { background: '#F1F3F6', color: '#3B4150' }">{{ roleLabel(u.role) }}</span>
           <button v-if="u.id !== session.user?.id" type="button" class="btn-link" style="color: var(--red-ink)" :aria-label="`Retirer l'accès de ${u.name}`" @click="removeUser(u)">Retirer</button>
         </div>
       </div>
@@ -239,7 +239,7 @@ onMounted(() => {
           <span>Voitures en {{ monthName() }}</span><span style="font-weight: 500">{{ usage.vehicles }} sur {{ usage.quota }}</span>
         </div>
         <div class="bar" role="progressbar" :aria-valuenow="usagePct" aria-valuemin="0" aria-valuemax="100" aria-label="Voitures utilisées ce mois">
-          <div :style="{ width: usagePct + '%', background: usagePct >= 100 ? '#A55A0B' : '#0E7C86' }" />
+          <div :style="{ width: usagePct + '%', background: usagePct >= 100 ? '#A55A0B' : '#2E5A88' }" />
         </div>
         <span class="muted" style="font-size: 13px">{{ usage.renders }} photo{{ usage.renders > 1 ? 's' : '' }} de showroom préparée{{ usage.renders > 1 ? 's' : '' }} ce mois-ci.</span>
       </div>

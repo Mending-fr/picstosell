@@ -330,7 +330,7 @@ const preview = computed(() => online.value.slice(0, 4))
   width: 100%;
   aspect-ratio: 4/3;
   object-fit: cover;
-  background: #EAF6F7;
+  background: #EEF3F9;
 }
 .pv-foot {
   border-top: 1px solid var(--line-2);

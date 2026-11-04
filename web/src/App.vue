@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import AppSidebar from './components/AppSidebar.vue'
+import AppTopbar from './components/AppTopbar.vue'
 import AddVehicleModal from './components/AddVehicleModal.vue'
 import PriceModal from './components/PriceModal.vue'
 import { session, isManager } from './session'
@@ -40,7 +40,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
 <template>
   <a href="#contenu" class="skip">Aller au contenu</a>
   <div v-if="showSidebar" class="shell">
-    <AppSidebar :variant="layout === 'mending' ? 'mending' : 'garage'" />
+    <AppTopbar :variant="layout === 'mending' ? 'mending' : 'garage'" />
     <main id="contenu" class="main" :class="{ narrow: route.path === '/settings' }">
       <RouterView :key="`${session.viewKey}-${route.path}`" />
     </main>

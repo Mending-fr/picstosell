@@ -1,11 +1,11 @@
 /*
  * Palette « nuancée » : tout se règle ici.
- * Accent sarcelle, gris doux, teintes sémantiques (à vérifier = ambre, prête = vert,
+ * Bleu atelier : bleu de travail, barre anthracite, touche jaune signal. Gris doux, teintes sémantiques (à vérifier = ambre, prête = vert,
  * demande = violet, sans photo = ardoise, vendue / danger = rouge doux).
  */
 :root {
   /* fond, texte, filets */
-  --ground: #f8f8f6;
+  --ground: #f5f5f2;
   --surface: #ffffff;
   --ink: #1c2230;
   --ink-2: #3b4150;
@@ -19,15 +19,17 @@
   --field-bg: #fafbfc;
   --plate-line: #d5d8df;
 
-  /* accent sarcelle */
-  --accent: #0e7c86;
-  --accent-ink: #0a626a;
-  --accent-dark: #0a626a;
-  --accent-soft: #daeff0;
-  --accent-tint: #eaf6f7;
-  --accent-band: #f1f9f9;
-  --accent-line: #b9e0e3;
-  --accent-glow: rgba(14, 124, 134, 0.22);
+  /* accent bleu atelier */
+  --accent: #2e5a88;
+  --accent-ink: #234670;
+  --accent-dark: #1b3a5e;
+  --accent-soft: #e1eaf4;
+  --accent-tint: #eef3f9;
+  --accent-band: #f2f6fa;
+  --accent-line: #c5d5e8;
+  --accent-glow: rgba(46, 90, 136, 0.22);
+  /* touche secondaire : jaune signal (liseré, page active) */
+  --signal: #e3b23c;
 
   /* teintes sémantiques */
   --amber-ink: #a55a0b;
@@ -58,20 +60,21 @@
   --orange-soft: var(--amber-tint);
   --red-soft: var(--red-tint);
 
-  /* barre latérale claire */
-  --side: #f0f4f4;
-  --side-line: #e2e9ea;
-  --side-text: #5a6172;
-  --side-muted: #8a90a0;
-  --side-hover: #e7eeef;
-  --side-on: #daeff0;
-  --side-on-ink: #0a626a;
-  /* espace Mending : teinte voisine, accent indigo */
-  --side-mending: #eef1f6;
-  --side-mending-line: #e1e5ee;
-  --side-mending-hover: #e4e8f1;
-  --side-mending-on: #e3e1f8;
-  --side-mending-ink: #4536b8;
+  /* barre du haut anthracite */
+  --bar: #1f2833;
+  --bar-text: #aeb6c2;
+  --bar-strong: #ffffff;
+  --bar-muted: #7e8794;
+  --bar-hover: rgba(255, 255, 255, 0.06);
+  --bar-on: rgba(255, 255, 255, 0.1);
+  --bar-line: rgba(255, 255, 255, 0.14);
+  --bar-mark: var(--signal);
+  /* espace Mending : même barre, teinte indigo */
+  --bar-mending: #24233d;
+  --bar-mending-mark: #8c7df0;
+  /* filets utilisés par le sélecteur de garage */
+  --side-line: #e1e2e5;
+  --side-muted: #7e8794;
 
   --shadow-soft: 0 1px 2px rgba(28, 34, 48, 0.05);
   --shadow-pop: 0 12px 32px rgba(28, 34, 48, 0.1);
@@ -97,7 +100,7 @@ a {
   color: var(--accent-ink);
 }
 a:hover {
-  color: #084e55;
+  color: var(--accent-dark);
 }
 h1,
 h2,
@@ -184,7 +187,7 @@ img {
   font-family: var(--mono);
   font-size: 11px;
   background: rgba(255, 255, 255, 0.16);
-  color: #e6f6f7;
+  color: #e6eef7;
   border-radius: 5px;
   padding: 1px 6px;
   line-height: 1.5;
@@ -748,19 +751,11 @@ input[type='search']::-webkit-search-cancel-button {
 .shell {
   min-height: 100vh;
   display: flex;
-  align-items: stretch;
-}
-@media (min-width: 861px) {
-  /* la colonne de la barre latérale reste teintée sur toute la hauteur de la page */
-  .shell {
-    background: linear-gradient(90deg, var(--side) 0 235px, var(--side-line) 235px 236px, var(--ground) 236px);
-  }
-  .shell:has(.side.mending) {
-    background: linear-gradient(90deg, var(--side-mending) 0 235px, var(--side-mending-line) 235px 236px, var(--ground) 236px);
-  }
+  flex-direction: column;
 }
 .main {
   flex: 1;
+  width: 100%;
   min-width: 0;
   padding: 44px 48px 64px;
   display: flex;

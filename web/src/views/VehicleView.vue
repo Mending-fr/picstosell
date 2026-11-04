@@ -794,7 +794,7 @@ onBeforeRouteLeave(() => {
   justify-content: center;
   gap: 10px;
   color: var(--accent-dark);
-  background: #EAF6F7;
+  background: #EEF3F9;
   font-size: 14px;
   text-align: center;
   padding: 12px;

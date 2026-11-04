@@ -11,8 +11,6 @@ const router = useRouter()
 const data = ref<Dashboard | null>(null)
 const names = ref<Record<number, string>>({})
 const error = ref('')
-const q = ref('')
-const searchEl = ref<HTMLInputElement | null>(null)
 const busyRow = ref<string | null>(null)
 
 async function load() {
@@ -131,20 +129,12 @@ const stockLine = computed(() => {
   return items.filter((i) => !i.hide)
 })
 
-// ---------- recherche et raccourcis ----------
-function search() {
-  const s = q.value.trim()
-  router.push({ path: '/vehicles', query: s ? { q: s } : {} })
-}
-
+// ---------- raccourcis (la recherche « / » est dans la barre du haut) ----------
 function onKey(e: KeyboardEvent) {
   if (e.metaKey || e.ctrlKey || e.altKey || modals.add || modals.price || typingIn(e)) return
   if (document.querySelector('[role="dialog"]')) return
   const k = e.key.toLowerCase()
-  if (e.key === '/') {
-    e.preventDefault()
-    searchEl.value?.focus()
-  } else if (k === 'v' && isManager.value) router.push(reviewTo.value)
+  if (k === 'v' && isManager.value) router.push(reviewTo.value)
   else if (k === 'p' && isManager.value) router.push(publishTo.value)
 }
 
@@ -171,12 +161,6 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
           <span v-else-if="!error" class="skel sum-skel" aria-hidden="true" />
         </h1>
       </div>
-      <form class="search-pill hs" role="search" @submit.prevent="search">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A90A0" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
-        <label for="home-q" class="sr-only">Rechercher dans le stock</label>
-        <input id="home-q" ref="searchEl" v-model="q" type="search" placeholder="Plaque ou modèle" aria-keyshortcuts="/" />
-        <span class="kbd" aria-hidden="true">/</span>
-      </form>
     </header>
 
     <p v-if="error" class="alert alert-error" role="alert" style="margin: 0">
@@ -312,10 +296,6 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
   height: 22px;
   vertical-align: middle;
 }
-.hs {
-  width: 300px;
-  max-width: 100%;
-}
 
 /* cartes d'action */
 .cards {
@@ -352,15 +332,24 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
   }
 }
 .ac-add {
+  position: relative;
+  overflow: hidden;
   border: 0;
   background: var(--accent);
   color: #fff;
-  box-shadow: 0 8px 22px rgba(14, 124, 134, 0.24);
+  box-shadow: 0 8px 22px rgba(46, 90, 136, 0.24);
+}
+.ac-add::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  background: var(--signal);
 }
 .ac-add:hover {
   color: #fff;
-  background: #0c717a;
-  box-shadow: 0 10px 26px rgba(14, 124, 134, 0.3);
+  background: #285079;
+  box-shadow: 0 10px 26px rgba(46, 90, 136, 0.3);
 }
 .ac-top {
   display: flex;
@@ -411,7 +400,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
   color: var(--muted);
 }
 .ac-add .ac-x {
-  color: #cfedef;
+  color: #ccdaea;
 }
 .amber {
   --t-ink: var(--amber-ink);
@@ -573,9 +562,6 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
   .home {
     gap: 28px;
     padding-top: 0;
-  }
-  .hs {
-    width: 100%;
   }
   .ac {
     min-height: 150px;

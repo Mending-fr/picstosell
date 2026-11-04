@@ -493,7 +493,7 @@ const doneTitle = computed(() => {
         <div role="radiogroup" aria-label="Qui fait les photos" class="col" style="gap: 10px">
           <button type="button" role="radio" class="mode" :aria-checked="mode === 'phone'" :disabled="saving" @click="mode = 'phone'">
             <span class="mode-ico" aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0A626A" stroke-width="1.8"><rect x="7" y="3" width="10" height="18" rx="2" /><path d="M11 18h2" /></svg>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#234670" stroke-width="1.8"><rect x="7" y="3" width="10" height="18" rx="2" /><path d="M11 18h2" /></svg>
             </span>
             <span class="col" style="gap: 2px">
               <span class="mode-t">Sur le parking, au téléphone</span>
