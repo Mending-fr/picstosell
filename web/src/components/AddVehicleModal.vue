@@ -21,6 +21,7 @@ const plate = ref('')
 const looking = ref(false)
 const lookup = ref<'idle' | 'found' | 'notfound'>('idle')
 const lookupMsg = ref('')
+const lookupDemo = ref(false)
 /** Saisie d'un numéro de série à la place de la plaque : pas de recherche, la plaque se saisit ensuite. */
 const byVin = ref(false)
 
@@ -100,6 +101,7 @@ async function find() {
   try {
     const r = await get<PlateLookup>(`/lookup/plate/${encodeURIComponent(plate.value)}`)
     if (r.plate) plate.value = r.plate
+    lookupDemo.value = !!r.demo
     const d = (r.data ?? {}) as Partial<NonNullable<PlateLookup['data']>> & Record<string, unknown>
     if (r.found) {
       form.make = d.make ?? ''
@@ -364,7 +366,7 @@ const doneTitle = computed(() => {
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1E7A50" stroke-width="1.8"><path d="M5 16l1.5-5h11L19 16" /><rect x="3" y="16" width="18" height="4" rx="1" /><circle cx="7.5" cy="18" r=".5" /><circle cx="16.5" cy="18" r=".5" /></svg>
           </span>
           <div class="col" style="gap: 4px; min-width: 0">
-            <span class="found-k">Voiture trouvée · <span class="plate" style="font-size: 11px">{{ plate }}</span></span>
+            <span class="found-k">{{ lookupDemo ? 'Données d\'exemple (garage en démo)' : 'Voiture trouvée' }} · <span class="plate" style="font-size: 11px">{{ plate }}</span></span>
             <span class="found-t">{{ carName || 'Modèle inconnu' }} <span v-if="form.version" class="found-v">{{ form.version }}</span></span>
             <span v-if="facts" class="found-x">{{ facts }}</span>
           </div>

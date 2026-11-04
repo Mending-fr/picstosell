@@ -90,7 +90,7 @@ export const LEAD_TYPES: Record<LeadType, string> = {
 export const GARAGE_STATUSES: { value: string; label: string }[] = [
   { value: 'pilot', label: 'Pilote' },
   { value: 'onboarding', label: 'En installation' },
-  { value: 'demo', label: 'Démo prévue' },
+  { value: 'demo', label: 'Démo (données fictives)' },
   { value: 'active', label: 'Actif' },
   { value: 'paused', label: 'En pause' },
 ]

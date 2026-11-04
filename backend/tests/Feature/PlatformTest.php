@@ -125,4 +125,19 @@ class PlatformTest extends TestCase
         $this->getJson('/api/v1/lookup/plate/AA-123-ZE')->assertOk();
         \Illuminate\Support\Facades\Http::assertSentCount(1);
     }
+
+    public function test_un_garage_en_demo_n_appelle_pas_le_service_de_plaque(): void
+    {
+        config(['services.plate.provider' => 'apiplaque', 'services.plate.api_key' => 'test']);
+        \Illuminate\Support\Facades\Http::fake();
+        $g = Garage::create(['name' => 'Garage démo', 'status' => 'demo']);
+        $this->assertNotNull($g->fresh()->phone);
+        $this->assertSame(3, $g->leads()->count());
+        Sanctum::actingAs(User::create(['name' => 'G', 'email' => 'd@a.fr', 'password' => 'x', 'role' => 'manager', 'garage_id' => $g->id]));
+
+        $this->getJson('/api/v1/lookup/plate/WW123AA')->assertOk()->assertJsonPath('found', true)->assertJsonPath('demo', true);
+        \Illuminate\Support\Facades\Http::assertNothingSent();
+        $this->assertDatabaseMissing('plate_lookups', ['plate' => 'WW123AA']);
+        $this->get("/s/{$g->slug}/")->assertOk()->assertSee('noindex', false)->assertSee('Site de démonstration');
+    }
 }

@@ -45,6 +45,15 @@ class Garage extends Model
 
         static::created(function (Garage $g) {
             $g->ensureShowroom();
+            if ($g->isDemo()) {
+                $g->fillDemoData();
+            }
+        });
+
+        static::updated(function (Garage $g) {
+            if ($g->wasChanged('status') && $g->isDemo()) {
+                $g->fillDemoData();
+            }
         });
     }
 
@@ -71,6 +80,36 @@ class Garage extends Model
     public function aiConfig(): BelongsTo
     {
         return $this->belongsTo(AiConfig::class);
+    }
+
+    /** Garage de démonstration : les services externes (hors IA photo et texte) renvoient des données factices. */
+    public function isDemo(): bool
+    {
+        return $this->status === 'demo';
+    }
+
+    /** Complète un garage de démo avec des coordonnées et des demandes fictives, sans écraser ce qui est saisi. */
+    public function fillDemoData(): void
+    {
+        $this->fill(array_filter([
+            'phone' => $this->phone ? null : '02 00 00 00 00',
+            'email' => $this->email ? null : 'contact@garage-demo.test',
+            'address' => $this->address ? null : '1 rue de la Démonstration',
+            'city' => $this->city ? null : 'Valognes',
+            'hours' => $this->hours ? null : "Lundi au vendredi : 8 h 30 - 18 h 30\nSamedi : 9 h - 12 h",
+            'about' => $this->about ? null : "Garage de démonstration. Les coordonnées et les demandes de clients sont fictives.",
+        ]))->saveQuietly();
+
+        if ($this->leads()->doesntExist()) {
+            $samples = [
+                ['type' => 'vehicle', 'name' => 'Client démo 1', 'phone' => '06 00 00 00 01', 'message' => "Bonjour, la voiture est-elle toujours disponible ? Je peux passer l'essayer samedi."],
+                ['type' => 'trade_in', 'name' => 'Client démo 2', 'phone' => '06 00 00 00 02', 'message' => 'Je voudrais faire reprendre ma voiture pour un SUV.', 'trade_in_plate' => 'AA-000-AA', 'trade_in_mileage' => 112000],
+                ['type' => 'other', 'name' => 'Client démo 3', 'phone' => '06 00 00 00 03', 'message' => 'Proposez-vous un financement sur 48 mois ?'],
+            ];
+            foreach ($samples as $l) {
+                $this->leads()->create($l + ['status' => 'new', 'source' => 'démo']);
+            }
+        }
     }
 
     public function setting(string $key): mixed
@@ -130,6 +169,7 @@ class Garage extends Model
             'initials' => $this->initials(),
             'color' => $this->color(),
             'todo_count' => $this->todoCount(),
+            'is_demo' => $this->isDemo(),
         ];
     }
 
@@ -153,6 +193,7 @@ class Garage extends Model
             'site_url' => $this->siteUrl(),
             'settings' => array_merge(self::DEFAULT_SETTINGS, $this->settings ?? []),
             'ai_config_id' => $this->ai_config_id,
+            'is_demo' => $this->isDemo(),
         ];
     }
 }

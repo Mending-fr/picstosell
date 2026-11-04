@@ -35,7 +35,7 @@ class VehicleController extends Controller
     public function lookup(string $plate, PlateLookupService $service)
     {
         try {
-            $r = $service->lookup($plate);
+            $r = $service->lookup($plate, $this->garage());
         } catch (\Throwable $e) {
             report($e);
 
@@ -43,7 +43,7 @@ class VehicleController extends Controller
             return ['found' => false, 'plate' => Vehicle::normalizePlate($plate), 'data' => (object) [], 'message' => 'Recherche indisponible, complétez les informations à la main.'];
         }
 
-        return ['found' => $r['found'], 'plate' => Vehicle::normalizePlate($plate), 'data' => (object) $r['data']];
+        return ['found' => $r['found'], 'plate' => Vehicle::normalizePlate($plate), 'data' => (object) $r['data'], 'demo' => $r['demo'] ?? false];
     }
 
     public function store(Request $request)

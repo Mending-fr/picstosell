@@ -4,6 +4,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+@if($g->isDemo())<meta name="robots" content="noindex, nofollow">@endif
 <title>@yield('title', 'Nos occasions') · {{ $g->name }}</title>
 <meta name="description" content="@yield('description', 'Voitures d\'occasion chez '.$g->name.($g->city ? ' à '.$g->city : '').'.')">
 @hasSection('og_image')<meta property="og:image" content="@yield('og_image')">@endif
@@ -50,6 +51,7 @@ footer.bottom strong{color:#fff}
 @endif
 </head>
 <body>
+@if($g->isDemo())<div style="background:#FCF1E3;color:#A55A0B;text-align:center;font-size:14px;padding:8px 16px">Site de démonstration : les voitures, les prix et les coordonnées sont fictifs.</div>@endif
 <header class="top"><div class="wrap">
 <a class="logo" href="{{ route('site.index', $g->slug) }}">@if($g->logo_path)<img src="{{ \App\Support\Media::url($g->logo_path) }}" alt="">@endif{{ $g->name }}</a>
 <nav class="menu" aria-label="Menu">

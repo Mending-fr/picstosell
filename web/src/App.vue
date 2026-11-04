@@ -4,7 +4,7 @@ import { useRoute } from 'vue-router'
 import AppSidebar from './components/AppSidebar.vue'
 import AddVehicleModal from './components/AddVehicleModal.vue'
 import PriceModal from './components/PriceModal.vue'
-import { session, isManager } from './session'
+import { session, isManager, currentGarage } from './session'
 import { modals, openAdd, openPrice, typingIn } from './modals'
 
 const route = useRoute()
@@ -42,6 +42,9 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
   <div v-if="showSidebar" class="shell">
     <AppSidebar :variant="layout === 'mending' ? 'mending' : 'garage'" />
     <main id="contenu" class="main" :class="{ narrow: route.path === '/settings' }">
+      <div v-if="layout === 'garage' && currentGarage?.is_demo" class="demo-bar" role="status">
+        Garage en démo : la recherche par plaque renvoie des données d'exemple. Les photos passent par la vraie IA.
+      </div>
       <RouterView :key="`${session.viewKey}-${route.path}`" />
     </main>
   </div>
@@ -56,6 +59,15 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
 </template>
 
 <style>
+.demo-bar {
+  background: var(--amber-tint, #FCF1E3);
+  color: var(--amber-ink, #A55A0B);
+  border: 1px solid #F4E0C5;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
 .skip {
   position: absolute;
   left: -9999px;

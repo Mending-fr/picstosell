@@ -31,6 +31,7 @@ export interface GarageSummary {
   initials: string
   color: string
   todo_count: number
+  is_demo?: boolean
 }
 
 export interface GarageSettings {
@@ -135,6 +136,7 @@ export interface PlateLookup {
   found: boolean
   plate?: string
   message?: string
+  demo?: boolean
   data: {
     make: string | null
     model: string | null

@@ -2,18 +2,23 @@
 
 namespace App\Services\Plate;
 
+use App\Models\Garage;
 use App\Models\PlateLookup;
 use App\Models\Vehicle;
 
 /**
  * Données techniques à partir de la plaque, mises en cache : on ne paie jamais deux fois le même véhicule.
  * PLATE_PROVIDER=apiplaque (apiplaqueimmatriculation.com, jeton dans PLATE_API_KEY) ou fake (données d'exemple).
+ * Un garage en mode démo reçoit toujours des données d'exemple, sans appel payant ni mise en cache.
  */
 class PlateLookupService
 {
-    public function lookup(string $plate): array
+    public function lookup(string $plate, ?Garage $garage = null): array
     {
         $plate = Vehicle::normalizePlate($plate);
+        if ($garage?->isDemo()) {
+            return ['found' => true, 'data' => $this->fake($plate, always: true), 'cached' => false, 'demo' => true];
+        }
         $cached = PlateLookup::where('plate', $plate)->first();
         if ($cached) {
             return ['found' => $cached->found, 'data' => $cached->payload ?? [], 'cached' => true];
@@ -30,9 +35,9 @@ class PlateLookupService
         return ['found' => $data !== null, 'data' => $data ?? [], 'cached' => false];
     }
 
-    private function fake(string $plate): ?array
+    private function fake(string $plate, bool $always = false): ?array
     {
-        if (str_starts_with($plate, 'WW')) {
+        if (! $always && str_starts_with($plate, 'WW')) {
             return null; // plaque provisoire : rien à trouver
         }
         $catalog = [
