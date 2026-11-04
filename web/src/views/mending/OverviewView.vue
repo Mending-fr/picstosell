@@ -25,16 +25,30 @@ async function load() {
 }
 onMounted(load)
 
-async function update(g: AdminGarageRow, field: 'status' | 'ai_config_id' | 'show_usage', value: string | boolean) {
-  const before = g[field]
+function saveQuota(g: AdminGarageRow, input: HTMLInputElement) {
+  const raw = input.value.trim()
+  const n = raw === '' ? null : Math.max(0, Math.round(Number(raw)))
+  if (raw !== '' && !Number.isFinite(n)) {
+    input.value = g.quota == null ? '' : String(g.quota)
+    return
+  }
+  if (n === g.quota) return
+  update(g, 'vehicle_quota', n)
+}
+
+async function update(g: AdminGarageRow, field: 'status' | 'ai_config_id' | 'show_usage' | 'vehicle_quota', value: string | boolean | number | null) {
+  // Le champ de l'API « vehicle_quota » s'appelle « quota » dans la ligne du tableau.
+  const key = field === 'vehicle_quota' ? 'quota' : field
+  const row = g as unknown as Record<string, unknown>
+  const before = row[key]
   const v = field === 'ai_config_id' ? (value ? Number(value) : null) : value
-  ;(g as unknown as Record<string, unknown>)[field] = v
+  row[key] = v
   try {
     await patch<Garage>(`/admin/garages/${g.id}`, { [field]: v })
     toast(`${g.name} : réglage enregistré.`)
-    if (field === 'status') refreshGarages()
+    if (field === 'status' || field === 'vehicle_quota') refreshGarages()
   } catch (e) {
-    ;(g as unknown as Record<string, unknown>)[field] = before
+    row[key] = before
     toast(errorMessage(e), 'error')
   }
 }
@@ -131,7 +145,7 @@ const perCarOk = computed(() => {
             <th>Refaites</th>
             <th>Réglage photo</th>
             <th>Statut</th>
-            <th title="Affiche « Ce mois : x / quota voitures » dans le menu du garage">Compteur visible</th>
+            <th title="Affiche « Ce mois : x / quota voitures » dans le menu du garage">Compteur</th>
           </tr>
         </thead>
         <tbody v-if="data">
@@ -145,7 +159,23 @@ const perCarOk = computed(() => {
                 </div>
               </div>
             </td>
-            <td>{{ g.vehicles_month }} / {{ g.quota }}</td>
+            <td>
+              <label class="quota" :title="`Voitures comprises par mois dans l'abonnement de ${g.name}`">
+                <span>{{ g.vehicles_month }} /</span>
+                <span class="sr-only">Voitures comprises par mois pour {{ g.name }}</span>
+                <input
+                  class="f f-sm q-in"
+                  type="number"
+                  min="0"
+                  step="1"
+                  inputmode="numeric"
+                  :value="g.quota ?? ''"
+                  placeholder="∞"
+                  @change="saveQuota(g, ($event.target as HTMLInputElement))"
+                  @keydown.enter="($event.target as HTMLInputElement).blur()"
+                />
+              </label>
+            </td>
             <td>{{ usd(g.cost_usd) }}</td>
             <td>{{ usd(g.cost_per_vehicle_usd) }}</td>
             <td>{{ pct(g.redo_rate) }}</td>
@@ -244,6 +274,14 @@ const perCarOk = computed(() => {
   color: var(--accent);
   text-decoration: underline;
 }
+.quota {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.q-in {
+  width: 68px;
+}
 .chk {
   display: inline-flex;
   align-items: center;
@@ -259,8 +297,8 @@ const perCarOk = computed(() => {
 }
 .sel {
   width: auto;
-  min-width: 150px;
-  max-width: 260px;
+  min-width: 130px;
+  max-width: 210px;
 }
 .erow {
   display: flex;

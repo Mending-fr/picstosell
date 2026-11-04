@@ -246,7 +246,7 @@ export interface Usage {
 
 export interface AdminGarageRow extends GarageSummary {
   vehicles_month: number
-  quota: number
+  quota: number | null
   cost_usd: string
   cost_per_vehicle_usd: string | null
   redo_rate: number | null
