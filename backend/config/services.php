@@ -51,6 +51,11 @@ return [
         'cutout_cost_usd' => env('FAL_CUTOUT_COST_USD', '0.0005'),
     ],
 
+    'anthropic' => [
+        'key' => env('ANTHROPIC_API_KEY'),
+        'model' => env('ANTHROPIC_MODEL', 'claude-opus-5-5'),
+    ],
+
     'vigie' => [
         'script' => env('VIGIE_SCRIPT'),
     ],

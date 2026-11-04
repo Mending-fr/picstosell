@@ -4,7 +4,8 @@ WORKDIR /src
 COPY web/package*.json web/
 RUN cd web && (npm ci || npm install)
 COPY web/ web/
-RUN mkdir -p backend/public && cd web && npm run build
+# Tant que l'interface web n'est pas terminée, un échec de compilation n'empêche pas l'API de démarrer (/app répond 503).
+RUN mkdir -p backend/public/app && cd web && (npm run build || echo "Interface web non compilée")
 
 # --- Dépendances PHP ---
 FROM composer:2 AS vendor
