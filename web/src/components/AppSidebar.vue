@@ -119,6 +119,7 @@ async function doLogout() {
   display: flex;
   gap: 8px;
   align-items: flex-start;
+  min-width: 0;
 }
 .menu-btn {
   display: none;

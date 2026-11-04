@@ -130,7 +130,7 @@ function addGarage() {
         <label class="sw-search">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A9AEB8" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
           <span class="sr-only">Chercher un garage</span>
-          <input ref="search" v-model="q" type="search" placeholder="Chercher un garage" @input="active = 0" />
+          <input ref="search" v-model="q" type="search" placeholder="Rechercher" @input="active = 0" />
           <span class="k">⌘K</span>
         </label>
         <div role="listbox" aria-label="Dossiers clients" class="sw-list">
@@ -176,6 +176,9 @@ function addGarage() {
   gap: 8px;
   padding-bottom: 16px;
   position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
 }
 .sw-btn {
   color: #fff;
@@ -221,9 +224,12 @@ function addGarage() {
 .name {
   font-weight: 600;
   font-size: 14px;
-  white-space: nowrap;
+  line-height: 1.25;
   overflow: hidden;
-  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow-wrap: anywhere;
 }
 .name.sm {
   font-size: 13px;
@@ -244,7 +250,7 @@ function addGarage() {
   flex-direction: column;
   gap: 4px;
   position: absolute;
-  top: 64px;
+  top: calc(100% - 8px);
   left: 0;
   right: 0;
   z-index: 30;
