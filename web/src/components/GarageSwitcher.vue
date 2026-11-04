@@ -163,7 +163,7 @@ function addGarage() {
       <span class="ini" :style="{ background: currentGarage.color }">{{ currentGarage.initials }}</span>
       <span class="txt">
         <span class="name">{{ currentGarage.name }}</span>
-        <span class="sub">{{ garageStatusLabel(currentGarage.status) }}</span>
+        <span class="sub" :title="currentGarage.is_demo ? &quot;La recherche par plaque renvoie des données d'exemple. Les photos passent par la vraie IA.&quot; : undefined">{{ garageStatusLabel(currentGarage.status) }}</span>
       </span>
     </div>
   </div>
