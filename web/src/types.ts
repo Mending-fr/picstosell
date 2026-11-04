@@ -184,7 +184,18 @@ export interface Lead {
   phone: string
   email: string | null
   message: string | null
-  vehicle: { id: number; label: string; price: number } | null
+  vehicle: {
+    id: number
+    label: string
+    price: number | null
+    plate?: string
+    mileage?: number | null
+    year?: number | null
+    fuel?: string | null
+    status?: VehicleStatus
+    cover_url?: string | null
+    published_at?: string | null
+  } | null
   trade_in: { plate: string; mileage: number | null } | null
   status: LeadStatus
   note: string | null

@@ -103,40 +103,42 @@ async function uploadLogo(e: Event) {
 }
 
 onBeforeRouteLeave(() => !dirty.value || window.confirm("Vos modifications ne sont pas enregistrées. Quitter quand même ?"))
-const preview = computed(() => online.value.slice(0, 4))
+const preview = computed(() => online.value.slice(0, 6))
 </script>
 
 <template>
   <div class="page-head">
-    <div class="col" style="gap: 4px">
-      <h1>Mon site</h1>
-      <p class="lead" style="margin: 0">
-        <template v-if="garage">{{ garage.domain || garage.site_url.replace(/^https?:\/\//, '') }} · en ligne, {{ online.length }} voiture{{ online.length > 1 ? 's' : '' }} affichée{{ online.length > 1 ? 's' : '' }}</template>
-        <span v-else class="skel" style="display: inline-block; width: 260px; height: 16px" />
-      </p>
-    </div>
-    <a v-if="garage" :href="garage.site_url" target="_blank" rel="noopener" class="btn btn-primary">Voir mon site</a>
+    <h1>Mon site</h1>
+    <template v-if="garage">
+      <span class="dom">{{ garage.domain || garage.site_url.replace(/^https?:\/\//, '') }}</span>
+      <span class="pill" style="color: var(--green-ink); background: var(--green-tint)">En ligne · {{ online.length }} voiture{{ online.length > 1 ? 's' : '' }}</span>
+    </template>
+    <span v-else class="skel" style="display: inline-block; width: 260px; height: 16px" />
+    <span class="grow" />
+    <span v-if="dirty" class="unsaved">Modifications non enregistrées</span>
+    <a v-if="garage" :href="garage.site_url" target="_blank" rel="noopener" class="btn">Voir mon site</a>
+    <button v-if="garage" type="button" class="btn btn-primary" :disabled="saving || !dirty" @click="save"><span v-if="saving" class="spinner" aria-hidden="true" />Enregistrer</button>
   </div>
 
   <p v-if="error" class="alert alert-error" role="alert">{{ error }} <button type="button" class="btn-link" @click="load">Réessayer</button></p>
 
-  <div v-if="garage" class="split">
-    <div class="col" style="flex: 999 1 480px; min-width: 0; gap: 20px">
-      <section class="card" aria-labelledby="look">
+  <div v-if="garage" class="cols">
+    <div class="left">
+      <section class="panel look" aria-labelledby="look">
         <h2 id="look" class="h2">L'apparence</h2>
-        <div class="row" style="gap: 16px">
+        <div class="row" style="gap: 12px; flex-wrap: nowrap">
           <div class="logo">
             <img v-if="garage.logo_url" :src="garage.logo_url" alt="Logo actuel" />
             <span v-else>Pas de logo</span>
           </div>
           <input ref="logoInput" type="file" accept="image/*" class="sr-only" tabindex="-1" aria-hidden="true" @change="uploadLogo" />
-          <button type="button" class="btn" :disabled="uploading" @click="logoInput?.click()">
+          <button type="button" class="btn btn-sm" :disabled="uploading" @click="logoInput?.click()">
             <span v-if="uploading" class="spinner" aria-hidden="true" />{{ garage.logo_url ? 'Changer le logo' : 'Ajouter le logo' }}
           </button>
         </div>
         <div role="radiogroup" aria-label="Couleur principale" class="col" style="gap: 8px">
           <span class="lbl">Couleur principale</span>
-          <div class="row">
+          <div class="row" style="gap: 8px">
             <button
               v-for="c in COLORS"
               :key="c.hex"
@@ -145,7 +147,7 @@ const preview = computed(() => online.value.slice(0, 4))
               class="swatch"
               :aria-checked="form.brand_color.toLowerCase() === c.hex.toLowerCase()"
               :aria-label="c.name"
-              :style="{ background: c.hex }"
+              :style="{ background: c.hex, '--sw': c.hex }"
               @click="form.brand_color = c.hex"
             />
             <label class="custom" :class="{ on: custom }">
@@ -157,59 +159,57 @@ const preview = computed(() => online.value.slice(0, 4))
         </div>
       </section>
 
-      <section class="card" aria-labelledby="coord">
+      <section class="panel coord" aria-labelledby="coord">
         <h2 id="coord" class="h2">Vos coordonnées sur le site</h2>
-        <div class="grid-fields">
+        <div class="grid3">
           <label class="lbl">Nom du garage<input v-model="form.name" class="f" :aria-invalid="!!errors.name" /></label>
-          <label class="lbl">Ville<input v-model="form.city" class="f" /></label>
           <label class="lbl">Téléphone<input v-model="form.phone" class="f" type="tel" autocomplete="tel" :aria-invalid="!!errors.phone" /><span v-if="errors.phone" class="err">{{ errors.phone }}</span></label>
           <label class="lbl">E-mail qui reçoit les demandes<input v-model="form.email" class="f" type="email" :aria-invalid="!!errors.email" /><span v-if="errors.email" class="err">{{ errors.email }}</span></label>
-          <label class="lbl" style="grid-column: 1 / -1">Adresse<input v-model="form.address" class="f" /></label>
+          <label class="lbl" style="grid-column: span 2">Adresse<input v-model="form.address" class="f" /></label>
+          <label class="lbl">Ville<input v-model="form.city" class="f" /></label>
         </div>
-        <label class="lbl">Horaires<textarea v-model="form.hours" class="f" rows="3" placeholder="Lundi au vendredi : 9 h - 18 h" /></label>
-        <label class="lbl">Présentation du garage<textarea v-model="form.about" class="f" rows="3" placeholder="Deux ou trois phrases sur votre garage, votre équipe, vos garanties." /></label>
+        <div class="grid2">
+          <label class="lbl">Horaires<textarea v-model="form.hours" class="f" rows="4" placeholder="Lundi au vendredi : 9 h - 18 h" /></label>
+          <label class="lbl">Présentation du garage<textarea v-model="form.about" class="f" rows="4" placeholder="Deux ou trois phrases sur votre garage, votre équipe, vos garanties." /></label>
+        </div>
       </section>
 
-      <section class="card" aria-labelledby="pub">
-        <h2 id="pub" class="h2">Leboncoin et La Centrale</h2>
-        <p style="margin: 0; font-size: 15px; color: var(--ink-2); line-height: 1.5">
-          Pour l'instant, chaque annonce prête vous donne ses photos et un texte à copier. La mise en ligne automatique viendra plus tard.
-        </p>
+      <section class="panel pub" aria-labelledby="pub">
+        <h2 id="pub" class="h2" style="white-space: nowrap">Leboncoin et La Centrale</h2>
+        <span class="muted" style="font-size: 13px; line-height: 1.5">Chaque annonce prête vous donne ses photos et un texte à copier. La mise en ligne automatique viendra plus tard.</span>
       </section>
-
-      <div class="row" style="justify-content: flex-end">
-        <span v-if="dirty" class="muted" style="font-size: 13px">Modifications non enregistrées</span>
-        <button type="button" class="btn btn-primary btn-lg" :disabled="saving || !dirty" @click="save"><span v-if="saving" class="spinner" aria-hidden="true" />Enregistrer</button>
-      </div>
     </div>
 
-    <aside aria-label="Aperçu" class="col" style="flex: 1 1 300px; min-width: 0; gap: 8px; position: sticky; top: 16px">
-      <span class="muted" style="font-size: 13px; font-weight: 500">Aperçu</span>
+    <aside aria-label="Aperçu" class="right">
+      <span class="muted" style="font-size: 13px; font-weight: 500">Aperçu, mis à jour pendant que vous tapez</span>
       <div class="pv">
+        <div class="pv-bar" aria-hidden="true">
+          <span /><span /><span />
+          <span class="pv-url">{{ garage.domain || garage.site_url.replace(/^https?:\/\//, '') }}</span>
+        </div>
         <div class="pv-head">
-          <span class="row" style="gap: 8px; flex-wrap: nowrap; min-width: 0">
-            <img v-if="garage.logo_url" :src="garage.logo_url" alt="" style="height: 22px; width: auto" />
-            <span class="pv-name" :style="{ color: form.brand_color }">{{ form.name || 'Votre garage' }}</span>
+          <span class="row" style="gap: 10px; flex-wrap: nowrap; min-width: 0">
+            <img v-if="garage.logo_url" :src="garage.logo_url" alt="" style="height: 26px; width: auto" />
+            <span class="pv-name">{{ form.name || 'Votre garage' }}</span>
           </span>
           <span class="pv-call" :style="{ background: form.brand_color }">Appeler</span>
         </div>
         <div class="pv-body">
-          <span style="font-size: 17px; font-weight: 500">Nos occasions</span>
+          <span style="font-size: 16px; font-weight: 600">Nos occasions</span>
           <div v-if="preview.length" class="pv-grid">
             <div v-for="v in preview" :key="v.id" class="pv-car">
               <img v-if="v.cover_url" :src="v.cover_url" alt="" />
               <div v-else class="pv-img" />
-              <div class="col" style="padding: 6px 8px; gap: 2px">
-                <span style="font-size: 11px; font-weight: 500">{{ vehicleTitle(v, false) }}</span>
-                <span style="font-size: 12px; font-weight: 500" :style="{ color: form.brand_color }">{{ euros(v.price) }}</span>
+              <div class="col" style="padding: 8px 10px; gap: 2px">
+                <span style="font-size: 12px; font-weight: 500">{{ vehicleTitle(v, false) }}</span>
+                <span style="font-size: 12px; font-weight: 600" :style="{ color: form.brand_color }">{{ euros(v.price) }}</span>
               </div>
             </div>
           </div>
           <span v-else class="muted" style="font-size: 13px">Vos voitures en ligne apparaîtront ici.</span>
-          <div v-if="form.phone || form.address || form.hours" class="pv-foot">
+          <div v-if="form.phone || form.address" class="pv-foot">
             <span v-if="form.phone" style="font-weight: 500">{{ form.phone }}</span>
             <span v-if="form.address">{{ form.address }}{{ form.city ? `, ${form.city}` : '' }}</span>
-            <span v-if="form.hours" style="white-space: pre-line">{{ form.hours }}</span>
           </div>
         </div>
       </div>
@@ -222,73 +222,161 @@ const preview = computed(() => online.value.slice(0, 4))
 </template>
 
 <style scoped>
-.h2 {
-  font-size: 18px;
+.page-head {
+  flex-wrap: nowrap;
+  align-items: center;
 }
-.split {
+.dom {
+  font-size: 14px;
+  color: var(--muted);
+  margin-left: 8px;
+}
+.unsaved {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--amber-ink);
+  white-space: nowrap;
+}
+.h2 {
+  font-size: 15px;
+  font-weight: 500;
+}
+.cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 560px;
+  gap: 18px;
+  align-items: start;
+}
+.left {
   display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+.panel {
+  background: #fff;
+  border: 1px solid #e6e7ea;
+  border-radius: 16px;
+  padding: 18px 22px;
+}
+.look {
+  display: flex;
+  align-items: center;
+  gap: 28px;
   flex-wrap: wrap;
-  gap: 20px;
-  align-items: flex-start;
+}
+.look .h2 {
+  width: 120px;
+}
+.coord {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.grid3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px 14px;
+}
+.grid2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.pub {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding-top: 14px;
+  padding-bottom: 14px;
 }
 .logo {
-  width: 120px;
-  height: 60px;
+  width: 96px;
+  height: 52px;
   border: 1px dashed var(--field);
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--muted);
   overflow: hidden;
   padding: 4px;
+  flex-shrink: 0;
 }
 .logo img {
   max-height: 100%;
+  max-width: 100%;
   object-fit: contain;
 }
 .swatch {
-  width: 44px;
-  height: 44px;
-  border-radius: 22px;
-  border: 3px solid transparent;
-  box-shadow: 0 0 0 2px #fff inset;
+  width: 32px;
+  height: 32px;
+  border-radius: 16px;
+  border: 0;
 }
 .swatch[aria-checked='true'] {
-  border-color: var(--ink);
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--sw);
 }
 .custom {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   border: 1px solid var(--field-2);
-  border-radius: 22px;
-  padding: 0 12px 0 4px;
-  height: 44px;
-  font-size: 14px;
+  border-radius: 18px;
+  padding: 0 12px 0 3px;
+  height: 36px;
+  font-size: 13px;
   cursor: pointer;
 }
 .custom.on {
-  border: 3px solid var(--ink);
+  border: 2px solid var(--ink);
 }
 .custom input {
-  width: 34px;
-  height: 34px;
+  width: 28px;
+  height: 28px;
   border: 0;
   padding: 0;
   background: none;
-  border-radius: 17px;
+  border-radius: 14px;
   cursor: pointer;
+}
+.right {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
 }
 .pv {
   background: #fff;
-  border: 1px solid var(--line);
-  border-radius: 14px;
+  border: 1px solid #e6e7ea;
+  border-radius: 16px;
   overflow: hidden;
 }
+.pv-bar {
+  height: 30px;
+  background: #f0f1f3;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+}
+.pv-bar > span:not(.pv-url) {
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  background: #d3d5d9;
+}
+.pv-url {
+  margin-left: 10px;
+  font-size: 11px;
+  color: var(--muted-3);
+  background: #fff;
+  border-radius: 6px;
+  padding: 2px 10px;
+}
 .pv-head {
-  padding: 12px 14px;
+  padding: 14px 18px;
   border-bottom: 1px solid var(--line-2);
   display: flex;
   justify-content: space-between;
@@ -296,33 +384,33 @@ const preview = computed(() => online.value.slice(0, 4))
   gap: 8px;
 }
 .pv-name {
-  font-weight: 500;
+  font-weight: 600;
   font-size: 14px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .pv-call {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   color: #fff;
-  border-radius: 6px;
-  padding: 5px 8px;
+  border-radius: 999px;
+  padding: 6px 12px;
 }
 .pv-body {
-  padding: 14px;
+  padding: 16px 18px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 .pv-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
 }
 .pv-car {
   border: 1px solid var(--line-2);
-  border-radius: 8px;
+  border-radius: 10px;
   overflow: hidden;
 }
 .pv-car img,
@@ -330,15 +418,44 @@ const preview = computed(() => online.value.slice(0, 4))
   width: 100%;
   aspect-ratio: 4/3;
   object-fit: cover;
-  background: #EEF3F9;
+  background: var(--accent-tint);
+  display: block;
 }
 .pv-foot {
   border-top: 1px solid var(--line-2);
   padding-top: 10px;
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  gap: 16px;
+  flex-wrap: wrap;
   font-size: 12px;
   color: var(--ink-2);
+}
+@media (max-width: 1280px) {
+  .cols {
+    grid-template-columns: minmax(0, 1fr) 420px;
+  }
+  .pv-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .grid3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 960px) {
+  .page-head {
+    flex-wrap: wrap;
+  }
+  .cols,
+  .grid2,
+  .grid3 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .grid3 .lbl {
+    grid-column: auto !important;
+  }
+  .pub {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 </style>

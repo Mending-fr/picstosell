@@ -15,6 +15,7 @@ const fileInput = ref<HTMLInputElement | null>(null)
 
 const shots = computed<Shot[]>(() => [...(showrooms.value?.[0]?.shots ?? [])].sort((a, b) => a.position - b.position))
 const cur = computed(() => shots.value.find((s) => s.id === selId.value) ?? null)
+const doneCount = computed(() => shots.value.filter((s) => s.configured).length)
 const dirty = computed(() => JSON.stringify({ ...place }) !== saved.value)
 
 function select(s: Shot) {
@@ -87,14 +88,20 @@ function reset() {
 
 <template>
   <div class="page-head">
-    <div class="col" style="gap: 4px">
-      <h1>Mon showroom</h1>
-      <p class="lead" style="margin: 0">Les photos de votre showroom, une par angle. Chaque voiture photographiée sur le parking y est placée.</p>
-    </div>
+    <h1>Mon showroom</h1>
+    <span v-if="shots.length" class="progress">
+      <span class="pbar" role="progressbar" :aria-valuenow="doneCount" aria-valuemin="0" :aria-valuemax="shots.length" aria-label="Angles réglés">
+        <span :style="{ width: (doneCount / shots.length) * 100 + '%' }" />
+      </span>
+      {{ doneCount }} {{ doneCount > 1 ? 'angles réglés' : 'angle réglé' }} sur {{ shots.length }}
+    </span>
+    <span class="grow" />
+    <span class="muted hint-t">Chaque voiture photographiée sur le parking est placée dans ces photos</span>
   </div>
 
   <p v-if="error" class="alert alert-error" role="alert">{{ error }} <button type="button" class="btn-link" @click="load">Réessayer</button></p>
 
+  <div class="cols">
   <div role="tablist" aria-label="Angles" class="angles">
     <template v-if="!showrooms">
       <div v-for="i in 6" :key="i" class="skel" style="aspect-ratio: 4/3.7; border-radius: 10px" />
@@ -102,12 +109,14 @@ function reset() {
     <button v-for="s in shots" :key="s.id" type="button" role="tab" class="angle" :aria-selected="s.id === selId" @click="select(s)">
       <img v-if="s.image_url" :src="s.image_url" alt="" />
       <div v-else class="noimg" />
-      <span class="a-l">{{ s.label }}</span>
-      <span class="a-s" :style="{ color: s.configured ? '#1E7A50' : '#A55A0B' }">{{ s.configured ? 'Réglé' : 'À régler' }}</span>
+      <span class="a-t">
+        <span class="a-l">{{ s.label }}</span>
+        <span class="a-s" :style="{ color: s.configured ? 'var(--green-ink)' : 'var(--amber-ink)' }">{{ s.configured ? 'Réglé' : 'À régler' }}</span>
+      </span>
     </button>
   </div>
 
-  <div v-if="cur" class="split">
+    <template v-if="cur">
     <section aria-label="Réglage de l'angle" class="card editor">
       <div class="row between">
         <span style="font-size: 17px; font-weight: 500">{{ cur.label }}</span>
@@ -133,7 +142,7 @@ function reset() {
         <button type="button" class="btn" :disabled="uploading" @click="fileInput?.click()">
           <span v-if="uploading" class="spinner" aria-hidden="true" />{{ cur.image_url ? 'Remplacer la photo' : 'Ajouter la photo du showroom' }}
         </button>
-        <button type="button" class="btn-link" @click="reset">Revenir au réglage par défaut</button>
+        <button type="button" class="btn btn-quiet" @click="reset">Revenir au réglage par défaut</button>
         <button type="button" class="btn btn-primary" style="margin-left: auto" :disabled="saving || !dirty" @click="save">
           <span v-if="saving" class="spinner" aria-hidden="true" />{{ dirty ? 'Enregistrer' : 'Enregistré' }}
         </button>
@@ -149,38 +158,86 @@ function reset() {
         </div>
         <div class="p-bar"><span class="shutter" /></div>
       </div>
-      <span class="muted" style="font-size: 13px; text-align: center">La silhouette aide à cadrer la voiture sous le même angle que votre showroom.</span>
+      <span class="muted" style="font-size: 12px; line-height: 1.5">La silhouette aide à cadrer la voiture sous le même angle que votre showroom.</span>
     </aside>
+    </template>
   </div>
 </template>
 
 <style scoped>
-.angles {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+.page-head {
+  flex-wrap: nowrap;
+  align-items: center;
+}
+.progress {
+  display: inline-flex;
+  align-items: center;
   gap: 10px;
+  margin-left: 12px;
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.pbar {
+  width: 120px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--line);
+  overflow: hidden;
+  display: inline-block;
+}
+.pbar span {
+  display: block;
+  height: 6px;
+  background: var(--green-ink);
+}
+.hint-t {
+  font-size: 13px;
+  white-space: nowrap;
+}
+/* trois colonnes : les angles, le réglage, l'aperçu du téléphone */
+.cols {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr) 300px;
+  gap: 18px;
+  align-items: start;
+}
+.angles {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 .angle {
   text-align: left;
-  border: 2px solid var(--line);
-  border-radius: 10px;
+  border: 2px solid #e6e7ea;
+  border-radius: 12px;
   background: #fff;
   padding: 6px;
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  gap: 10px;
+  align-items: center;
   color: var(--ink);
+}
+.angle:hover {
+  border-color: var(--accent-line);
 }
 .angle[aria-selected='true'] {
   border-color: var(--accent);
 }
 .angle img,
 .noimg {
-  width: 100%;
+  width: 84px;
   aspect-ratio: 4/3;
-  border-radius: 6px;
+  border-radius: 8px;
   object-fit: cover;
   background: #d9d4ca;
+  flex-shrink: 0;
+}
+.a-t {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 .a-l {
   font-size: 13px;
@@ -189,21 +246,16 @@ function reset() {
 .a-s {
   font-size: 12px;
 }
-.split {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  align-items: flex-start;
-}
 .editor {
-  flex: 999 1 520px;
   min-width: 0;
-  padding: 18px;
+  padding: 18px 20px;
   gap: 14px;
 }
 .stage {
   aspect-ratio: 16/10;
-  border-radius: 10px;
+  max-height: calc(100vh - 64px - 28px - 56px - 230px);
+  width: 100%;
+  border-radius: 12px;
   position: relative;
   overflow: hidden;
   background: #d9d4ca;
@@ -230,53 +282,98 @@ function reset() {
   position: absolute;
   transform: translateX(-50%);
   filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.6));
-  background: rgba(31, 79, 216, 0.1);
-  border-radius: 8px;
   pointer-events: none;
 }
+.grid-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+.grid-fields input[type='range'] {
+  accent-color: var(--accent);
+}
+.btn-quiet {
+  background: #fff;
+  border-color: var(--line);
+  color: var(--ink-2);
+}
 .phone-col {
-  flex: 1 1 240px;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  align-items: center;
+  gap: 12px;
 }
 .phone {
-  width: 220px;
-  height: 420px;
+  width: 100%;
+  height: min(520px, calc(100vh - 64px - 28px - 56px - 120px));
   border-radius: 28px;
-  background: #1c2230;
-  padding: 12px;
+  background: #0e0f12;
+  padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
+  box-sizing: border-box;
 }
 .p-title {
   color: #fff;
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 500;
   text-align: center;
-  padding-top: 8px;
+  padding-top: 6px;
 }
 .p-screen {
   flex: 1;
-  border-radius: 14px;
-  background: repeating-linear-gradient(135deg, #2a2c31 0 12px, #24262b 12px 24px);
+  border-radius: 16px;
+  background: linear-gradient(180deg, #3a3d44, #24262b);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .p-bar {
-  height: 52px;
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .shutter {
-  width: 44px;
-  height: 44px;
-  border-radius: 22px;
-  border: 3px solid #fff;
+  width: 52px;
+  height: 52px;
+  border-radius: 26px;
+  border: 4px solid #fff;
   display: block;
+}
+@media (max-width: 1280px) {
+  .cols {
+    grid-template-columns: 200px minmax(0, 1fr);
+  }
+  .phone-col {
+    display: none;
+  }
+  .hint-t {
+    display: none;
+  }
+}
+@media (max-width: 860px) {
+  .page-head {
+    flex-wrap: wrap;
+  }
+  .progress {
+    margin-left: 0;
+  }
+  .cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .angles {
+    flex-direction: row;
+    overflow-x: auto;
+  }
+  .angle {
+    flex-direction: column;
+    align-items: flex-start;
+    flex-shrink: 0;
+  }
+  .grid-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 </style>
