@@ -4,7 +4,7 @@ import PriceHelper from '../components/PriceHelper.vue'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { ApiError, del, download, get, patch, post, errorMessage } from '../api'
-import { FUELS, GEARBOXES, RENDER_STATE, STATUS, copyText, listingText, parseNum, num, shotLabel, vehicleTitle, euros } from '../labels'
+import { FUELS, GEARBOXES, RENDER_STATE, STATUS, SHOTS, INTERIOR_LABELS, DETAIL_LABELS, copyText, listingText, parseNum, num, vehicleTitle, euros } from '../labels'
 import { isManager, toast, refreshSidebar } from '../session'
 import StatusPill from '../components/StatusPill.vue'
 import PhotoPicker, { type PickedPhoto } from '../components/PhotoPicker.vue'
@@ -154,8 +154,35 @@ async function launchRenders() {
   }
 }
 
+// ---------- ce que montre la photo (reconnu par l'IA, corrigeable) ----------
+const fixing = ref(false)
+function classOf(p: Photo): string {
+  if (p.kind === 'exterior') return `exterior:${p.shot_key ?? ''}`
+  const list = p.kind === 'interior' ? INTERIOR_LABELS : DETAIL_LABELS
+  return `${p.kind}:${p.label && list.includes(p.label) ? p.label : list[list.length - 1]}`
+}
+async function reclassify(p: Photo, value: string) {
+  const [kind, rest] = value.split(':') as [Photo['kind'], string]
+  fixing.value = true
+  try {
+    const np = await patch<Photo>(`/photos/${p.id}`, kind === 'exterior' ? { kind, shot_key: rest || null } : { kind, label: rest })
+    if (v.value) v.value.photos = (v.value.photos ?? []).map((x) => (x.id === p.id ? np : x))
+    if (p.kind === 'exterior' && kind !== 'exterior') {
+      toast('Photo publiée telle quelle : elle ne passe plus par le showroom.')
+      load(true)
+    } else if (p.kind !== 'exterior' && kind === 'exterior') {
+      toast('Photo rangée en extérieur. Lancez « Préparer les photos showroom » pour la placer dans le décor.')
+      load(true)
+    }
+  } catch (e) {
+    toast(errorMessage(e), 'error')
+  } finally {
+    fixing.value = false
+  }
+}
+
 async function removePhoto(p: Photo) {
-  if (!window.confirm(`Supprimer la photo « ${shotLabel(p.shot_key)} » ?`)) return
+  if (!window.confirm(`Supprimer la photo « ${p.display_label} » ?`)) return
   const old = v.value?.photos
   if (v.value) v.value.photos = (v.value.photos ?? []).filter((x) => x.id !== p.id)
   selectFirst()
@@ -411,7 +438,7 @@ const nextVehicle = computed(() => {
 const viewerItems = computed(() => {
   const items: (ViewerItem & { key: string })[] = []
   for (const p of photos.value) {
-    const name = p.kind === 'exterior' ? shotLabel(p.shot_key) : p.kind === 'interior' ? 'Intérieur' : 'Détail'
+    const name = p.display_label
     items.push({ key: `${p.id}-p`, url: p.url, label: p.kind === 'exterior' ? `${name} · sur le parking` : name })
     const r = renderOf.value.get(p.id)
     if (p.kind === 'exterior' && r?.url && r.status !== 'pending' && r.status !== 'processing' && r.status !== 'failed') {
@@ -556,7 +583,25 @@ onBeforeRouteLeave(() => {
 
             <div v-if="cur" class="card viewer">
               <div class="row between">
-                <span style="font-size: 16px; font-weight: 500">{{ cur.kind === 'exterior' ? `Vue ${shotLabel(cur.shot_key).toLowerCase()}` : cur.kind === 'interior' ? 'Intérieur' : 'Détail' }}</span>
+                <div class="row" style="gap: 10px; flex-wrap: nowrap; min-width: 0">
+                  <span style="font-size: 16px; font-weight: 500; white-space: nowrap">{{ cur.kind === 'exterior' ? `Vue ${cur.display_label.toLowerCase()}` : cur.display_label }}</span>
+                  <span v-if="cur.classified === 'ai'" class="pill ai" title="L'IA a reconnu ce que montre la photo. Corrigez si besoin.">Reconnue par l'IA</span>
+                  <label v-if="isManager" class="fix">
+                    <span class="sr-only">Corriger ce que montre la photo</span>
+                    <select class="f f-sm" :value="classOf(cur)" :disabled="fixing" @change="reclassify(cur, ($event.target as HTMLSelectElement).value)">
+                      <optgroup label="Extérieur (placée dans le showroom)">
+                        <option v-for="s in SHOTS" :key="s.key" :value="`exterior:${s.key}`">{{ s.label }}</option>
+                        <option value="exterior:">Extérieur, autre angle</option>
+                      </optgroup>
+                      <optgroup label="Intérieur (publiée telle quelle)">
+                        <option v-for="l in INTERIOR_LABELS" :key="l" :value="`interior:${l}`">{{ l }}</option>
+                      </optgroup>
+                      <optgroup label="Détail (publiée telle quelle)">
+                        <option v-for="l in DETAIL_LABELS" :key="l" :value="`detail:${l}`">{{ l }}</option>
+                      </optgroup>
+                    </select>
+                  </label>
+                </div>
                 <div v-if="curRender?.url" role="group" aria-label="Affichage" class="seg">
                   <button type="button" :aria-pressed="viewMode === 'side'" @click="viewMode = 'side'">Côte à côte</button>
                   <button type="button" :aria-pressed="viewMode === 'overlay'" @click="viewMode = 'overlay'">Superposé</button>
@@ -630,7 +675,7 @@ onBeforeRouteLeave(() => {
                 @click="selected = p.id"
               >
                 <img :src="renderOf.get(p.id)?.status === 'approved' || renderOf.get(p.id)?.status === 'to_review' ? renderOf.get(p.id)?.url ?? p.thumb_url : p.thumb_url" alt="" loading="lazy" />
-                <span class="th-l">{{ p.kind === 'exterior' ? shotLabel(p.shot_key) : p.kind === 'interior' ? 'Intérieur' : 'Détail' }}</span>
+                <span class="th-l">{{ p.display_label }}</span>
                 <span class="th-s" :style="{ color: stateOf(p).color }">{{ stateOf(p).label }}</span>
               </button>
             </div>
@@ -927,6 +972,15 @@ onBeforeRouteLeave(() => {
   object-fit: cover;
   border-radius: 6px;
   background: #EEF0F3;
+}
+.pill.ai {
+  color: var(--violet-ink);
+  background: var(--violet-tint);
+  white-space: nowrap;
+}
+.fix select {
+  min-width: 0;
+  max-width: 200px;
 }
 .th-l {
   font-size: 12px;

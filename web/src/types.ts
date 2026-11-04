@@ -71,6 +71,10 @@ export interface Photo {
   vehicle_id: number
   shot_key: ShotKey | null
   kind: PhotoKind
+  label: string | null
+  display_label: string
+  /** 'ai' : rangée par l'IA, 'user' : corrigée à la main, null : non rangée. */
+  classified: 'ai' | 'user' | null
   url: string
   thumb_url: string
   position: number
@@ -154,7 +158,8 @@ export interface PlateLookup {
 }
 
 export interface Placement {
-  scale: number
+  /** Hauteur de la voiture, en % de la hauteur de la photo du showroom. */
+  height: number
   bottom: number
   offset_x: number
 }
@@ -330,6 +335,7 @@ export interface ComparisonSummaryRow {
 }
 
 export interface ComparisonCell {
+  label?: string
   source_url: string | null
   renders: Record<string, Render | null>
 }

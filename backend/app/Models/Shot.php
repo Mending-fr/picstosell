@@ -8,19 +8,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Shot extends Model
 {
-    /** Angles extérieurs par défaut, dans l'ordre de la prise de vue. */
+    /** Un seul décor par showroom : la voiture « tourne » devant le même fond. */
     public const DEFAULTS = [
-        ['front_left', 'Avant gauche'],
-        ['front', 'De face'],
-        ['front_right', 'Avant droit'],
-        ['right', 'Côté droit'],
-        ['rear', 'Arrière'],
-        ['left', 'Côté gauche'],
+        ['main', 'Le showroom'],
     ];
 
-    public const KEYS = ['front', 'front_left', 'front_right', 'left', 'right', 'rear', 'rear_left', 'rear_right'];
+    /** Angles possibles d'une photo extérieure (reconnus par l'IA ou choisis à la main). */
+    public const KEYS = ['front_left', 'front', 'front_right', 'right', 'rear_right', 'rear', 'rear_left', 'left'];
 
-    public const DEFAULT_PLACEMENT = ['scale' => 66, 'bottom' => 12, 'offset_x' => 0];
+    /** Zone au sol : hauteur de la voiture en % de la hauteur de l'image, distance au bas, décalage horizontal. */
+    public const DEFAULT_PLACEMENT = ['height' => 42, 'bottom' => 12, 'offset_x' => 0];
 
     protected $guarded = ['id'];
 
@@ -36,18 +33,7 @@ class Shot extends Model
 
     public static function labelFor(?string $key): string
     {
-        foreach (self::DEFAULTS as [$k, $label]) {
-            if ($k === $key) {
-                return $label;
-            }
-        }
-
-        return match ($key) {
-            'rear_left' => 'Arrière gauche',
-            'rear_right' => 'Arrière droit',
-            null => 'Photo libre',
-            default => $key,
-        };
+        return Photo::VIEWS[$key] ?? ($key === 'main' ? 'Le showroom' : 'Extérieur');
     }
 
     public function toApi(): array
@@ -59,7 +45,7 @@ class Shot extends Model
             'label' => $this->label,
             'position' => $this->position,
             'image_url' => Media::url($this->image_path),
-            'placement' => array_merge(self::DEFAULT_PLACEMENT, $this->placement ?? []),
+            'placement' => array_intersect_key(array_merge(self::DEFAULT_PLACEMENT, $this->placement ?? []), self::DEFAULT_PLACEMENT),
             'configured' => (bool) $this->image_path,
             'overlay_url' => url('/api/v1/shots/'.$this->id.'/overlay'),
         ];

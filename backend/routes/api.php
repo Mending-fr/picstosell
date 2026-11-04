@@ -71,6 +71,7 @@ Route::prefix('v1')->group(function () {
                 Route::post('vehicles/{id}/approve-all', [RenderController::class, 'approveAll'])->whereNumber('id');
                 Route::get('vehicles/{id}/export', [VehicleController::class, 'export'])->whereNumber('id');
                 Route::delete('photos/{id}', [PhotoController::class, 'destroy'])->whereNumber('id');
+                Route::patch('photos/{id}', [PhotoController::class, 'update'])->whereNumber('id');
 
                 Route::post('renders/{id}/approve', [RenderController::class, 'approve'])->whereNumber('id');
                 Route::post('renders/{id}/keep-original', [RenderController::class, 'keepOriginal'])->whereNumber('id');

@@ -88,7 +88,7 @@ class ComparisonController
                     $r = $latest[$p->id.'-'.$cfg->id] ?? null;
                     $cells[$cfg->id] = $r?->toApi();
                 }
-                $grid[$v->id][$p->shot_key ?? 'photo-'.$p->id] = ['source_url' => Media::url($p->thumb_path ?? $p->path), 'renders' => $cells];
+                $grid[$v->id]['p'.$p->id] = ['label' => $p->displayLabel(), 'source_url' => Media::url($p->thumb_path ?? $p->path), 'renders' => $cells];
             }
         }
 

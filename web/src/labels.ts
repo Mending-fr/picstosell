@@ -16,16 +16,21 @@ export const GEARBOXES: { value: Gearbox; label: string }[] = [
   { value: 'automatique', label: 'Automatique' },
 ]
 
+/** Angles extérieurs, dans l'ordre du tour de la voiture (celui de l'annonce). */
 export const SHOTS: { key: ShotKey; label: string }[] = [
-  { key: 'front', label: 'De face' },
   { key: 'front_left', label: 'Avant gauche' },
+  { key: 'front', label: 'De face' },
   { key: 'front_right', label: 'Avant droit' },
-  { key: 'left', label: 'Côté gauche' },
   { key: 'right', label: 'Côté droit' },
+  { key: 'rear_right', label: 'Arrière droit' },
   { key: 'rear', label: 'Arrière' },
   { key: 'rear_left', label: 'Arrière gauche' },
-  { key: 'rear_right', label: 'Arrière droit' },
+  { key: 'left', label: 'Côté gauche' },
 ]
+
+/** Libellés proposés pour l'intérieur et les détails (mêmes listes que le serveur). */
+export const INTERIOR_LABELS = ['Tableau de bord', 'Compteur', 'Places avant', 'Places arrière', 'Coffre', 'Écran', 'Intérieur']
+export const DETAIL_LABELS = ['Jante', 'Pneu', 'Phare', 'Défaut', 'Équipement', 'Document', 'Détail']
 
 /** Ordre conseillé pour les photos importées depuis l'ordinateur. */
 export const UPLOAD_ORDER: ShotKey[] = ['front_left', 'front', 'front_right', 'right', 'rear', 'left']

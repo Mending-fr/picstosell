@@ -17,7 +17,9 @@ export async function uploadPhotos(vehicleId: number, list: PickedPhoto[]): Prom
     p.error = undefined
     const fd = new FormData()
     fd.append('file', p.file)
-    if (p.slot === 'interior' || p.slot === 'detail') {
+    if (p.slot === 'auto') {
+      fd.append('kind', 'auto')
+    } else if (p.slot === 'interior' || p.slot === 'detail') {
       fd.append('kind', p.slot)
     } else {
       fd.append('kind', 'exterior')

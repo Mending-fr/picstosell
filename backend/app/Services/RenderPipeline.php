@@ -28,9 +28,10 @@ class RenderPipeline
             $vehicle = $render->vehicle()->firstOrFail();
             $garage = $vehicle->garage;
             $config = $render->aiConfig ?? new AiConfig(['provider' => $render->provider, 'model' => $render->model, 'method' => $render->method, 'quality' => '2K', 'unit_cost_usd' => 0]);
+            // Un seul décor par garage : le même fond pour tous les angles de la voiture.
             $shot = Shot::query()
                 ->whereHas('showroom', fn ($q) => $q->where('garage_id', $garage->id))
-                ->where('key', $photo->shot_key)->first();
+                ->orderByRaw("case when key = 'main' then 0 else 1 end")->orderBy('id')->first();
 
             $background = $shot?->image_path ? Imaging::load(Media::get($shot->image_path)) : Imaging::placeholderBackground();
             $background = Imaging::fit($background, 2048);

@@ -29,13 +29,13 @@ class ShowroomController extends Controller
         $data = $request->validate([
             'label' => 'sometimes|string|max:60',
             'placement' => 'sometimes|array',
-            'placement.scale' => 'numeric|min:10|max:100',
+            'placement.height' => 'numeric|min:10|max:90',
             'placement.bottom' => 'numeric|min:0|max:60',
             'placement.offset_x' => 'numeric|min:-50|max:50',
         ]);
         $shot = $this->shot($id);
         if (isset($data['placement'])) {
-            $data['placement'] = array_merge(Shot::DEFAULT_PLACEMENT, $shot->placement ?? [], $data['placement']);
+            $data['placement'] = array_intersect_key(array_merge(Shot::DEFAULT_PLACEMENT, $shot->placement ?? [], $data['placement']), Shot::DEFAULT_PLACEMENT);
         }
         $shot->update($data);
 

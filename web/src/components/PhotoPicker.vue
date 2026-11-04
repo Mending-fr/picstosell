@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { onBeforeUnmount, ref } from 'vue'
-import { SHOTS, UPLOAD_ORDER } from '../labels'
+import { SHOTS } from '../labels'
 import type { ShotKey } from '../types'
 
 export interface PickedPhoto {
   id: number
   file: File
   preview: string
-  slot: ShotKey | 'interior' | 'detail'
+  /** « auto » : l'IA dit ce que montre la photo à l'envoi. */
+  slot: ShotKey | 'interior' | 'detail' | 'auto'
   state?: 'waiting' | 'sending' | 'done' | 'error'
   error?: string
 }
@@ -20,11 +21,6 @@ const over = ref(false)
 const rejected = ref('')
 let nextId = 1
 
-function nextSlot(list: PickedPhoto[]): PickedPhoto['slot'] {
-  const used = new Set<string>([...(props.taken ?? []), ...list.map((p) => p.slot)])
-  const free = UPLOAD_ORDER.find((k) => !used.has(k)) ?? SHOTS.map((s) => s.key).find((k) => !used.has(k))
-  return free ?? 'interior'
-}
 
 function add(files: FileList | File[]) {
   const list = [...props.modelValue]
@@ -34,7 +30,7 @@ function add(files: FileList | File[]) {
       skipped++
       continue
     }
-    list.push({ id: nextId++, file: f, preview: URL.createObjectURL(f), slot: nextSlot(list), state: 'waiting' })
+    list.push({ id: nextId++, file: f, preview: URL.createObjectURL(f), slot: 'auto', state: 'waiting' })
   }
   rejected.value = skipped ? `${skipped} fichier${skipped > 1 ? 's' : ''} ignoré${skipped > 1 ? 's' : ''} : seules les photos sont acceptées.` : ''
   emit('update:modelValue', list)
@@ -63,9 +59,6 @@ function setSlot(p: PickedPhoto, slot: string) {
     props.modelValue.map((x) => (x === p ? { ...x, slot: slot as PickedPhoto['slot'] } : x)),
   )
 }
-function dup(p: PickedPhoto) {
-  return SHOTS.some((s) => s.key === p.slot) && (props.modelValue.filter((x) => x.slot === p.slot).length > 1 || (props.taken ?? []).includes(p.slot))
-}
 onBeforeUnmount(() => props.modelValue.forEach((p) => URL.revokeObjectURL(p.preview)))
 </script>
 
@@ -82,7 +75,7 @@ onBeforeUnmount(() => props.modelValue.forEach((p) => URL.revokeObjectURL(p.prev
       <button type="button" class="pick" :disabled="disabled" @click="input?.click()">choisissez-les</button>
       <input ref="input" type="file" accept="image/*" multiple class="sr-only" tabindex="-1" aria-hidden="true" @change="onPick" />
       <span class="muted" style="display: block; font-size: 13px; margin-top: 6px">
-        Dans l'ordre : avant gauche, face, avant droit, côté droit, arrière, côté gauche. Vous pouvez corriger l'angle sous chaque photo.
+        Toutes les photos, dans n'importe quel ordre : l'extérieur va dans le showroom, l'intérieur et les détails restent tels quels.
       </span>
     </div>
     <p v-if="rejected" class="err" style="margin: 0">{{ rejected }}</p>
@@ -97,6 +90,7 @@ onBeforeUnmount(() => props.modelValue.forEach((p) => URL.revokeObjectURL(p.prev
         <label class="lbl" style="font-size: 12px">
           <span class="sr-only">Angle de la photo {{ i + 1 }}</span>
           <select class="f f-sm" :value="p.slot" :disabled="disabled || p.state === 'done'" @change="setSlot(p, ($event.target as HTMLSelectElement).value)">
+            <option value="auto">L'IA reconnaît la photo</option>
             <optgroup label="Extérieur (placée dans le showroom)">
               <option v-for="s in SHOTS" :key="s.key" :value="s.key">{{ s.label }}</option>
             </optgroup>
@@ -106,7 +100,6 @@ onBeforeUnmount(() => props.modelValue.forEach((p) => URL.revokeObjectURL(p.prev
             </optgroup>
           </select>
         </label>
-        <span v-if="dup(p)" class="err" style="font-size: 12px">Angle déjà utilisé : cette photo remplacera l'autre.</span>
         <span v-if="p.error" class="err" style="font-size: 12px">{{ p.error }}</span>
         <button v-if="p.state !== 'done'" type="button" class="btn-link" style="min-height: 36px; font-size: 13px; color: var(--red-ink)" :disabled="disabled" @click="remove(p)">
           Retirer

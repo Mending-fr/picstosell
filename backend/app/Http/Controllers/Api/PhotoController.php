@@ -6,6 +6,7 @@ use App\Models\Photo;
 use App\Models\Shot;
 use App\Models\Vehicle;
 use App\Services\Imaging;
+use App\Services\PhotoClassifier;
 use App\Services\RenderLauncher;
 use App\Support\Media;
 use Illuminate\Http\Request;
@@ -21,7 +22,7 @@ class PhotoController extends Controller
         $data = $request->validate([
             'files' => 'required|array|min:1|max:40',
             'files.*.shot_key' => ['nullable', Rule::in(Shot::KEYS)],
-            'files.*.kind' => ['required', Rule::in(Photo::KINDS)],
+            'files.*.kind' => ['required', Rule::in([...Photo::KINDS, 'auto'])],
             'files.*.content_type' => ['required', Rule::in(['image/jpeg', 'image/png', 'image/heic', 'image/webp'])],
         ]);
         if (! Media::supportsSignedUploads()) {
@@ -43,7 +44,8 @@ class PhotoController extends Controller
             'path' => 'required_without:file|string|max:500',
             'file' => 'required_without:path|file|image|max:25600',
             'shot_key' => ['nullable', Rule::in(Shot::KEYS)],
-            'kind' => ['required', Rule::in(Photo::KINDS)],
+            // « auto » : prise de vue libre, l'IA dit ce que montre la photo.
+            'kind' => ['required', Rule::in([...Photo::KINDS, 'auto'])],
         ]);
         if (isset($data['path']) && ! str_starts_with($data['path'], "garages/{$v->garage_id}/vehicles/{$v->id}/incoming/")) {
             abort(422, 'Chemin invalide');
@@ -59,20 +61,58 @@ class PhotoController extends Controller
 
         $kind = $data['kind'];
         $shotKey = $kind === 'exterior' ? ($data['shot_key'] ?? null) : null;
-        if ($kind === 'exterior' && $shotKey) {
-            // Une nouvelle photo pour un angle remplace l'ancienne.
+        $label = null;
+        $classified = null;
+        if ($kind === 'auto') {
+            $found = app(PhotoClassifier::class)->classify($thumb);
+            // Sans réponse de l'IA, on suppose une vue extérieure : le garage corrige sur la fiche si besoin.
+            $kind = $found['kind'] ?? 'exterior';
+            $shotKey = $found['view'] ?? null;
+            $label = $found['label'] ?? null;
+            $classified = $found ? 'ai' : null;
+        } elseif ($kind === 'exterior' && $shotKey) {
+            // Ancienne prise de vue guidée : une nouvelle photo pour un angle remplace l'ancienne.
             $v->photos()->where('kind', 'exterior')->where('shot_key', $shotKey)->get()->each->delete();
         }
         $photo = $v->photos()->create([
             'shot_key' => $shotKey,
             'kind' => $kind,
+            'label' => $label,
+            'classified' => $classified,
             'path' => "$base.jpg",
             'thumb_path' => "{$base}_thumb.jpg",
-            'position' => $kind === 'exterior' ? array_search($shotKey, array_column(Shot::DEFAULTS, 0)) ?: 0 : 100 + $v->photos()->count(),
+            'position' => Photo::rank($kind, $shotKey, $label),
         ]);
         $v->refreshStatus();
 
         return response()->json($photo->toApi(), 201);
+    }
+
+    /** Correction à la main : type, angle ou libellé. */
+    public function update(Request $request, int $id)
+    {
+        $photo = Photo::whereHas('vehicle', fn ($q) => $q->where('garage_id', $this->garage()->id))->findOrFail($id);
+        $data = $request->validate([
+            'kind' => ['required', Rule::in(Photo::KINDS)],
+            'shot_key' => ['nullable', Rule::in(Shot::KEYS)],
+            'label' => ['nullable', 'string', 'max:60'],
+        ]);
+        $wasExterior = $photo->kind === 'exterior';
+        $photo->update([
+            'kind' => $data['kind'],
+            'shot_key' => $data['kind'] === 'exterior' ? ($data['shot_key'] ?? null) : null,
+            'label' => $data['kind'] === 'exterior' ? null : ($data['label'] ?? null),
+            'classified' => 'user',
+            'position' => Photo::rank($data['kind'], $data['shot_key'] ?? null, $data['label'] ?? null),
+        ]);
+        if ($wasExterior && $data['kind'] !== 'exterior') {
+            // Une photo d'intérieur n'a rien à faire dans le showroom : on retire ses rendus.
+            $photo->renders()->whereNull('comparison_id')->delete();
+        }
+        $vehicle = $photo->vehicle;
+        $vehicle->refreshStatus();
+
+        return $photo->fresh()->toApi();
     }
 
     public function destroy(int $id)

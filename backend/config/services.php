@@ -54,6 +54,8 @@ return [
     'anthropic' => [
         'key' => env('ANTHROPIC_API_KEY'),
         'model' => env('ANTHROPIC_MODEL', 'claude-opus-5-5'),
+        // Rangement des photos : un modèle rapide suffit.
+        'vision_model' => env('ANTHROPIC_VISION_MODEL', 'claude-haiku-5-5'),
     ],
 
     'autoways' => [

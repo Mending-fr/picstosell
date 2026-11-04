@@ -94,9 +94,19 @@ class Imaging
         imagealphablending($out, true);
 
         [$cx, $cy, $cw, $ch] = self::contentBox($car);
-        $scale = max(10, min(100, (float) ($placement['scale'] ?? 66))) / 100;
-        $tw = (int) round($bw * $scale);
-        $th = (int) round($ch * ($tw / max(1, $cw)));
+        if (isset($placement['height'])) {
+            // Hauteur fixe : une voiture a la même hauteur de face comme de profil, seule sa longueur change.
+            $th = (int) round($bh * max(10, min(90, (float) $placement['height'])) / 100);
+            $tw = (int) round($cw * ($th / max(1, $ch)));
+            if ($tw > $bw * 0.96) {
+                $tw = (int) round($bw * 0.96);
+                $th = (int) round($ch * ($tw / max(1, $cw)));
+            }
+        } else {
+            $scale = max(10, min(100, (float) ($placement['scale'] ?? 66))) / 100;
+            $tw = (int) round($bw * $scale);
+            $th = (int) round($ch * ($tw / max(1, $cw)));
+        }
         $x = (int) round(($bw - $tw) / 2 + $bw * ((float) ($placement['offset_x'] ?? 0)) / 100);
         $y = (int) round($bh - $th - $bh * ((float) ($placement['bottom'] ?? 12)) / 100);
 
@@ -152,6 +162,7 @@ class Imaging
         $side = '<path d="M20 140 L40 95 Q60 70 110 62 L200 58 Q245 60 270 85 L305 100 Q318 110 315 140 Z"/><circle cx="85" cy="145" r="26"/><circle cx="255" cy="145" r="26"/>';
         $front = '<path d="M60 150 L60 95 Q70 60 110 52 L220 52 Q260 60 270 95 L270 150 Z"/><rect x="95" y="62" width="140" height="38" rx="6"/><circle cx="90" cy="118" r="12"/><circle cx="240" cy="118" r="12"/><rect x="70" y="150" width="40" height="22" rx="4"/><rect x="220" y="150" width="40" height="22" rx="4"/>';
         $body = match ($key) {
+            'main' => '<g transform="translate(330,0) scale(-1,1)">'.$side.'</g>',
             'front', 'rear' => $front,
             'left', 'front_left', 'rear_right' => '<g transform="translate(330,0) scale(-1,1)">'.$side.'</g>', // capot à gauche
             default => $side,

@@ -116,7 +116,7 @@ const rows = computed(() => {
   const shots = data.value.grid[String(car.value)] ?? {}
   return Object.entries(shots)
     .sort(([a], [b]) => order(a) - order(b))
-    .map(([key, cell]) => ({ key, label: SHOTS.some((s) => s.key === key) ? shotLabel(key) : 'Photo', source: cell.source_url, renders: cell.renders }))
+    .map(([key, cell]) => ({ key, label: cell.label ?? (SHOTS.some((s) => s.key === key) ? shotLabel(key) : 'Photo'), source: cell.source_url, renders: cell.renders }))
 })
 
 // ---------- photos en grand : pour chaque angle, la photo du parking puis le rendu de chaque modèle ----------

@@ -137,12 +137,12 @@ class Vehicle extends Model
             $r = $latest[$photo->id] ?? null;
             if ($photo->kind === 'exterior') {
                 if ($r && $r->status === 'approved' && $r->output_path) {
-                    $images[] = ['url' => Media::url($r->output_path), 'label' => Shot::labelFor($photo->shot_key)];
+                    $images[] = ['url' => Media::url($r->output_path), 'label' => $photo->displayLabel()];
                 } elseif (! $r || $r->status === 'kept_original') {
-                    $images[] = ['url' => Media::url($photo->path), 'label' => Shot::labelFor($photo->shot_key)];
+                    $images[] = ['url' => Media::url($photo->path), 'label' => $photo->displayLabel()];
                 }
             } else {
-                $images[] = ['url' => Media::url($photo->path), 'label' => $photo->kind === 'interior' ? 'Intérieur' : 'Détail'];
+                $images[] = ['url' => Media::url($photo->path), 'label' => $photo->displayLabel()];
             }
         }
 
