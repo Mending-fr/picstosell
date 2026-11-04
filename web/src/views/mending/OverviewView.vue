@@ -5,6 +5,7 @@ import { ApiError, get, patch, post, errorMessage } from '../../api'
 import { GARAGE_STATUSES, garageStatusLabel, monthName, pct, shortDateTime, usd } from '../../labels'
 import { refreshGarages, switchGarage, toast } from '../../session'
 import AppModal from '../../components/AppModal.vue'
+import SiteThemeModal from '../../components/SiteThemeModal.vue'
 import type { AdminGarageRow, AdminOverview, AiConfig, Garage } from '../../types'
 
 const route = useRoute()
@@ -100,6 +101,9 @@ const perCarOk = computed(() => {
   const v = data.value?.cost_per_vehicle_usd
   return v !== null && v !== undefined && Number(v) < 0.5
 })
+
+// Présentation du site public : choix du thème et de ses réglages pour un garage.
+const themeFor = ref<AdminGarageRow | null>(null)
 </script>
 
 <template>
@@ -145,6 +149,7 @@ const perCarOk = computed(() => {
             <th>Refaites</th>
             <th>Réglage photo</th>
             <th>Statut</th>
+            <th>Site</th>
             <th title="Affiche « Ce mois : x / quota voitures » dans le menu du garage">Compteur</th>
           </tr>
         </thead>
@@ -197,6 +202,9 @@ const perCarOk = computed(() => {
               </label>
             </td>
             <td>
+              <button type="button" class="btn btn-sm site-btn" :aria-label="`Présentation du site de ${g.name} : ${g.site_theme}`" @click="themeFor = g">{{ g.site_theme }}</button>
+            </td>
+            <td>
               <label class="chk">
                 <input type="checkbox" :checked="g.show_usage" @change="update(g, 'show_usage', ($event.target as HTMLInputElement).checked)" />
                 <span class="sr-only">Afficher le compteur de voitures à {{ g.name }}</span>
@@ -225,6 +233,8 @@ const perCarOk = computed(() => {
     </div>
   </section>
 
+  <SiteThemeModal v-if="themeFor" :garage-id="themeFor.id" :garage-name="themeFor.name" @close="themeFor = null" @saved="(n) => themeFor && (themeFor.site_theme = n)" />
+
   <AppModal v-if="addOpen" title="Ajouter un garage" @close="closeAdd">
     <form class="col" style="gap: 14px" novalidate @submit.prevent="addGarage">
       <label class="lbl">Nom du garage<input v-model="form.name" class="f" :aria-invalid="!!addErrors.name" /><span v-if="addErrors.name" class="err">{{ addErrors.name }}</span></label>
@@ -244,6 +254,9 @@ const perCarOk = computed(() => {
 </template>
 
 <style scoped>
+.site-btn {
+  white-space: nowrap;
+}
 .stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));

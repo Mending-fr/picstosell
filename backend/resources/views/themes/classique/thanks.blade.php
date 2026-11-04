@@ -1,4 +1,4 @@
-@extends('site.layout')
+@extends($theme->view('layout'))
 @section('title', 'Message envoyé')
 @section('content')
 <div class="wrap" style="max-width:640px;padding-top:80px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:18px">

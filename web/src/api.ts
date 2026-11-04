@@ -128,6 +128,8 @@ export const post = <T>(path: string, body: unknown = {}, opts: RequestOptions =
   api<T>(path, { ...opts, method: 'POST', body })
 export const patch = <T>(path: string, body: unknown, opts: RequestOptions = {}) =>
   api<T>(path, { ...opts, method: 'PATCH', body })
+export const put = <T>(path: string, body: unknown, opts: RequestOptions = {}) =>
+  api<T>(path, { ...opts, method: 'PUT', body })
 export const del = (path: string, opts: RequestOptions = {}) => api<void>(path, { ...opts, method: 'DELETE' })
 
 /** Télécharge une réponse binaire authentifiée et propose le fichier à l'utilisateur. */

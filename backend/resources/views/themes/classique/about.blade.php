@@ -1,4 +1,4 @@
-@extends('site.layout')
+@extends($theme->view('layout'))
 @section('title', 'Le garage')
 @section('content')
 <section style="background:var(--ground)"><div class="wrap" style="padding-top:48px;padding-bottom:48px;display:flex;flex-direction:column;gap:16px;max-width:900px">

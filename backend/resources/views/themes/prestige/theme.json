@@ -1,0 +1,26 @@
+{
+  "name": "Prestige",
+  "description": "Fond ivoire, en-tête sombre, titres à empattements, grandes photos. Les chiffres du garage (avis, garantie, ancienneté) s'affichent quand ils sont renseignés.",
+  "extends": "classique",
+  "garages": [],
+  "options": [
+    { "key": "hero_kicker", "label": "Petit titre au-dessus", "type": "text", "default": "", "help": "Vide : « Voitures d'occasion à <ville> »." },
+    { "key": "hero_title", "label": "Grand titre de l'accueil", "type": "text", "default": "Votre prochaine voiture est peut-être déjà chez nous." },
+    { "key": "hero_text", "label": "Texte sous le titre", "type": "textarea", "default": "", "help": "Vide : la présentation du garage, ou une phrase simple sur la visite et l'essai." },
+    { "key": "google_rating", "label": "Note Google", "type": "number", "default": "", "help": "Ex. 4,8. Vide : la note n'apparaît pas." },
+    { "key": "google_reviews", "label": "Nombre d'avis Google", "type": "number", "default": "" },
+    { "key": "google_url", "label": "Lien vers les avis", "type": "text", "default": "" },
+    { "key": "warranty_months", "label": "Garantie (mois)", "type": "number", "default": "", "help": "Vide : la garantie n'est pas mentionnée." },
+    { "key": "since_year", "label": "Garage ouvert depuis (année)", "type": "number", "default": "" },
+    { "key": "promise_1_title", "label": "Engagement 1 : titre", "type": "text", "default": "", "help": "Ex. Révisée dans notre atelier. Les engagements vides sont masqués." },
+    { "key": "promise_1_text", "label": "Engagement 1 : texte", "type": "textarea", "default": "" },
+    { "key": "promise_2_title", "label": "Engagement 2 : titre", "type": "text", "default": "" },
+    { "key": "promise_2_text", "label": "Engagement 2 : texte", "type": "textarea", "default": "" },
+    { "key": "promise_3_title", "label": "Engagement 3 : titre", "type": "text", "default": "" },
+    { "key": "promise_3_text", "label": "Engagement 3 : texte", "type": "textarea", "default": "" },
+    { "key": "finance_rate", "label": "Financement : TAEG d'exemple (%)", "type": "number", "default": "", "help": "Renseigné, chaque voiture affiche une mensualité d'exemple avec la mention légale du crédit." },
+    { "key": "finance_months", "label": "Financement : durée (mois)", "type": "number", "default": "60" },
+    { "key": "finance_deposit", "label": "Financement : apport (€)", "type": "number", "default": "0" },
+    { "key": "alert_form", "label": "Encart « Vous cherchez un modèle précis ? »", "type": "toggle", "default": true }
+  ]
+}

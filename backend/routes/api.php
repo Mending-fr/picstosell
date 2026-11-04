@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\Admin\AiConfigController;
 use App\Http\Controllers\Api\Admin\ComparisonController;
 use App\Http\Controllers\Api\Admin\GarageAdminController;
+use App\Http\Controllers\Api\Admin\SiteThemeController;
 use App\Http\Controllers\Api\Admin\OverviewController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DashboardController;
@@ -30,6 +31,8 @@ Route::prefix('v1')->group(function () {
             Route::get('overview', OverviewController::class);
             Route::post('garages', [GarageAdminController::class, 'store']);
             Route::patch('garages/{garage}', [GarageAdminController::class, 'update']);
+            Route::get('garages/{garage}/site-theme', [SiteThemeController::class, 'index']);
+            Route::put('garages/{garage}/site-theme', [SiteThemeController::class, 'update']);
             Route::get('ai-configs', [AiConfigController::class, 'index']);
             Route::post('ai-configs', [AiConfigController::class, 'store']);
             Route::patch('ai-configs/{aiConfig}', [AiConfigController::class, 'update']);

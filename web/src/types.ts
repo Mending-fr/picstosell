@@ -265,6 +265,30 @@ export interface AdminGarageRow extends GarageSummary {
   redo_rate: number | null
   ai_config_id: number | null
   show_usage: boolean
+  site_theme: string
+}
+
+export interface ThemeOption {
+  key: string
+  label: string
+  type: 'text' | 'textarea' | 'number' | 'toggle'
+  default?: string | number | boolean
+  help?: string
+}
+export interface SiteTheme {
+  key: string
+  name: string
+  description: string
+  extends: string | null
+  reserved: boolean
+  options: ThemeOption[]
+  values: Record<string, string | number | boolean | null>
+  preview_url: string
+}
+export interface SiteThemes {
+  current: string
+  site_url: string
+  themes: SiteTheme[]
 }
 
 export interface AdminError {

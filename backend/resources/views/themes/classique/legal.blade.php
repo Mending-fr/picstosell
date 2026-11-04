@@ -1,4 +1,4 @@
-@extends('site.layout')
+@extends($theme->view('layout'))
 @section('title', 'Informations légales')
 @section('content')
 <div class="wrap" style="max-width:820px;padding-top:40px;display:flex;flex-direction:column;gap:12px;line-height:1.65">

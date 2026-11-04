@@ -1,4 +1,4 @@
-@extends('site.layout')
+@extends($theme->view('layout'))
 @section('content')
 <div class="wrap" style="padding-top:32px;padding-bottom:24px;display:flex;flex-direction:column;gap:24px">
 <div style="display:flex;flex-direction:column;gap:6px">
@@ -23,7 +23,7 @@
 <a class="btn" href="{{ route('site.contact', [$g->slug, 'sujet' => 'autre']) }}">Nous dire ce que je cherche</a>
 </div>
 @else
-<div class="grid-cars">@foreach($vehicles as $v) @include('site._card') @endforeach</div>
+<div class="grid-cars">@foreach($vehicles as $v) @include($theme->view('_card')) @endforeach</div>
 @endif
 </div>
 <script>document.querySelectorAll('form select').forEach(s=>s.addEventListener('change',()=>s.form.submit()));</script>

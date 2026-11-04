@@ -51,6 +51,7 @@ footer.bottom strong{color:#fff}
 @endif
 </head>
 <body>
+@include('themes._preview')
 @if($g->isDemo())<div style="background:#FCF1E3;color:#A55A0B;text-align:center;font-size:14px;padding:8px 16px">Site de démonstration : les voitures, les prix et les coordonnées sont fictifs.</div>@endif
 <header class="top"><div class="wrap">
 <a class="logo" href="{{ route('site.index', $g->slug) }}">@if($g->logo_path)<img src="{{ \App\Support\Media::url($g->logo_path) }}" alt="">@endif{{ $g->name }}</a>

@@ -28,6 +28,7 @@ class OverviewController
                 'redo_rate' => $total ? round($redo / $total, 3) : null,
                 'ai_config_id' => $g->ai_config_id,
                 'show_usage' => (bool) $g->setting('show_usage'),
+                'site_theme' => app(\App\Support\Themes\ThemeRegistry::class)->forGarage($g)->name(),
             ];
         });
         $vehicles = $rows->sum('vehicles_month');

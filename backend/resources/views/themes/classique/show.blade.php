@@ -1,4 +1,4 @@
-@extends('site.layout')
+@extends($theme->view('layout'))
 @section('title', $v->label().($v->version ? ' '.$v->version : ''))
 @section('description', \Illuminate\Support\Str::limit($v->description ?: $v->label().' d\'occasion chez '.$g->name, 155))
 @if($images)@section('og_image', $images[0]['url'])@endif
@@ -63,7 +63,7 @@
 </div></section>
 @endif
 @if($similar->isNotEmpty())
-<section><h2 style="font-size:22px">Dans le même budget</h2><div class="grid-cars">@foreach($similar as $v) @include('site._card') @endforeach</div></section>
+<section><h2 style="font-size:22px">Dans le même budget</h2><div class="grid-cars">@foreach($similar as $v) @include($theme->view('_card')) @endforeach</div></section>
 @endif
 </div>
 <style>.nav-btn{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:22px;border:0;background:#fff;font-size:24px;cursor:pointer}</style>
