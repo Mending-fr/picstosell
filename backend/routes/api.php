@@ -2,7 +2,9 @@
 
 use App\Http\Controllers\Api\Admin\AiConfigController;
 use App\Http\Controllers\Api\Admin\ComparisonController;
+use App\Http\Controllers\Api\Admin\BackdropController;
 use App\Http\Controllers\Api\Admin\GarageAdminController;
+use App\Http\Controllers\Api\BackdropChoiceController;
 use App\Http\Controllers\Api\Admin\SiteThemeController;
 use App\Http\Controllers\Api\Admin\OverviewController;
 use App\Http\Controllers\Api\AuthController;
@@ -32,6 +34,10 @@ Route::prefix('v1')->group(function () {
             Route::post('garages', [GarageAdminController::class, 'store']);
             Route::patch('garages/{garage}', [GarageAdminController::class, 'update']);
             Route::get('garages/{garage}/site-theme', [SiteThemeController::class, 'index']);
+            Route::get('backdrops', [BackdropController::class, 'index']);
+            Route::post('backdrops', [BackdropController::class, 'store']);
+            Route::patch('backdrops/{backdrop}', [BackdropController::class, 'update']);
+            Route::delete('backdrops/{backdrop}', [BackdropController::class, 'destroy']);
             Route::put('garages/{garage}/site-theme', [SiteThemeController::class, 'update']);
             Route::get('ai-configs', [AiConfigController::class, 'index']);
             Route::post('ai-configs', [AiConfigController::class, 'store']);
@@ -78,6 +84,11 @@ Route::prefix('v1')->group(function () {
                 Route::post('renders/{id}/keep-original', [RenderController::class, 'keepOriginal'])->whereNumber('id');
 
                 Route::get('showrooms', [ShowroomController::class, 'index']);
+                Route::get('backdrop', [BackdropChoiceController::class, 'index']);
+                Route::put('backdrop', [BackdropChoiceController::class, 'choose']);
+                Route::get('backdrop/photos', [BackdropChoiceController::class, 'photos']);
+                Route::post('backdrop/test', [BackdropChoiceController::class, 'test']);
+                Route::get('backdrop/test/{id}', [BackdropChoiceController::class, 'show'])->whereNumber('id');
                 Route::patch('shots/{id}', [ShowroomController::class, 'update'])->whereNumber('id');
                 Route::post('shots/{id}/image', [ShowroomController::class, 'image'])->whereNumber('id');
 

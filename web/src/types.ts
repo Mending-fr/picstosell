@@ -351,3 +351,24 @@ export interface Comparison {
   estimate_usd: string
   grid: Record<string, Record<string, ComparisonCell>>
 }
+
+export interface Backdrop {
+  id: number
+  name: string
+  image_url: string | null
+  is_default: boolean
+}
+export interface BackdropOptions {
+  /** Décor réellement utilisé : 'own', 'lib:ID' ou 'none'. */
+  selected: string
+  /** Choix enregistré par le garage (null : automatique). */
+  chosen: string | null
+  own: { shot_id: number | null; image_url: string | null }
+  library: Backdrop[]
+}
+export interface TestPhoto {
+  id: number
+  thumb_url: string | null
+  label: string
+  vehicle: string
+}

@@ -47,9 +47,10 @@ class Vehicle extends Model
         return $this->hasMany(Photo::class)->orderBy('position')->orderBy('id');
     }
 
+    /** Rendus de la voiture, sans les essais de décor (faits depuis Mon showroom). */
     public function renders(): HasMany
     {
-        return $this->hasMany(Render::class);
+        return $this->hasMany(Render::class)->where('is_test', false);
     }
 
     public function leads(): HasMany

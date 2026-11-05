@@ -18,7 +18,7 @@ class RenderLauncher
             ?? new AiConfig(['provider' => 'fake', 'model' => 'fake-composite', 'method' => 'B', 'quality' => '2K', 'unit_cost_usd' => 0]);
     }
 
-    public static function launch(Photo $photo, ?AiConfig $config = null, ?int $comparisonId = null, int $attempt = 1): Render
+    public static function launch(Photo $photo, ?AiConfig $config = null, ?int $comparisonId = null, int $attempt = 1, ?string $testBackdrop = null): Render
     {
         $config ??= self::configFor($photo);
         $render = Render::create([
@@ -26,6 +26,9 @@ class RenderLauncher
             'vehicle_id' => $photo->vehicle_id,
             'ai_config_id' => $config->exists ? $config->id : null,
             'comparison_id' => $comparisonId,
+            // Essai de décor : le rendu ne remplace pas les photos de la voiture.
+            'is_test' => $testBackdrop !== null,
+            'backdrop' => $testBackdrop,
             'provider' => $config->provider,
             'model' => $config->model,
             'method' => $config->method,

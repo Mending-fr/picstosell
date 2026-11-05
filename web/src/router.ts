@@ -28,6 +28,7 @@ const router = createRouter({
     { path: '/settings', component: () => import('./views/SettingsView.vue'), meta: { layout: 'garage', role: 'manager', title: 'Réglages' } },
     { path: '/mending', component: () => import('./views/mending/OverviewView.vue'), meta: { layout: 'mending', role: 'super', title: 'Espace Mending' } },
     { path: '/mending/models', component: () => import('./views/mending/ModelsView.vue'), meta: { layout: 'mending', role: 'super', title: 'Réglages photo IA' } },
+    { path: '/mending/backdrops', component: () => import('./views/mending/BackdropsView.vue'), meta: { layout: 'mending', role: 'super', title: 'Décors' } },
     { path: '/mending/comparisons', component: () => import('./views/mending/ComparisonsView.vue'), meta: { layout: 'mending', role: 'super', title: 'Comparer les modèles' } },
     { path: '/mending/comparisons/:id(\\d+)', component: () => import('./views/mending/ComparisonView.vue'), meta: { layout: 'mending', role: 'super', title: 'Comparatif' } },
     { path: '/:pathMatch(.*)*', component: () => import('./views/NotFoundView.vue'), meta: { layout: 'bare', title: 'Page introuvable' } },

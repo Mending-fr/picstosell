@@ -117,6 +117,35 @@ class Garage extends Model
         return ($this->settings ?? [])[$key] ?? self::DEFAULT_SETTINGS[$key] ?? null;
     }
 
+    /**
+     * Décor à utiliser : « own » (la photo du garage), « lib:ID » (un décor Mending),
+     * ou null pour le choix du garage. Sans choix : sa photo s'il en a une, sinon le décor Mending par défaut.
+     *
+     * @return array{path: ?string, placement: array, key: string}
+     */
+    public function backdrop(?string $choice = null): array
+    {
+        $choice ??= $this->settings['backdrop'] ?? null;
+        $shot = Shot::whereHas('showroom', fn ($q) => $q->where('garage_id', $this->id))
+            ->orderByRaw("case when key = 'main' then 0 else 1 end")->orderBy('id')->first();
+        $placement = array_merge(Shot::DEFAULT_PLACEMENT, array_intersect_key($shot?->placement ?? [], Shot::DEFAULT_PLACEMENT));
+
+        if ($choice && str_starts_with($choice, 'lib:')) {
+            $b = Backdrop::find((int) substr($choice, 4));
+            if ($b) {
+                return ['path' => $b->image_path, 'placement' => Shot::DEFAULT_PLACEMENT, 'key' => $choice];
+            }
+        }
+        if (($choice === 'own' || ! $choice) && $shot?->image_path) {
+            return ['path' => $shot->image_path, 'placement' => $placement, 'key' => 'own'];
+        }
+        $d = Backdrop::default();
+
+        return $d
+            ? ['path' => $d->image_path, 'placement' => Shot::DEFAULT_PLACEMENT, 'key' => 'lib:'.$d->id]
+            : ['path' => null, 'placement' => $placement, 'key' => 'none'];
+    }
+
     public function ensureShowroom(): Showroom
     {
         $showroom = $this->showrooms()->first() ?? $this->showrooms()->create(['name' => 'Showroom']);

@@ -16,7 +16,7 @@ class Render extends Model
 
     protected function casts(): array
     {
-        return ['cost_usd' => 'decimal:4'];
+        return ['cost_usd' => 'decimal:4', 'is_test' => 'boolean'];
     }
 
     public function photo(): BelongsTo
@@ -53,6 +53,8 @@ class Render extends Model
             'attempt' => $this->attempt,
             'ai_config_id' => $this->ai_config_id,
             'comparison_id' => $this->comparison_id,
+            'is_test' => (bool) $this->is_test,
+            'backdrop' => $this->backdrop,
         ];
     }
 }

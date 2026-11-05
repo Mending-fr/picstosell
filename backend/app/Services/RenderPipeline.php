@@ -28,14 +28,11 @@ class RenderPipeline
             $vehicle = $render->vehicle()->firstOrFail();
             $garage = $vehicle->garage;
             $config = $render->aiConfig ?? new AiConfig(['provider' => $render->provider, 'model' => $render->model, 'method' => $render->method, 'quality' => '2K', 'unit_cost_usd' => 0]);
-            // Un seul décor par garage : le même fond pour tous les angles de la voiture.
-            $shot = Shot::query()
-                ->whereHas('showroom', fn ($q) => $q->where('garage_id', $garage->id))
-                ->orderByRaw("case when key = 'main' then 0 else 1 end")->orderBy('id')->first();
-
-            $background = $shot?->image_path ? Imaging::load(Media::get($shot->image_path)) : Imaging::placeholderBackground();
+            // Un seul décor par voiture : celui du garage, ou celui choisi pour un essai.
+            $bg = $garage->backdrop($render->backdrop);
+            $background = $bg['path'] ? Imaging::load(Media::get($bg['path'])) : Imaging::placeholderBackground();
             $background = Imaging::fit($background, 2048);
-            $placement = array_merge(Shot::DEFAULT_PLACEMENT, $shot?->placement ?? []);
+            $placement = $bg['placement'];
             $carBytes = Media::get($photo->path);
             $generator = Generators::for($config->provider);
             $isFake = $config->provider === 'fake';
@@ -69,7 +66,7 @@ class RenderPipeline
             Media::put($path, Imaging::jpeg($final, 88));
 
             $render->update([
-                'status' => $render->comparison_id || $garage->setting('review_before_publish') ? 'to_review' : 'approved',
+                'status' => $render->comparison_id || $render->is_test || $garage->setting('review_before_publish') ? 'to_review' : 'approved',
                 'output_path' => $path,
                 'cost_usd' => $cost,
                 'duration_ms' => (int) ((microtime(true) - $started) * 1000),
@@ -84,7 +81,7 @@ class RenderPipeline
             ]);
         }
 
-        if (! $render->comparison_id) {
+        if (! $render->comparison_id && ! $render->is_test) {
             $render->vehicle?->refreshStatus();
         }
     }

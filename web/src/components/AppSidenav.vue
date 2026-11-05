@@ -33,6 +33,7 @@ const items = computed<Item[]>(() => {
       { to: '/mending', label: "Vue d'ensemble", icon: 'chart', match: /^\/mending\/?$/ },
       { to: '/mending/comparisons', label: 'Comparer les modèles', icon: 'flask', match: /^\/mending\/comparisons/ },
       { to: '/mending/models', label: 'Réglages photo IA', icon: 'sliders', match: /^\/mending\/models/ },
+      { to: '/mending/backdrops', label: 'Décors', icon: 'image', match: /^\/mending\/backdrops/ },
     ]
   }
   const list: Item[] = [
