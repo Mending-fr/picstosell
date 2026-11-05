@@ -154,17 +154,6 @@ function exportCsv() {
 <template>
   <div class="page-head">
     <h1>Mon parc</h1>
-    <div role="tablist" aria-label="Filtrer par étape" class="tabs grow">
-      <button v-for="t in TABS" :key="t.id" type="button" role="tab" class="tab" :aria-selected="tab === t.id" @click="tab = t.id">
-        {{ t.label }}<span class="n">{{ all ? count(t) : '' }}</span>
-      </button>
-      <span v-if="q.trim()" class="qchip">
-        « {{ q.trim() }} »
-        <button type="button" aria-label="Effacer la recherche" @click="q = ''">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
-        </button>
-      </span>
-    </div>
     <div class="row">
       <button v-if="isManager" type="button" class="btn" :disabled="!rows.length" @click="exportCsv">Exporter la liste</button>
       <button type="button" class="btn btn-primary" aria-keyshortcuts="N" @click="openAdd">
@@ -178,7 +167,18 @@ function exportCsv() {
   </p>
 
   <div class="table-wrap">
-    <table class="t" style="min-width: 980px">
+    <div role="tablist" aria-label="Filtrer par étape" class="tabs tbar">
+      <button v-for="t in TABS" :key="t.id" type="button" role="tab" class="tab" :aria-selected="tab === t.id" @click="tab = t.id">
+        {{ t.label }}<span class="n">{{ all ? count(t) : '' }}</span>
+      </button>
+      <span v-if="q.trim()" class="qchip">
+        « {{ q.trim() }} »
+        <button type="button" aria-label="Effacer la recherche" @click="q = ''">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        </button>
+      </span>
+    </div>
+    <table class="t">
       <thead>
         <tr>
           <th>Voiture</th>
@@ -252,35 +252,27 @@ function exportCsv() {
 </template>
 
 <style scoped>
-.page-head {
-  flex-wrap: nowrap;
+.tbar {
+  padding: 8px;
+  border-bottom: 1px solid #e3e3e3;
   align-items: center;
-}
-.page-head .tabs {
-  margin-left: 12px;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.page-head .tab {
-  min-height: 36px;
-  padding: 0 14px;
-  font-size: 13.5px;
 }
 .qchip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 36px;
-  padding: 0 6px 0 14px;
-  border-radius: 999px;
+  height: 28px;
+  padding: 0 4px 0 10px;
+  border-radius: 8px;
+  font-size: 12.5px;
   background: #1f2833;
   color: #fff;
   font-size: 13.5px;
 }
 .qchip button {
-  width: 26px;
-  height: 26px;
-  border-radius: 13px;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
   border: 0;
   background: rgba(255, 255, 255, 0.14);
   color: #fff;
@@ -313,7 +305,6 @@ function exportCsv() {
   flex-wrap: wrap;
   font-size: 13px;
   color: var(--muted-3);
-  margin-top: -6px;
 }
 .sep {
   margin: 0 4px;
@@ -326,16 +317,6 @@ function exportCsv() {
 .pager .btn-link {
   font-size: 13px;
   min-height: 0;
-}
-@media (max-width: 1100px) {
-  .page-head {
-    flex-wrap: wrap;
-  }
-  .page-head .tabs {
-    order: 3;
-    flex-basis: 100%;
-    margin-left: 0;
-  }
 }
 .car-link {
   font-weight: 500;

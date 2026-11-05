@@ -1150,5 +1150,15 @@ onBeforeRouteLeave(() => {
   .head-t .plate {
     display: none;
   }
+  .head {
+    flex-wrap: wrap;
+  }
+  .head-t {
+    flex-basis: calc(100% - 52px);
+  }
+  .head-a {
+    width: 100%;
+    justify-content: flex-end;
+  }
 }
 </style>

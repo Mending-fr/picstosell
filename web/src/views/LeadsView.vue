@@ -126,7 +126,6 @@ async function setStatus(l: Lead, status: 'new' | 'done') {
       <button type="button" role="tab" class="tab" :aria-selected="filter === 'new'" @click="filter = 'new'">Nouvelles<span class="n">{{ leads ? newCount : '' }}</span></button>
       <button type="button" role="tab" class="tab" :aria-selected="filter === 'done'" @click="filter = 'done'">Traitées</button>
     </div>
-    <span class="muted hint">Les messages laissés sur votre site, du plus récent au plus ancien</span>
   </div>
 
   <p v-if="error" class="alert alert-error" role="alert">{{ error }} <button type="button" class="btn-link" @click="load">Réessayer</button></p>
@@ -169,18 +168,18 @@ async function setStatus(l: Lead, status: 'new' | 'done') {
       <template v-if="cur">
         <div class="row between" style="align-items: flex-start; flex-wrap: nowrap">
           <div class="col" style="gap: 4px; min-width: 0">
-            <h2 style="font-size: 22px">{{ cur.name }}</h2>
+            <h2 style="font-size: 16px">{{ cur.name }}</h2>
             <span class="muted" style="font-size: 13px">{{ KIND[cur.type] ?? 'Demande' }} · {{ relative(cur.created_at) }} · depuis {{ source(cur) }}</span>
           </div>
           <span class="pill" :style="cur.status === 'new' ? { color: 'var(--accent-ink)', background: 'var(--accent-soft)' } : { color: 'var(--green-ink)', background: 'var(--green-tint)' }">{{ cur.status === 'new' ? 'Nouvelle' : 'Traitée' }}</span>
         </div>
 
         <div class="acts">
-          <a v-if="cur.phone" :href="telHref(cur.phone)" class="btn btn-primary btn-lg">Appeler {{ cur.phone }}</a>
-          <a v-if="cur.email" :href="`mailto:${cur.email}`" class="btn btn-lg">Écrire un e-mail</a>
+          <a v-if="cur.phone" :href="telHref(cur.phone)" class="btn">Appeler</a>
+          <a v-if="cur.email" :href="`mailto:${cur.email}`" class="btn">Écrire</a>
           <span class="grow" />
-          <button v-if="cur.status === 'new'" type="button" class="btn btn-green btn-lg" @click="setStatus(cur, 'done')">Marquer comme traitée</button>
-          <button v-else type="button" class="btn btn-lg" @click="setStatus(cur, 'new')">Remettre en nouvelle</button>
+          <button v-if="cur.status === 'new'" type="button" class="btn btn-primary" @click="setStatus(cur, 'done')">Marquer comme traitée</button>
+          <button v-else type="button" class="btn" @click="setStatus(cur, 'new')">Remettre en nouvelle</button>
         </div>
 
         <div class="msg">
@@ -266,16 +265,6 @@ async function setStatus(l: Lead, status: 'new' | 'done') {
 }
 .page-head .tabs {
   margin-left: 12px;
-  gap: 6px;
-}
-.page-head .tab {
-  min-height: 36px;
-  padding: 0 14px;
-  font-size: 13.5px;
-}
-.hint {
-  font-size: 13px;
-  white-space: nowrap;
 }
 .cols {
   display: grid;
@@ -285,8 +274,6 @@ async function setStatus(l: Lead, status: 'new' | 'done') {
 }
 .panel {
   background: #fff;
-  border: 1px solid #e6e7ea;
-  border-radius: 16px;
 }
 .list {
   padding: 6px;

@@ -273,13 +273,18 @@ onMounted(() => {
   flex-wrap: wrap;
 }
 .invite {
-  background: var(--ground);
-  border-radius: 12px;
-  padding: 16px;
+  background: #f7f7f7;
+  border-radius: 10px;
+  padding: 12px;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
   gap: 12px;
   align-items: end;
+}
+@media (max-width: 900px) {
+  .invite {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 .pw {
   font-family: var(--mono);

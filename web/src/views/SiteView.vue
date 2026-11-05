@@ -128,6 +128,7 @@ const preview = computed(() => online.value.slice(0, 6))
     <div class="left">
       <section class="panel look" aria-labelledby="look">
         <h2 id="look" class="h2">L'apparence</h2>
+        <span class="lbl" style="margin-bottom: -8px">Logo</span>
         <div class="row" style="gap: 12px; flex-wrap: nowrap">
           <div class="logo">
             <img v-if="garage.logo_url" :src="garage.logo_url" alt="Logo actuel" />
@@ -167,7 +168,7 @@ const preview = computed(() => online.value.slice(0, 6))
           <label class="lbl">Nom du garage<input v-model="form.name" class="f" :aria-invalid="!!errors.name" /></label>
           <label class="lbl">Téléphone<input v-model="form.phone" class="f" type="tel" autocomplete="tel" :aria-invalid="!!errors.phone" /><span v-if="errors.phone" class="err">{{ errors.phone }}</span></label>
           <label class="lbl">E-mail qui reçoit les demandes<input v-model="form.email" class="f" type="email" :aria-invalid="!!errors.email" /><span v-if="errors.email" class="err">{{ errors.email }}</span></label>
-          <label class="lbl" style="grid-column: span 2">Adresse<input v-model="form.address" class="f" /></label>
+          <label class="lbl">Adresse<input v-model="form.address" class="f" /></label>
           <label class="lbl">Ville<input v-model="form.city" class="f" /></label>
         </div>
         <div class="grid2">
@@ -176,10 +177,6 @@ const preview = computed(() => online.value.slice(0, 6))
         </div>
       </section>
 
-      <section class="panel pub" aria-labelledby="pub">
-        <h2 id="pub" class="h2" style="white-space: nowrap">Leboncoin et La Centrale</h2>
-        <span class="muted" style="font-size: 13px; line-height: 1.5">Chaque annonce prête vous donne ses photos et un texte à copier. La mise en ligne automatique viendra plus tard.</span>
-      </section>
     </div>
 
     <aside aria-label="Aperçu" class="right">
@@ -239,10 +236,6 @@ const preview = computed(() => online.value.slice(0, 6))
   color: var(--amber-ink);
   white-space: nowrap;
 }
-.h2 {
-  font-size: 15px;
-  font-weight: 500;
-}
 .cols {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 560px;
@@ -256,19 +249,12 @@ const preview = computed(() => online.value.slice(0, 6))
   min-width: 0;
 }
 .panel {
-  background: #fff;
-  border: 1px solid #e6e7ea;
-  border-radius: 16px;
-  padding: 18px 22px;
+  padding: 16px;
 }
 .look {
   display: flex;
-  align-items: center;
-  gap: 28px;
-  flex-wrap: wrap;
-}
-.look .h2 {
-  width: 120px;
+  flex-direction: column;
+  gap: 14px;
 }
 .coord {
   display: flex;
@@ -277,7 +263,7 @@ const preview = computed(() => online.value.slice(0, 6))
 }
 .grid3 {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px 14px;
 }
 .grid2 {

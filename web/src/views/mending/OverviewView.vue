@@ -104,6 +104,8 @@ const perCarOk = computed(() => {
 
 // Présentation du site public : choix du thème et de ses réglages pour un garage.
 const themeFor = ref<AdminGarageRow | null>(null)
+// Réglages d'un garage, dans une fenêtre plutôt que dans le tableau.
+const editFor = ref<AdminGarageRow | null>(null)
 </script>
 
 <template>
@@ -135,22 +137,22 @@ const themeFor = ref<AdminGarageRow | null>(null)
 
   <section aria-labelledby="gar" class="col" style="gap: 10px">
     <div class="row between">
-      <h2 id="gar" style="font-size: 18px">Garages</h2>
+      <h2 id="gar">Garages</h2>
       <RouterLink to="/mending/comparisons" class="btn-link" style="display: inline-flex; align-items: center">Comparer les modèles avant de choisir</RouterLink>
     </div>
     <div class="table-wrap">
-      <table class="t" style="min-width: 860px">
+      <table class="t">
         <thead>
           <tr>
             <th>Garage</th>
-            <th>Voitures</th>
-            <th>Coût IA</th>
-            <th>Par voiture</th>
-            <th>Refaites</th>
-            <th>Réglage photo</th>
             <th>Statut</th>
+            <th class="r">Voitures ce mois</th>
+            <th class="r">Coût IA</th>
+            <th class="r">Par voiture</th>
+            <th class="r">Refaites</th>
+            <th>Réglage photo</th>
             <th>Site</th>
-            <th title="Affiche « Ce mois : x / quota voitures » dans le menu du garage">Compteur</th>
+            <th><span class="sr-only">Actions</span></th>
           </tr>
         </thead>
         <tbody v-if="data">
@@ -158,58 +160,20 @@ const themeFor = ref<AdminGarageRow | null>(null)
             <td>
               <div class="row" style="flex-wrap: nowrap; gap: 10px">
                 <span class="ini" :style="{ background: g.color }">{{ g.initials }}</span>
-                <div class="col" style="gap: 2px">
+                <div class="col" style="gap: 1px">
                   <button type="button" class="gname" :aria-label="`Ouvrir l'espace de ${g.name}`" @click="open(g)">{{ g.name }}</button>
-                  <span class="muted" style="font-size: 12px">{{ garageStatusLabel(g.status) }}{{ g.todo_count ? ` · ${g.todo_count} à faire` : '' }}</span>
+                  <span v-if="g.todo_count" class="muted" style="font-size: 12px">{{ g.todo_count }} à faire</span>
                 </div>
               </div>
             </td>
-            <td>
-              <label class="quota" :title="`Voitures comprises par mois dans l'abonnement de ${g.name}`">
-                <span>{{ g.vehicles_month }} /</span>
-                <span class="sr-only">Voitures comprises par mois pour {{ g.name }}</span>
-                <input
-                  class="f f-sm q-in"
-                  type="number"
-                  min="0"
-                  step="1"
-                  inputmode="numeric"
-                  :value="g.quota ?? ''"
-                  placeholder="∞"
-                  @change="saveQuota(g, ($event.target as HTMLInputElement))"
-                  @keydown.enter="($event.target as HTMLInputElement).blur()"
-                />
-              </label>
-            </td>
-            <td>{{ usd(g.cost_usd) }}</td>
-            <td>{{ usd(g.cost_per_vehicle_usd) }}</td>
-            <td>{{ pct(g.redo_rate) }}</td>
-            <td>
-              <label>
-                <span class="sr-only">Réglage photo de {{ g.name }}</span>
-                <select class="f f-sm sel" :value="g.ai_config_id ?? ''" @change="update(g, 'ai_config_id', ($event.target as HTMLSelectElement).value)">
-                  <option value="">Par défaut</option>
-                  <option v-for="c in configs" :key="c.id" :value="c.id" :disabled="!c.active">{{ c.name }}{{ c.active ? '' : ' (inactif)' }}</option>
-                </select>
-              </label>
-            </td>
-            <td>
-              <label>
-                <span class="sr-only">Statut de {{ g.name }}</span>
-                <select class="f f-sm sel" :value="g.status" @change="update(g, 'status', ($event.target as HTMLSelectElement).value)">
-                  <option v-for="s in GARAGE_STATUSES" :key="s.value" :value="s.value">{{ s.label }}</option>
-                </select>
-              </label>
-            </td>
-            <td>
-              <button type="button" class="btn btn-sm site-btn" :aria-label="`Présentation du site de ${g.name} : ${g.site_theme}`" @click="themeFor = g">{{ g.site_theme }}</button>
-            </td>
-            <td>
-              <label class="chk">
-                <input type="checkbox" :checked="g.show_usage" @change="update(g, 'show_usage', ($event.target as HTMLInputElement).checked)" />
-                <span class="sr-only">Afficher le compteur de voitures à {{ g.name }}</span>
-              </label>
-            </td>
+            <td><span class="pill" style="background: #f1f1f1; color: var(--ink-2)">{{ garageStatusLabel(g.status) }}</span></td>
+            <td class="r">{{ g.vehicles_month }}{{ g.quota != null ? ` / ${g.quota}` : '' }}</td>
+            <td class="r">{{ usd(g.cost_usd) }}</td>
+            <td class="r">{{ usd(g.cost_per_vehicle_usd) }}</td>
+            <td class="r">{{ pct(g.redo_rate) }}</td>
+            <td class="soft">{{ configs.find((c) => c.id === g.ai_config_id)?.name ?? 'Par défaut' }}</td>
+            <td class="soft">{{ g.site_theme }}</td>
+            <td style="text-align: right"><button type="button" class="btn btn-sm" @click="editFor = g">Réglages</button></td>
           </tr>
         </tbody>
       </table>
@@ -221,7 +185,7 @@ const themeFor = ref<AdminGarageRow | null>(null)
   </section>
 
   <section aria-labelledby="err" class="col" style="gap: 10px">
-    <h2 id="err" style="font-size: 18px">Dernières erreurs</h2>
+    <h2 id="err">Dernières erreurs</h2>
     <div class="table-wrap">
       <div v-if="data && !data.errors.length" class="empty">Aucune erreur récente.</div>
       <div v-for="(e, i) in data?.errors ?? []" :key="i" class="erow">
@@ -233,6 +197,41 @@ const themeFor = ref<AdminGarageRow | null>(null)
     </div>
   </section>
 
+  <AppModal v-if="editFor" :title="`Réglages de ${editFor.name}`" @close="editFor = null">
+    <div class="col" style="gap: 14px">
+      <label class="lbl">
+        Statut
+        <select class="f" :value="editFor.status" @change="update(editFor, 'status', ($event.target as HTMLSelectElement).value)">
+          <option v-for="st in GARAGE_STATUSES" :key="st.value" :value="st.value">{{ st.label }}</option>
+        </select>
+      </label>
+      <label class="lbl">
+        Réglage photo IA
+        <select class="f" :value="editFor.ai_config_id ?? ''" @change="update(editFor, 'ai_config_id', ($event.target as HTMLSelectElement).value)">
+          <option value="">Par défaut</option>
+          <option v-for="c in configs" :key="c.id" :value="c.id" :disabled="!c.active">{{ c.name }}{{ c.active ? '' : ' (inactif)' }}</option>
+        </select>
+      </label>
+      <label class="lbl">
+        Voitures comprises par mois
+        <input class="f" type="number" min="0" step="1" inputmode="numeric" :value="editFor.quota ?? ''" placeholder="Sans limite" @change="saveQuota(editFor, $event.target as HTMLInputElement)" />
+      </label>
+      <div class="row between">
+        <span class="col" style="gap: 2px">
+          <span class="lbl">Présentation du site</span>
+          <span class="muted" style="font-size: 12.5px">{{ editFor.site_theme }}</span>
+        </span>
+        <button type="button" class="btn btn-sm" @click="(themeFor = editFor), (editFor = null)">Changer</button>
+      </div>
+      <label class="row" style="gap: 8px; font-size: 13px; flex-wrap: nowrap">
+        <input type="checkbox" :checked="editFor.show_usage" @change="update(editFor, 'show_usage', ($event.target as HTMLInputElement).checked)" />
+        Afficher au garage son compteur de voitures du mois
+      </label>
+    </div>
+    <template #footer>
+      <button type="button" class="btn btn-primary" @click="editFor = null">Terminé</button>
+    </template>
+  </AppModal>
   <SiteThemeModal v-if="themeFor" :garage-id="themeFor.id" :garage-name="themeFor.name" @close="themeFor = null" @saved="(n) => themeFor && (themeFor.site_theme = n)" />
 
   <AppModal v-if="addOpen" title="Ajouter un garage" @close="closeAdd">

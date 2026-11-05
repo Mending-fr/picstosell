@@ -1254,3 +1254,112 @@ textarea.f {
 .toast {
   z-index: 90;
 }
+
+/* titres de section : une seule taille, comme dans Shopify */
+h2 {
+  font-size: 14px;
+  font-weight: 650;
+}
+h3 {
+  font-size: 13px;
+  font-weight: 650;
+}
+
+/* onglets : texte sobre, l'onglet actif sur fond gris */
+.tabs {
+  gap: 2px;
+}
+.tab,
+.page-head .tab {
+  min-height: 28px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  gap: 6px;
+}
+.tab:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--ink);
+}
+.tab[aria-selected='true'] {
+  background: rgba(0, 0, 0, 0.08);
+  color: var(--ink);
+  font-weight: 600;
+}
+.tab[aria-selected='true'] .n {
+  color: var(--muted);
+  opacity: 1;
+}
+.seg {
+  border-radius: 8px;
+  padding: 2px;
+  background: #ebebeb;
+}
+.seg button {
+  border-radius: 6px;
+  min-height: 26px;
+  padding: 0 10px;
+  font-size: 12.5px;
+}
+.seg button[aria-pressed='true'] {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* tableaux */
+.table-wrap {
+  border: 0;
+  border-radius: 12px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.07), 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+.t th {
+  font-size: 12px;
+  font-weight: 550;
+  color: var(--muted);
+  background: #f7f7f7;
+  padding: 8px 12px;
+  border-bottom: 1px solid #e3e3e3;
+}
+.t td {
+  font-size: 13px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #ebebeb;
+}
+.t tbody tr.clickable:hover td {
+  background: #f7f7f7;
+}
+.empty {
+  font-size: 13px;
+  padding: 32px 16px;
+}
+.empty strong {
+  font-size: 14px;
+  font-weight: 650;
+}
+.thumb {
+  width: 40px;
+  height: 30px;
+  border-radius: 6px;
+}
+.stat {
+  padding: 14px 16px;
+}
+.stat-value {
+  font-size: 20px;
+  font-weight: 650;
+}
+.t .r {
+  text-align: right;
+}
+.t .soft {
+  color: var(--muted);
+}
+.section-title {
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--ink);
+}

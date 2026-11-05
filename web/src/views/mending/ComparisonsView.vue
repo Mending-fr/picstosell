@@ -112,7 +112,7 @@ const statusLabel = (s: string) => (s === 'running' ? 'En cours' : s === 'done' 
 
   <form v-if="creating" class="card" novalidate @submit.prevent="create">
     <div class="row between">
-      <h2 style="font-size: 18px">Nouveau test</h2>
+      <h2>Nouveau test</h2>
       <button v-if="list?.length" type="button" class="btn-link" @click="creating = false">Annuler</button>
     </div>
     <div class="grid-fields">
@@ -172,7 +172,7 @@ const statusLabel = (s: string) => (s === 'running' ? 'En cours' : s === 'done' 
   </form>
 
   <section class="col" style="gap: 10px">
-    <h2 style="font-size: 18px">Tests précédents</h2>
+    <h2>Tests précédents</h2>
     <div class="table-wrap">
       <table class="t" style="min-width: 640px">
         <thead><tr><th>Test</th><th>Garage</th><th>Réglages</th><th>Voitures</th><th>État</th><th>Créé le</th></tr></thead>

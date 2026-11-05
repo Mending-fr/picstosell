@@ -161,11 +161,11 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
 <template>
   <div class="home">
     <header class="hello">
-      <h1>
-        Bonjour{{ firstName ? ` ${firstName}` : '' }}.
+      <div class="col" style="gap: 2px; min-width: 0">
+        <h1>Bonjour{{ firstName ? ` ${firstName}` : '' }}</h1>
         <span v-if="data" class="sum">{{ summary }}</span>
         <span v-else-if="!error" class="skel sum-skel" aria-hidden="true" />
-      </h1>
+      </div>
       <span class="date">{{ todayLabel() }}</span>
     </header>
 
@@ -290,21 +290,20 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
   flex-wrap: wrap;
 }
 .hello h1 {
-  font-size: 24px;
   min-width: 0;
 }
 .date {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--muted-3);
 }
 .sum {
-  color: var(--muted-2);
+  color: var(--muted);
+  font-size: 13px;
 }
 .sum-skel {
   display: inline-block;
   width: 280px;
-  height: 22px;
-  vertical-align: middle;
+  height: 16px;
 }
 
 /* cartes d'action */
@@ -329,7 +328,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
   display: flex;
   align-items: center;
   gap: 16px;
-  min-height: 104px;
+  min-height: 84px;
   transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 .ac:hover {
@@ -363,19 +362,21 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
   min-width: 0;
 }
 .ac-txt .ac-x {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
+/* raccourcis clavier : actifs, mais plus affichés sur les cartes */
 .ac-k,
 .ac .kbd-inv {
-  align-self: flex-start;
+  display: none;
 }
 .ac-ico {
   flex-shrink: 0;
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.16);
   display: flex;
   align-items: center;
@@ -383,15 +384,15 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
 }
 .ac-n {
   flex-shrink: 0;
-  min-width: 48px;
-  height: 48px;
+  min-width: 40px;
+  height: 40px;
   padding: 0 10px;
-  border-radius: 14px;
+  border-radius: 10px;
   background: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 500;
 }
 .ac-k {
@@ -403,14 +404,14 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
   line-height: 1.5;
 }
 .ac-t {
-  font-size: 16px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 650;
 }
 .ac-t.big {
-  font-size: 19px;
+  font-size: 15px;
 }
 .ac-x {
-  font-size: 13px;
+  font-size: 12.5px;
   line-height: 1.4;
   color: var(--muted);
 }
@@ -478,8 +479,8 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
   gap: 20px;
 }
 .section-title {
-  font-size: 15px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 650;
   color: var(--ink);
 }
 

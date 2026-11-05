@@ -232,7 +232,7 @@ const isPending = (r: Render | null) => !!r && (r.status === 'pending' || r.stat
 
     <section aria-labelledby="score" class="card">
       <div class="row between" style="align-items: baseline">
-        <h2 id="score" style="font-size: 18px">Résultats</h2>
+        <h2 id="score">Résultats</h2>
         <span class="muted" style="font-size: 13px">{{ totals.rated }} photo{{ totals.rated > 1 ? 's' : '' }} notée{{ totals.rated > 1 ? 's' : '' }} sur {{ totals.total }}</span>
       </div>
       <div style="overflow-x: auto">
@@ -269,7 +269,7 @@ const isPending = (r: Render | null) => !!r && (r.status === 'pending' || r.stat
     </section>
 
     <section v-if="data" aria-labelledby="models" class="col" style="gap: 12px">
-      <h2 id="models" style="font-size: 18px">Modèles comparés</h2>
+      <h2 id="models">Modèles comparés</h2>
       <div class="cards">
         <div v-for="c in data.configs" :key="c.id" class="mcard" :style="{ borderColor: cards[c.id]?.shown ? colorOf(c.id) : '#E3E6EC', opacity: cards[c.id]?.shown ? 1 : 0.6 }">
           <label class="row" style="gap: 10px; font-size: 16px; font-weight: 500; cursor: pointer; flex-wrap: nowrap">
@@ -313,7 +313,7 @@ const isPending = (r: Render | null) => !!r && (r.status === 'pending' || r.stat
 
     <section v-if="data" aria-labelledby="grid" class="col" style="gap: 12px">
       <div class="row between">
-        <h2 id="grid" style="font-size: 18px">Noter les photos</h2>
+        <h2 id="grid">Noter les photos</h2>
         <div role="tablist" aria-label="Voiture" class="row" style="gap: 8px">
           <button v-for="v in data.vehicles" :key="v.id" type="button" role="tab" class="ptab" :aria-selected="car === v.id" :title="v.label" @click="car = v.id">{{ v.plate }}</button>
         </div>

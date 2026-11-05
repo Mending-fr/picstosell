@@ -124,10 +124,6 @@ async function upload(e: Event) {
   padding: 16px 18px;
   max-width: 1200px;
 }
-.h2 {
-  font-size: 15px;
-  font-weight: 600;
-}
 .small {
   font-size: 12px;
 }

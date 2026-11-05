@@ -174,10 +174,6 @@ const initial = computed(() => choices.value.find((c) => list.value?.find((b) =>
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.07), 0 0 0 1px rgba(0, 0, 0, 0.05);
   padding: 16px 18px;
 }
-.h2 {
-  font-size: 15px;
-  font-weight: 600;
-}
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
