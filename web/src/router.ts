@@ -23,6 +23,7 @@ const router = createRouter({
     { path: '/vehicles/new', redirect: { path: '/vehicles', query: { ajouter: '1' } } },
     { path: '/vehicles/:id(\\d+)', component: () => import('./views/VehicleView.vue'), meta: { layout: 'garage', title: 'Vérifier et mettre en ligne' } },
     { path: '/leads', component: () => import('./views/LeadsView.vue'), meta: { layout: 'garage', role: 'manager', title: 'Demandes reçues' } },
+    { path: '/leads/:id(\\d+)', component: () => import('./views/LeadView.vue'), meta: { layout: 'garage', role: 'manager', title: 'Demande' } },
     { path: '/showroom', component: () => import('./views/ShowroomView.vue'), meta: { layout: 'garage', role: 'manager', title: 'Mon showroom' } },
     { path: '/site', component: () => import('./views/SiteView.vue'), meta: { layout: 'garage', role: 'manager', title: 'Mon site' } },
     { path: '/settings', component: () => import('./views/SettingsView.vue'), meta: { layout: 'garage', role: 'manager', title: 'Réglages' } },

@@ -101,7 +101,7 @@ function rowKey(t: TodoItem) {
   return `${t.type}-${t.id}-${t.action}`
 }
 function rowTo(t: TodoItem) {
-  return t.action === 'open_lead' ? { path: '/leads', query: { id: String(t.id) } } : `/vehicles/${t.id}`
+  return t.action === 'open_lead' ? `/leads/${t.id}` : `/vehicles/${t.id}`
 }
 
 async function unpublish(t: TodoItem) {
@@ -265,7 +265,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
         </div>
         <span v-if="!leads" class="skel" style="display: block; width: 70%; height: 16px" />
         <p v-else-if="!leads.length" class="none">Pas encore de demande. Elles arrivent ici depuis votre site.</p>
-        <RouterLink v-for="l in leads ?? []" :key="l.id" :to="{ path: '/leads', query: { id: String(l.id) } }" class="ld">
+        <RouterLink v-for="l in leads ?? []" :key="l.id" :to="`/leads/${l.id}`" class="ld">
           <span class="ld-top"><span class="ld-who">{{ l.name }}</span><span class="ld-when">{{ relative(l.created_at) }}</span></span>
           <span class="ld-msg">{{ [l.vehicle?.label, l.message].filter(Boolean).join(' · ') || 'Demande de rappel' }}</span>
         </RouterLink>
