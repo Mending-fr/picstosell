@@ -129,7 +129,7 @@ const stockLine = computed(() => {
     { n: k.processing, label: 'en préparation', dot: 'var(--accent-line)', to: '/vehicles?status=to_photograph', title: 'Photos showroom prêtes dans quelques minutes', hide: !k.processing },
     { n: k.to_review, label: 'à vérifier', dot: 'var(--amber-dot)', to: '/vehicles?status=to_review', title: '' },
     { n: k.ready, label: pl(k.ready, 'prête', 'prêtes'), dot: 'var(--green-dot)', to: '/vehicles?status=ready', title: '' },
-    { n: k.online, label: 'en ligne', dot: 'var(--accent)', to: '/vehicles?status=online', title: `${k.online_without_leads} sans aucune demande` },
+    { n: k.online, label: 'en ligne', dot: 'var(--accent-ink)', to: '/vehicles?status=online', title: `${k.online_without_leads} sans aucune demande` },
     { n: k.sold_month, label: `${pl(k.sold_month, 'vendue', 'vendues')} ce mois`, dot: 'var(--violet-dot)', to: '/vehicles?status=sold', title: k.sold_still_online ? `${k.sold_still_online} encore en ligne` : 'Toutes retirées du site' },
   ]
   return items.filter((i) => !i.hide)
@@ -209,7 +209,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
     <section aria-labelledby="todo" class="todo panel">
       <div class="todo-head">
         <h2 id="todo" class="section-title">À faire aujourd'hui</h2>
-        <RouterLink to="/vehicles" class="all">Tout voir dans le stock</RouterLink>
+        <RouterLink to="/vehicles" class="all">Voir le parc</RouterLink>
       </div>
       <template v-if="!data && !error">
         <div v-for="i in 3" :key="i" class="tr">
@@ -244,7 +244,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
 
     <div class="aside">
       <section aria-labelledby="stk" class="panel">
-        <h2 id="stk" class="section-title">Votre stock</h2>
+        <h2 id="stk" class="section-title">Votre parc</h2>
         <template v-if="c">
           <div v-if="stockTotal" class="sbar" aria-hidden="true">
             <span v-for="s in stockLine.filter((x) => x.n > 0)" :key="s.label" :style="{ flex: s.n, background: s.dot }" />
@@ -320,9 +320,10 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
   font: inherit;
   text-align: left;
   text-decoration: none;
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  padding: 18px 20px;
+  border: 0;
+  border-radius: 12px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.07), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  padding: 16px 18px;
   background: #fff;
   color: var(--ink);
   display: flex;
@@ -347,19 +348,12 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
   border: 0;
   background: var(--accent);
   color: #fff;
-  box-shadow: 0 8px 22px rgba(46, 90, 136, 0.24);
-}
-.ac-add::before {
-  content: '';
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 4px;
-  background: var(--signal);
+  box-shadow: inset 0 -1px 0 #000, 0 1px 0 rgba(0, 0, 0, 0.2);
 }
 .ac-add:hover {
   color: #fff;
-  background: #285079;
-  box-shadow: 0 10px 26px rgba(46, 90, 136, 0.3);
+  background: #1a1a1a;
+  box-shadow: inset 0 -1px 0 #000, 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 .ac-txt {
   display: flex;
@@ -421,7 +415,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
   color: var(--muted);
 }
 .ac-add .ac-x {
-  color: #ccdaea;
+  color: #b5b5b5;
 }
 .amber {
   --t-ink: var(--amber-ink);
@@ -448,11 +442,10 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
   --t-tint: var(--red-tint);
   --t-line: var(--red-line);
 }
-.ac.amber,
-.ac.green,
-.ac.slate {
+.ac.amber .ac-n,
+.ac.green .ac-n,
+.ac.slate .ac-n {
   background: var(--t-tint);
-  border-color: var(--t-line);
 }
 .ac.amber .ac-n,
 .ac.green .ac-n,
@@ -475,9 +468,9 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
 }
 .panel {
   background: #fff;
-  border: 1px solid #e6e7ea;
-  border-radius: 16px;
-  padding: 18px 22px;
+  border-radius: 12px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.07), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  padding: 16px 18px;
 }
 .aside {
   display: flex;
@@ -562,9 +555,9 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
   white-space: nowrap;
 }
 .cta {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--t-ink);
+  font-size: 13px;
+  font-weight: 550;
+  color: var(--accent-ink);
   width: 130px;
   text-align: right;
   flex-shrink: 0;

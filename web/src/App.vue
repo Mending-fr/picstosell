@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import AppTopbar from './components/AppTopbar.vue'
+import AppSidenav from './components/AppSidenav.vue'
 import AddVehicleModal from './components/AddVehicleModal.vue'
 import PriceModal from './components/PriceModal.vue'
 import { session, isManager } from './session'
@@ -11,6 +12,11 @@ const route = useRoute()
 const layout = computed(() => route.meta.layout ?? 'bare')
 const showSidebar = computed(() => (layout.value === 'garage' || layout.value === 'mending') && !!session.user)
 const garageSpace = computed(() => layout.value === 'garage' && !!session.user)
+const drawer = ref(false)
+watch(
+  () => route.fullPath,
+  () => (drawer.value = false),
+)
 
 // Les modales se ferment quand on quitte l'espace garage (changement de garage, déconnexion…).
 watch(garageSpace, (on) => {
@@ -40,7 +46,8 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
 <template>
   <a href="#contenu" class="skip">Aller au contenu</a>
   <div v-if="showSidebar" class="shell">
-    <AppTopbar :variant="layout === 'mending' ? 'mending' : 'garage'" />
+    <AppTopbar :variant="layout === 'mending' ? 'mending' : 'garage'" @menu="drawer = !drawer" />
+    <AppSidenav :variant="layout === 'mending' ? 'mending' : 'garage'" :open="drawer" @close="drawer = false" />
     <main id="contenu" class="main" :class="{ narrow: route.path === '/settings' }">
       <RouterView :key="`${session.viewKey}-${route.path}`" />
     </main>

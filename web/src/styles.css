@@ -1,33 +1,33 @@
 /*
  * Palette « nuancée » : tout se règle ici.
- * Bleu atelier : bleu de travail, barre anthracite, touche jaune signal. Gris doux, teintes sémantiques (à vérifier = ambre, prête = vert,
+ * Neutre comme Shopylike : gris, boutons principaux gris foncé, liens bleus. Teintes sémantiques (à vérifier = ambre, prête = vert,
  * demande = violet, sans photo = ardoise, vendue / danger = rouge doux).
  */
 :root {
   /* fond, texte, filets */
-  --ground: #f5f5f2;
+  --ground: #f1f1f1;
   --surface: #ffffff;
-  --ink: #1c2230;
-  --ink-2: #3b4150;
-  --muted: #5a6172;
-  --muted-2: #7a8090;
-  --muted-3: #8a90a0;
-  --line: #e3e6ec;
-  --line-2: #eceef2;
+  --ink: #303030;
+  --ink-2: #4a4a4a;
+  --muted: #616161;
+  --muted-2: #6b6b6b;
+  --muted-3: #8a8a8a;
+  --line: #e3e3e3;
+  --line-2: #ebebeb;
   --field: #d5d9e1;
   --field-2: #e3e6ec;
   --field-bg: #fafbfc;
   --plate-line: #d5d8df;
 
-  /* accent bleu atelier */
-  --accent: #2e5a88;
-  --accent-ink: #234670;
-  --accent-dark: #1b3a5e;
-  --accent-soft: #e1eaf4;
-  --accent-tint: #eef3f9;
-  --accent-band: #f2f6fa;
-  --accent-line: #c5d5e8;
-  --accent-glow: rgba(46, 90, 136, 0.22);
+  /* comme Shopylike : boutons principaux gris foncé, liens et focus bleus */
+  --accent: #303030;
+  --accent-ink: #005bd3;
+  --accent-dark: #1a1a1a;
+  --accent-soft: #ebebeb;
+  --accent-tint: #f7f7f7;
+  --accent-band: #f7f7f7;
+  --accent-line: #d4d4d4;
+  --accent-glow: rgba(0, 91, 211, 0.22);
   /* touche secondaire : jaune signal (liseré, page active) */
   --signal: #e3b23c;
 
@@ -78,7 +78,7 @@
 
   --shadow-soft: 0 1px 2px rgba(28, 34, 48, 0.05);
   --shadow-pop: 0 12px 32px rgba(28, 34, 48, 0.1);
-  --font: 'Inter Tight', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --mono: 'JetBrains Mono', ui-monospace, monospace;
   color-scheme: light;
 }
@@ -747,22 +747,31 @@ input[type='search']::-webkit-search-cancel-button {
   }
 }
 
-/* ---------- structure ---------- */
+/* ---------- structure : barre du haut 56 px, menu 240 px, contenu (comme Shopylike) ---------- */
 .shell {
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  grid-template-rows: 56px minmax(0, 1fr);
 }
 .main {
-  flex: 1;
-  width: 100%;
+  grid-column: 2;
   min-width: 0;
-  padding: 28px 28px 32px;
+  width: 100%;
+  padding: 24px 32px 48px;
   display: flex;
   flex-direction: column;
   gap: 20px;
-  max-width: 1840px;
-  margin-inline: auto;
+  max-width: 1680px;
+}
+@media (max-width: 1023px) {
+  .shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .main {
+    grid-column: 1;
+    padding: 16px 16px 96px;
+  }
 }
 .main.narrow {
   max-width: 900px;
@@ -935,14 +944,6 @@ input[type='search']::-webkit-search-cancel-button {
 }
 
 @media (max-width: 860px) {
-  .shell {
-    flex-direction: column;
-  }
-  .main {
-    padding: 24px 16px 40px;
-    gap: 22px;
-    width: 100%;
-  }
   h1 {
     font-size: 24px;
   }

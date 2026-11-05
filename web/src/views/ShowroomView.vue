@@ -3,6 +3,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
 import { get, patch, post, errorMessage } from '../api'
 import { toast } from '../session'
+import { useSaveBar } from '../saveBar'
 import type { Placement, Shot, Showroom } from '../types'
 
 const DEFAULT: Placement = { height: 42, bottom: 12, offset_x: 0 }
@@ -89,6 +90,9 @@ const silStyle = computed(() => ({
   left: `calc(50% + ${place.offset_x}%)`,
 }))
 
+// Enregistrer et Annuler sont dans la barre du haut, comme dans Shopylike.
+useSaveBar({ dirty, saving, save, discard: () => shot.value && fill(shot.value) })
+
 onBeforeRouteLeave(() => !dirty.value || window.confirm("La zone au sol n'est pas enregistrée. Quitter quand même ?"))
 </script>
 
@@ -99,14 +103,10 @@ onBeforeRouteLeave(() => !dirty.value || window.confirm("La zone au sol n'est pa
       {{ shot.configured ? 'Prêt' : 'Photo à ajouter' }}
     </span>
     <span class="grow" />
-    <span v-if="dirty" class="unsaved">Zone non enregistrée</span>
     <template v-if="shot">
       <input ref="fileInput" type="file" accept="image/*" class="sr-only" tabindex="-1" aria-hidden="true" @change="upload" />
       <button type="button" class="btn" :disabled="uploading" @click="fileInput?.click()">
         <span v-if="uploading" class="spinner" aria-hidden="true" />{{ shot.image_url ? 'Remplacer la photo' : 'Ajouter la photo du showroom' }}
-      </button>
-      <button type="button" class="btn btn-primary" :disabled="saving || !dirty" @click="save">
-        <span v-if="saving" class="spinner" aria-hidden="true" />{{ dirty ? 'Enregistrer' : 'Enregistré' }}
       </button>
     </template>
   </div>

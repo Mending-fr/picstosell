@@ -59,7 +59,7 @@ const P = {
   ok: { fg: '#1E7A50', bg: '#E9F5EE' },
   grey: { fg: '#4A5263', bg: '#F1F3F6' },
   red: { fg: '#C0392B', bg: '#FBECEB' },
-  blue: { fg: '#234670', bg: '#EEF3F9' },
+  blue: { fg: '#00527C', bg: '#E0F0FF' },
   violet: { fg: '#5B3FC4', bg: '#EFEBFD' },
 }
 
@@ -77,8 +77,8 @@ export const PILL = P
 
 export const RENDER_STATE: Record<RenderStatus | 'none' | 'asis', { label: string; color: string }> = {
   none: { label: 'Pas encore préparée', color: '#5A6172' },
-  pending: { label: 'En préparation', color: '#234670' },
-  processing: { label: 'En préparation', color: '#234670' },
+  pending: { label: 'En préparation', color: '#00527C' },
+  processing: { label: 'En préparation', color: '#00527C' },
   to_review: { label: 'À regarder', color: '#A55A0B' },
   approved: { label: 'OK', color: '#1E7A50' },
   failed: { label: 'Raté, à refaire', color: '#C0392B' },

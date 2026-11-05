@@ -4,6 +4,7 @@ import { onBeforeRouteLeave } from 'vue-router'
 import { ApiError, get, patch, post, errorMessage } from '../api'
 import { euros, vehicleTitle } from '../labels'
 import { session, toast } from '../session'
+import { useSaveBar } from '../saveBar'
 import type { Garage, Vehicle } from '../types'
 
 const garage = ref<Garage | null>(null)
@@ -102,6 +103,9 @@ async function uploadLogo(e: Event) {
   }
 }
 
+// Enregistrer et Annuler sont dans la barre du haut, comme dans Shopylike.
+useSaveBar({ dirty, saving, save, discard: () => garage.value && fill(garage.value) })
+
 onBeforeRouteLeave(() => !dirty.value || window.confirm("Vos modifications ne sont pas enregistrées. Quitter quand même ?"))
 const preview = computed(() => online.value.slice(0, 6))
 </script>
@@ -115,9 +119,7 @@ const preview = computed(() => online.value.slice(0, 6))
     </template>
     <span v-else class="skel" style="display: inline-block; width: 260px; height: 16px" />
     <span class="grow" />
-    <span v-if="dirty" class="unsaved">Modifications non enregistrées</span>
     <a v-if="garage" :href="garage.site_url" target="_blank" rel="noopener" class="btn">Voir mon site</a>
-    <button v-if="garage" type="button" class="btn btn-primary" :disabled="saving || !dirty" @click="save"><span v-if="saving" class="spinner" aria-hidden="true" />Enregistrer</button>
   </div>
 
   <p v-if="error" class="alert alert-error" role="alert">{{ error }} <button type="button" class="btn-link" @click="load">Réessayer</button></p>

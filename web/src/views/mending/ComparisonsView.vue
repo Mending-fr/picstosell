@@ -182,7 +182,7 @@ const statusLabel = (s: string) => (s === 'running' ? 'En cours' : s === 'done' 
             <td>{{ garageName(c.garage_id) }}</td>
             <td>{{ c.ai_config_ids.length }}</td>
             <td>{{ c.vehicle_ids.length }}</td>
-            <td><span class="pill" :style="c.status === 'running' ? { background: '#EEF3F9', color: '#234670' } : { background: '#E9F5EE', color: '#1E7A50' }">{{ statusLabel(c.status) }}</span></td>
+            <td><span class="pill" :style="c.status === 'running' ? { background: '#E0F0FF', color: '#00527C' } : { background: '#E9F5EE', color: '#1E7A50' }">{{ statusLabel(c.status) }}</span></td>
             <td>{{ new Date(c.created_at).toLocaleDateString('fr-FR') }}</td>
           </tr>
         </tbody>

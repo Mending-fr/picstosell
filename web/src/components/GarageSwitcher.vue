@@ -1,7 +1,9 @@
 <script setup lang="ts">
-const DEMO_HINT = "La recherche par plaque renvoie des données d'exemple. Les photos passent par la vraie IA."
+// Sélecteur de garage dans la barre du haut (comme le sélecteur de boutique de Shopylike).
+// Super-admin : liste des garages et « Tous les garages » (espace Mending). Gérant : nom du garage, sans menu.
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import AppIcon from './AppIcon.vue'
 import { session, isSuper, currentGarage, switchGarage, refreshGarages } from '../session'
 import { garageStatusShort } from '../labels'
 
@@ -15,92 +17,63 @@ const active = ref(0)
 const root = ref<HTMLElement | null>(null)
 const search = ref<HTMLInputElement | null>(null)
 
-interface Item {
-  id: number | 'all'
-  ini: string
-  name: string
-  sub: string
-  color: string
-  todo: number
-}
-
-const all = computed<Item[]>(() => [
-  { id: 'all', ini: 'M', name: 'Tous les garages', sub: 'Espace Mending', color: '#5B4BDB', todo: 0 },
-  ...session.garages.map((g) => ({ id: g.id, ini: g.initials, name: g.name, sub: garageStatusShort(g.status), color: g.color, todo: g.todo_count })),
-])
+const DEMO_HINT = "La recherche par plaque renvoie des données d'exemple. Les photos passent par la vraie IA."
 
 const items = computed(() => {
   const s = q.value.trim().toLowerCase()
-  return all.value.filter((g) => !s || `${g.name} ${g.sub}`.toLowerCase().includes(s))
+  return session.garages.filter((g) => !s || `${g.name} ${g.slug}`.toLowerCase().includes(s))
 })
-
-const cur = computed<Item>(() => {
-  if (props.mending || !currentGarage.value) return all.value[0]
-  return all.value.find((g) => g.id === currentGarage.value?.id) ?? all.value[0]
-})
-
-function isCurrent(g: Item) {
-  return g.id === cur.value.id
-}
+// Index 0 : « Tous les garages », puis les garages filtrés.
+const count = computed(() => items.value.length + 1)
 
 async function toggle() {
   open.value = !open.value
   q.value = ''
   if (open.value) {
-    active.value = Math.max(0, items.value.findIndex(isCurrent))
+    const i = items.value.findIndex((g) => !props.mending && g.id === currentGarage.value?.id)
+    active.value = i >= 0 ? i + 1 : 0
     refreshGarages()
     await nextTick()
     search.value?.focus()
   }
 }
 
-async function pick(g: Item) {
+async function pickAll() {
+  open.value = false
+  if (route.path !== '/mending' && !route.path.startsWith('/mending/')) router.push('/mending')
+}
+
+async function pick(id: number) {
   open.value = false
   q.value = ''
-  if (g.id === 'all') {
-    if (route.path !== '/mending') router.push('/mending')
-    return
-  }
   const leaving = props.mending || Object.keys(route.params).length > 0
-  await switchGarage(g.id)
+  await switchGarage(id)
   if (leaving) router.push('/')
 }
 
 function onKey(e: KeyboardEvent) {
-  if (e.key === 'Escape') {
-    open.value = false
-    return
-  }
-  if (e.key === 'ArrowDown') {
+  if (e.key === 'Escape') open.value = false
+  else if (e.key === 'ArrowDown') {
     e.preventDefault()
-    active.value = Math.min(items.value.length - 1, active.value + 1)
+    active.value = Math.min(count.value - 1, active.value + 1)
   } else if (e.key === 'ArrowUp') {
     e.preventDefault()
     active.value = Math.max(0, active.value - 1)
   } else if (e.key === 'Enter') {
     e.preventDefault()
-    const g = items.value[active.value]
-    if (g) pick(g)
+    if (active.value === 0) pickAll()
+    else {
+      const g = items.value[active.value - 1]
+      if (g) pick(g.id)
+    }
   }
 }
 
 function onDocClick(e: MouseEvent) {
   if (open.value && root.value && !root.value.contains(e.target as Node)) open.value = false
 }
-function onGlobalKey(e: KeyboardEvent) {
-  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-    e.preventDefault()
-    if (!open.value) toggle()
-  }
-}
-onMounted(() => {
-  document.addEventListener('click', onDocClick)
-  if (isSuper.value) document.addEventListener('keydown', onGlobalKey)
-})
-onBeforeUnmount(() => {
-  document.removeEventListener('click', onDocClick)
-  document.removeEventListener('keydown', onGlobalKey)
-})
+onMounted(() => document.addEventListener('click', onDocClick))
+onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
 
 function addGarage() {
   open.value = false
@@ -111,250 +84,243 @@ function addGarage() {
 <template>
   <div ref="root" class="sw">
     <template v-if="isSuper">
-      <button
-        type="button"
-        class="sw-btn"
-        :class="{ open }"
-        aria-haspopup="listbox"
-        :aria-expanded="open"
-        aria-label="Changer de garage"
-        @click="toggle"
-      >
-        <span class="ini" :style="{ background: cur.color }">{{ cur.ini }}</span>
-        <span class="txt">
-          <span class="name">{{ cur.name }}</span>
-          <span class="sub">{{ cur.sub }}</span>
-        </span>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A90A0" stroke-width="2" aria-hidden="true"><path d="M8 9l4-4 4 4M8 15l4 4 4-4" /></svg>
+      <button type="button" class="sel" :class="{ open }" aria-haspopup="listbox" :aria-expanded="open" aria-label="Changer de garage" @click="toggle">
+        <AppIcon v-if="mending || !currentGarage" name="store" :size="16" />
+        <span v-else class="dot ring" :style="{ background: currentGarage.color }" />
+        <span class="ellipsis">{{ mending || !currentGarage ? 'Tous les garages' : currentGarage.name }}</span>
+        <AppIcon name="chevrons" :size="16" :stroke="2" class="chev" />
       </button>
-      <div v-if="open" class="sw-pop" @keydown="onKey">
-        <label class="sw-search">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8A90A0" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
-          <span class="sr-only">Chercher un garage</span>
-          <input ref="search" v-model="q" type="search" placeholder="Rechercher" @input="active = 0" />
-          <span class="k">⌘K</span>
+      <div v-if="open" class="scrim" @click="open = false" />
+      <div v-if="open" class="pop" role="listbox" aria-label="Garages" @keydown="onKey">
+        <div class="handle" />
+        <label v-if="session.garages.length >= 6" class="find">
+          <AppIcon name="search" :size="14" :stroke="2" />
+          <span class="sr-only">Rechercher un garage</span>
+          <input ref="search" v-model="q" type="search" placeholder="Rechercher un garage" @input="active = 0" />
         </label>
-        <div role="listbox" aria-label="Dossiers clients" class="sw-list">
+        <button type="button" role="option" class="opt" :class="{ hl: active === 0 }" :aria-selected="mending" @click="pickAll" @mouseenter="active = 0">
+          <span class="opt-ic all"><AppIcon name="store" :size="16" /></span>
+          <span class="grow">
+            <span class="strong">Tous les garages</span>
+            <span class="small muted">Espace Mending · {{ session.garages.length }} garage{{ session.garages.length > 1 ? 's' : '' }}</span>
+          </span>
+          <AppIcon v-if="mending" name="check" :stroke="2" />
+        </button>
+        <div class="sep" />
+        <div class="opts">
           <button
             v-for="(g, i) in items"
             :key="g.id"
             type="button"
             role="option"
-            :aria-selected="isCurrent(g)"
-            class="sw-opt"
-            :class="{ on: isCurrent(g), hl: i === active }"
-            @click="pick(g)"
-            @mouseenter="active = i"
+            class="opt"
+            :class="{ hl: active === i + 1 }"
+            :aria-selected="!mending && g.id === currentGarage?.id"
+            @click="pick(g.id)"
+            @mouseenter="active = i + 1"
           >
-            <span class="ini sm" :style="{ background: g.color }">{{ g.ini }}</span>
-            <span class="txt">
-              <span class="name sm">{{ g.name }}</span>
-              <span class="sub sm">{{ g.sub }}</span>
+            <span class="opt-ic"><span class="dot" :style="{ background: g.color }" /></span>
+            <span class="grow" style="min-width: 0">
+              <span class="row" style="gap: 8px; flex-wrap: nowrap">
+                <span class="strong ellipsis">{{ g.name }}</span>
+                <span class="st" :title="g.is_demo ? DEMO_HINT : undefined">{{ garageStatusShort(g.status) }}</span>
+              </span>
+              <span v-if="g.todo_count" class="small muted">{{ g.todo_count }} à faire</span>
             </span>
-            <span v-if="g.todo > 0" class="todo" :aria-label="`${g.todo} choses à faire`">{{ g.todo }}</span>
+            <AppIcon v-if="!mending && g.id === currentGarage?.id" name="check" :stroke="2" />
           </button>
-          <span v-if="!items.length" class="none">Aucun garage trouvé</span>
+          <p v-if="!items.length" class="small muted" style="padding: 8px 10px; margin: 0">Aucun garage ne correspond.</p>
         </div>
-        <div class="sw-foot">
-          <button type="button" @click="addGarage">+ Ajouter un garage</button>
-        </div>
+        <div class="sep" />
+        <button type="button" class="opt create" @click="addGarage"><span class="opt-ic"><AppIcon name="plus" :size="18" :stroke="2" /></span>Ajouter un garage</button>
       </div>
     </template>
-    <div v-else-if="currentGarage" class="sw-btn static">
-      <span class="ini" :style="{ background: currentGarage.color }">{{ currentGarage.initials }}</span>
-      <span class="txt">
-        <span class="name">{{ currentGarage.name }}</span>
-        <span class="sub" :title="currentGarage.is_demo ? DEMO_HINT : undefined">{{ garageStatusShort(currentGarage.status) }}</span>
-      </span>
+    <div v-else-if="currentGarage" class="sel static" :title="currentGarage.is_demo ? DEMO_HINT : undefined">
+      <span class="dot ring" :style="{ background: currentGarage.color }" />
+      <span class="ellipsis">{{ currentGarage.name }}</span>
     </div>
   </div>
 </template>
 
 <style scoped>
 .sw {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding-bottom: 20px;
   position: relative;
-  flex: 1 1 auto;
-  min-width: 0;
-  width: 100%;
 }
-.sw-btn {
-  color: var(--ink);
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 12px;
-  padding: 8px 10px;
-  min-height: 52px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  text-align: left;
-  width: 100%;
-}
-.sw-btn:not(.static) {
-  border-color: var(--side-line);
-  background: rgba(255, 255, 255, 0.55);
-}
-.sw-btn.open,
-.sw-btn:not(.static):hover {
-  background: #fff;
-  border-color: #d8e2e3;
-}
-.ini {
-  width: 30px;
-  height: 30px;
-  border-radius: 9px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 500;
-  font-size: 12px;
-  flex-shrink: 0;
-  color: #fff;
-}
-.ini.sm {
-  width: 26px;
-  height: 26px;
-  border-radius: 7px;
-  font-size: 11px;
-}
-.txt {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-width: 0;
-}
-.name {
-  font-weight: 500;
-  font-size: 14px;
-  line-height: 1.25;
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow-wrap: anywhere;
-}
-.name.sm {
-  font-size: 13px;
-}
-.sub {
-  font-size: 12px;
-  color: var(--side-muted);
-}
-.sub.sm {
-  font-size: 11px;
-}
-.sw-pop {
-  background: #fff;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  position: absolute;
-  top: calc(100% - 12px);
-  left: 0;
-  right: 0;
-  z-index: 30;
-  box-shadow: var(--shadow-pop);
-}
-.sw-search {
+.sel {
+  height: 36px;
+  max-width: 260px;
   display: flex;
   align-items: center;
   gap: 8px;
-  background: var(--field-bg);
-  border: 1px solid var(--field);
-  border-radius: 10px;
+  padding: 0 8px 0 10px;
+  border-radius: 8px;
+  border: 1px solid #474747;
+  background: #2b2b2b;
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 550;
+  cursor: pointer;
+}
+.sel:hover,
+.sel.open {
+  background: #383838;
+}
+.sel.static {
+  cursor: default;
+  padding-right: 12px;
+}
+.chev {
+  color: #b5b5b5;
+}
+.ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 6px;
+  flex: none;
+  display: inline-block;
+}
+.dot.ring {
+  box-shadow: 0 0 0 2px #2b2b2b, 0 0 0 3px #555;
+}
+.pop {
+  position: absolute;
+  top: 44px;
+  right: 0;
+  width: 340px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.06);
+  padding: 6px;
+  color: var(--ink);
+  z-index: 60;
+}
+.find {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  margin: 2px 4px 6px;
   padding: 0 10px;
-  height: 40px;
+  border: 1px solid #8a8a8a;
+  border-radius: 8px;
+  color: #8a8a8a;
 }
-.sw-search:focus-within {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-glow);
-}
-.sw-search input {
+.find input {
   border: 0;
   outline: 0;
   flex: 1;
   min-width: 0;
-  background: transparent;
-  color: var(--ink);
   font: inherit;
-  font-size: 14px;
-}
-.k {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--muted-3);
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  padding: 0 5px;
-}
-.sw-list {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding-top: 4px;
-  max-height: 360px;
-  overflow-y: auto;
-}
-.sw-opt {
-  color: var(--ink);
+  font-size: 13px;
   background: transparent;
-  border: 0;
-  border-radius: 10px;
-  padding: 8px;
-  min-height: 44px;
+  color: var(--ink);
+}
+.opts {
+  max-height: 360px;
+  overflow: auto;
+}
+.opt {
+  width: 100%;
   display: flex;
   align-items: center;
   gap: 10px;
-  text-align: left;
-  width: 100%;
-}
-.sw-opt.hl {
-  background: var(--slate-tint);
-}
-.sw-opt.on {
-  background: var(--accent-tint);
-}
-.sw-opt.on .name {
-  color: var(--accent-ink);
-}
-.todo {
-  font-size: 11px;
-  font-weight: 500;
-  background: var(--amber-tint);
-  color: var(--amber-ink);
-  border-radius: 999px;
-  padding: 1px 7px;
-}
-.none {
-  font-size: 13px;
-  color: var(--muted-3);
-  padding: 8px;
-}
-.sw-foot {
-  border-top: 1px solid var(--line-2);
-  margin-top: 4px;
-  padding-top: 4px;
-}
-.sw-foot button {
-  color: var(--accent-ink);
-  background: none;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: transparent;
   border: 0;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 500;
-  padding: 10px 8px;
-  width: 100%;
   text-align: left;
-  min-height: 40px;
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
 }
-.sw-foot button:hover {
-  background: var(--accent-tint);
+.opt.hl {
+  background: #f7f7f7;
+}
+.opt-ic {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+.opt-ic.all {
+  background: #f1f1f1;
+  color: #616161;
+}
+.grow {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.strong {
+  font-weight: 600;
+}
+.small {
+  font-size: 12px;
+}
+.st {
+  font-size: 12px;
+  font-weight: 550;
+  color: #616161;
+  background: #ebebeb;
+  border-radius: 8px;
+  padding: 1px 7px;
+  white-space: nowrap;
+}
+.create {
+  color: var(--accent-ink);
+  font-weight: 550;
+}
+.sep {
+  height: 1px;
+  background: #ebebeb;
+  margin: 6px 4px;
+}
+.handle,
+.scrim {
+  display: none;
+}
+@media (max-width: 640px) {
+  .sel {
+    max-width: 170px;
+  }
+  .scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(26, 26, 26, 0.4);
+    z-index: 55;
+  }
+  .pop {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    width: auto;
+    border-radius: 16px 16px 0 0;
+    padding: 8px 8px 24px;
+    max-height: 80vh;
+    overflow: auto;
+  }
+  .opt {
+    min-height: 52px;
+  }
+  .handle {
+    display: block;
+    width: 36px;
+    height: 4px;
+    border-radius: 2px;
+    background: #d4d4d4;
+    margin: 4px auto 10px;
+  }
 }
 </style>

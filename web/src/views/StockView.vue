@@ -26,6 +26,15 @@ const TABS: { id: Tab; label: string; match: VehicleStatus[] }[] = [
 const tab = ref<Tab>((TABS.find((t) => t.id === route.query.status)?.id ?? 'all') as Tab)
 const q = ref(typeof route.query.q === 'string' ? route.query.q : '')
 
+// Le menu (À vérifier, Vendues) change l'étape par l'adresse (?status=), sans recharger la page.
+watch(
+  () => route.query.status,
+  (v) => {
+    const t = TABS.find((x) => x.id === v)?.id ?? 'all'
+    if (t !== tab.value) tab.value = t as Tab
+  },
+)
+
 // La recherche de la barre du haut arrive par l'adresse (?q=), même quand on est déjà sur le stock.
 watch(
   () => route.query.q,

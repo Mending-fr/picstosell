@@ -10,6 +10,7 @@ import StatusPill from '../components/StatusPill.vue'
 import PhotoPicker, { type PickedPhoto } from '../components/PhotoPicker.vue'
 import EquipmentEditor from '../components/EquipmentEditor.vue'
 import ImageViewer, { type ViewerItem } from '../components/ImageViewer.vue'
+import { useSaveBar } from '../saveBar'
 import { uploadPhotos } from '../uploads'
 import type { EquipmentGroup, Photo, Render, Vehicle } from '../types'
 
@@ -281,6 +282,8 @@ function fillForm(d: Vehicle) {
 const dirty = computed(() => original.value !== '' && snapshot() !== original.value)
 
 const saving = ref(false)
+// Enregistrer et Annuler sont dans la barre du haut, comme dans Shopylike.
+useSaveBar({ dirty, saving, save: () => saveListing(), discard: () => v.value && fillForm(v.value) })
 async function saveListing(quiet = false): Promise<boolean> {
   fieldErrors.value = {}
   if (form.history_url.trim() && !/^https?:\/\//i.test(form.history_url.trim())) {
@@ -526,12 +529,6 @@ onBeforeRouteLeave(() => {
           </template>
         </div>
         <div v-if="v && isManager" class="row">
-          <template v-if="dirty">
-            <span class="unsaved">Modifications non enregistrées</span>
-            <button type="button" class="btn btn-primary" :disabled="saving" @click="saveListing()">
-              <span v-if="saving" class="spinner" aria-hidden="true" />Enregistrer
-            </button>
-          </template>
           <button type="button" class="btn" :disabled="exporting" @click="exportZip">
             <span v-if="exporting" class="spinner" aria-hidden="true" />Télécharger les photos
           </button>
@@ -907,7 +904,7 @@ onBeforeRouteLeave(() => {
   justify-content: center;
   gap: 10px;
   color: var(--accent-dark);
-  background: #EEF3F9;
+  background: #E0F0FF;
   font-size: 14px;
   text-align: center;
   padding: 12px;

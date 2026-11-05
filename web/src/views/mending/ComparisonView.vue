@@ -12,7 +12,7 @@ const id = Number(route.params.id)
 const data = ref<Comparison | null>(null)
 const error = ref('')
 const notFound = ref(false)
-const COLORS = ['#2E5A88', '#1E7A50', '#A55A0B', '#5B3FC4', '#C0392B', '#4A5263']
+const COLORS = ['#005BD3', '#1E7A50', '#A55A0B', '#5B3FC4', '#C0392B', '#4A5263']
 
 /** Notes envoyées mais pas encore confirmées : elles priment sur les données rechargées. */
 const inflight = new Map<number, RenderRating | null>()
@@ -467,7 +467,7 @@ const isPending = (r: Render | null) => !!r && (r.status === 'pending' || r.stat
   aspect-ratio: 4/3;
   border-radius: 6px;
   object-fit: cover;
-  background: #EEF3F9;
+  background: #E0F0FF;
 }
 .wait {
   display: flex;

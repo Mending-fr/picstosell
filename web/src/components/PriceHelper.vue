@@ -158,8 +158,8 @@ const aw = () => advice.value?.sources.find((s) => s.provider === 'autoways')
   gap: 8px;
 }
 .ph-card {
-  border: 1px solid var(--accent-line, #C5D5E8);
-  background: var(--accent-tint, #EEF3F9);
+  border: 1px solid var(--accent-line, #D4D4D4);
+  background: var(--accent-tint, #E0F0FF);
   border-radius: 16px;
   padding: 16px 18px;
   display: flex;
@@ -274,8 +274,8 @@ const aw = () => advice.value?.sources.find((s) => s.provider === 'autoways')
   width: 16px;
   height: 16px;
   border-radius: 8px;
-  border: 2px solid var(--accent-line, #C5D5E8);
-  border-top-color: var(--accent, #2E5A88);
+  border: 2px solid var(--accent-line, #D4D4D4);
+  border-top-color: var(--accent, #005BD3);
   animation: ph-rot 0.9s linear infinite;
   flex-shrink: 0;
 }

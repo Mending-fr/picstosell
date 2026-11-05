@@ -1,14 +1,19 @@
 <script setup lang="ts">
+// Barre du haut (56 px, comme Shopylike) : logo, recherche, sélecteur de garage, compte.
+// Quand une page a des changements, la barre devient « Modifications non enregistrées ».
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import AppIcon from './AppIcon.vue'
 import GarageSwitcher from './GarageSwitcher.vue'
-import { session, isManager, logout, clearSession } from '../session'
+import { session, isManager, logout, clearSession, toast } from '../session'
 import { modals, typingIn } from '../modals'
+import { saveBar } from '../saveBar'
+import { errorMessage } from '../api'
 
 const props = defineProps<{ variant: 'garage' | 'mending' }>()
+const emit = defineEmits<{ menu: [] }>()
 const route = useRoute()
 const router = useRouter()
-const menuOpen = ref(false)
 const meOpen = ref(false)
 const q = ref('')
 const searchEl = ref<HTMLInputElement | null>(null)
@@ -16,48 +21,17 @@ const meRoot = ref<HTMLElement | null>(null)
 
 watch(
   () => route.fullPath,
-  () => {
-    menuOpen.value = false
-    meOpen.value = false
-  },
+  () => (meOpen.value = false),
 )
 
-interface Link {
-  to: string
-  label: string
-  badge?: number
-  exact?: boolean
-}
-
-const links = computed<Link[]>(() => {
-  if (props.variant === 'mending') {
-    return [
-      { to: '/mending', label: "Vue d'ensemble", exact: true },
-      { to: '/mending/comparisons', label: 'Comparer les modèles' },
-      { to: '/mending/models', label: 'Réglages photo IA' },
-    ]
-  }
-  const l: Link[] = [
-    { to: '/', label: 'Accueil', exact: true },
-    { to: '/vehicles', label: 'Mon parc' },
-  ]
-  if (isManager.value) {
-    l.push(
-      { to: '/leads', label: 'Demandes', badge: session.newLeads },
-      { to: '/showroom', label: 'Mon showroom' },
-      { to: '/site', label: 'Mon site' },
-      { to: '/settings', label: 'Réglages' },
-    )
-  }
-  return l
-})
-
-function isOn(l: Link) {
-  if (l.exact) return route.path === l.to
-  return route.path === l.to || route.path.startsWith(l.to + '/')
-}
-
-const initial = computed(() => (session.user?.name ?? '?').trim().charAt(0).toUpperCase())
+const initials = computed(() =>
+  (session.user?.name ?? '?')
+    .split(/\s+/)
+    .map((p) => p[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase(),
+)
 const showUsage = computed(() => props.variant === 'garage' && !!session.usage?.visible && !!session.usage.quota && isManager.value)
 
 function search() {
@@ -73,9 +47,19 @@ async function doLogout() {
   clearSession()
 }
 
-// « / » place le curseur dans la recherche, partout dans l'espace garage.
+async function save() {
+  try {
+    await saveBar.onSave?.()
+  } catch (e) {
+    toast(errorMessage(e), 'error')
+  }
+}
+
+// « / » ou Ctrl K place le curseur dans la recherche, partout dans l'espace garage.
 function onKey(e: KeyboardEvent) {
-  if (props.variant !== 'garage' || e.key !== '/' || e.metaKey || e.ctrlKey || e.altKey || typingIn(e)) return
+  if (props.variant !== 'garage') return
+  const ctrlK = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k'
+  if (!ctrlK && (e.key !== '/' || e.metaKey || e.ctrlKey || e.altKey || typingIn(e))) return
   if (modals.add || modals.price || document.querySelector('[role="dialog"]')) return
   e.preventDefault()
   searchEl.value?.focus()
@@ -94,311 +78,280 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <header class="bar" :class="variant">
-    <div class="bar-in">
-      <GarageSwitcher :mending="variant === 'mending'" class="bar-sw" />
+  <header class="top">
+    <div class="brand">
+      <button type="button" class="burger" aria-label="Ouvrir le menu" @click="emit('menu')"><AppIcon name="menu" /></button>
+      <RouterLink :to="variant === 'mending' ? '/mending' : '/'" class="logo" aria-label="Accueil">
+        <span class="mark">M</span><span class="word">Mending</span>
+      </RouterLink>
+    </div>
 
-      <button type="button" class="menu-btn" :aria-expanded="menuOpen" aria-controls="bar-links" @click="menuOpen = !menuOpen">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
-        <span class="sr-only">Menu</span>
-      </button>
+    <form v-if="variant === 'garage'" class="search" role="search" @submit.prevent="search">
+      <AppIcon name="search" :size="16" :stroke="2" />
+      <label for="bar-q" class="sr-only">Rechercher dans le parc</label>
+      <input id="bar-q" ref="searchEl" v-model="q" type="search" placeholder="Rechercher une voiture, une plaque" aria-keyshortcuts="/ Control+K" />
+      <kbd>Ctrl K</kbd>
+    </form>
+    <span v-else />
 
-      <nav id="bar-links" class="links" :class="{ open: menuOpen }" :aria-label="variant === 'mending' ? 'Navigation Mending' : 'Navigation principale'">
-        <RouterLink v-for="l in links" :key="l.to" :to="l.to" class="tl" :class="{ on: isOn(l) }" :aria-current="isOn(l) ? 'page' : undefined">
-          {{ l.label }}<span v-if="l.badge" class="badge" :aria-label="`${l.badge} nouvelles`">{{ l.badge }}</span>
-        </RouterLink>
-        <RouterLink v-if="variant === 'mending'" to="/" class="tl small">‹ Espace garage</RouterLink>
-      </nav>
-
-      <form v-if="variant === 'garage'" class="bs" role="search" @submit.prevent="search">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
-        <label for="bar-q" class="sr-only">Rechercher dans le stock</label>
-        <input id="bar-q" ref="searchEl" v-model="q" type="search" placeholder="Plaque ou modèle" aria-keyshortcuts="/" />
-        <span class="kbd" aria-hidden="true">/</span>
-      </form>
-
+    <div class="right">
+      <GarageSwitcher :mending="variant === 'mending'" />
       <div ref="meRoot" class="me">
-        <button type="button" class="me-btn" :aria-expanded="meOpen" aria-haspopup="true" :title="session.user?.name" @click="meOpen = !meOpen">
-          {{ initial }}<span class="sr-only">Mon compte</span>
+        <button type="button" class="avatar" :title="session.user?.name" aria-haspopup="menu" :aria-expanded="meOpen" @click="meOpen = !meOpen">
+          {{ initials }}<span class="sr-only">Mon compte</span>
         </button>
-        <div v-if="meOpen" class="me-pop">
-          <span class="me-name">{{ session.user?.name }}</span>
-          <span v-if="showUsage" class="me-usage">
-            Ce mois : {{ session.usage!.vehicles_month }} / {{ session.usage!.quota }} voitures
-          </span>
-          <button type="button" class="me-out" @click="doLogout">Se déconnecter</button>
+        <div v-if="meOpen" class="me-pop" role="menu">
+          <div style="padding: 8px 10px 10px">
+            <div class="strong">{{ session.user?.name }}</div>
+            <div class="small muted">{{ session.user?.email }}</div>
+            <div v-if="showUsage" class="small muted" style="margin-top: 4px">Ce mois : {{ session.usage!.vehicles_month }} / {{ session.usage!.quota }} voitures</div>
+          </div>
+          <div class="sep" />
+          <button type="button" class="opt" role="menuitem" @click="doLogout"><AppIcon name="logout" :size="16" />Se déconnecter</button>
         </div>
       </div>
+    </div>
+
+    <div v-if="saveBar.dirty" class="savebar" role="region" aria-label="Modifications non enregistrées">
+      <span class="sb-msg"><AppIcon name="alert" :size="18" :stroke="2" style="color: #ffd43b" />Modifications non enregistrées</span>
+      <span class="sb-acts">
+        <button type="button" class="sb-btn" :disabled="saveBar.saving" @click="saveBar.onDiscard?.()">Annuler</button>
+        <button type="button" class="sb-btn sb-primary" :disabled="saveBar.saving" @click="save">{{ saveBar.saving ? 'Enregistrement…' : 'Enregistrer' }}</button>
+      </span>
     </div>
   </header>
 </template>
 
 <style scoped>
-.bar {
-  --b-bg: var(--bar);
-  --b-mark: var(--bar-mark);
-  background: var(--b-bg);
-  color: var(--bar-text);
+.top {
+  grid-column: 1 / -1;
   position: sticky;
   top: 0;
+  height: 56px;
+  background: #1a1a1a;
+  display: grid;
+  grid-template-columns: 228px minmax(0, 1fr) auto;
+  align-items: center;
+  padding: 0 12px 0 16px;
+  gap: 12px;
   z-index: 40;
 }
-.bar.mending {
-  --b-bg: var(--bar-mending);
-  --b-mark: var(--bar-mending-mark);
-}
-.bar-in {
-  height: 64px;
-  padding: 0 28px;
-  display: flex;
-  align-items: center;
-  gap: 28px;
-}
-
-/* sélecteur de garage, version barre sombre */
-.bar-sw {
-  flex: 0 1 250px !important;
-  width: auto !important;
-  padding-bottom: 0 !important;
-}
-.bar-sw :deep(.sw-btn) {
-  min-height: 44px;
-  padding: 6px 10px;
-  color: var(--bar-strong);
-}
-.bar-sw :deep(.sw-btn:not(.static)) {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: var(--bar-line);
-}
-.bar-sw :deep(.sw-btn.open),
-.bar-sw :deep(.sw-btn:not(.static):hover) {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.22);
-}
-.bar-sw :deep(.sw-btn .name) {
-  -webkit-line-clamp: 1;
-}
-.bar-sw :deep(.sw-btn .sub) {
-  color: var(--bar-muted);
-}
-.bar-sw :deep(.sw-pop) {
-  top: calc(100% + 8px);
-  min-width: 300px;
-}
-
-.links {
-  display: flex;
-  align-items: stretch;
-  align-self: stretch;
-  gap: 22px;
-  flex: 1;
-  min-width: 0;
-}
-.tl {
+.brand {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: var(--bar-text);
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   text-decoration: none;
-  font-size: 14px;
-  white-space: nowrap;
-  border-bottom: 3px solid transparent;
-  border-top: 3px solid transparent;
 }
-.tl:hover {
-  color: var(--bar-strong);
+.mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: #fff;
+  color: #1a1a1a;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 15px;
 }
-.tl.on {
-  color: var(--bar-strong);
-  font-weight: 500;
-  border-bottom-color: var(--b-mark);
+.word {
+  color: #fff;
+  font-weight: 650;
+  font-size: 15px;
+  letter-spacing: -0.01em;
 }
-.tl.small {
-  font-size: 13px;
-  color: var(--bar-muted);
-  margin-left: auto;
+.burger {
+  display: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  place-items: center;
+  cursor: pointer;
 }
-.tl.small:hover {
-  color: var(--bar-strong);
-}
-.badge {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--violet-ink);
-  background: var(--violet-tint);
-  border-radius: 999px;
-  padding: 1px 7px;
-}
-
-.bs {
+.search {
+  justify-self: center;
+  width: 520px;
+  max-width: 100%;
+  height: 36px;
+  border-radius: 8px;
+  background: #2b2b2b;
+  border: 1px solid #474747;
   display: flex;
   align-items: center;
   gap: 8px;
-  height: 38px;
-  width: 320px;
-  flex-shrink: 1;
-  min-width: 180px;
-  padding: 0 14px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid var(--bar-line);
-  color: var(--bar-muted);
-  transition: border-color 0.12s ease, background 0.12s ease;
+  padding: 0 6px 0 12px;
+  color: #b5b5b5;
 }
-.bs:focus-within {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: var(--signal);
+.search:hover {
+  border-color: #6b6b6b;
 }
-.bs input {
+.search:focus-within {
+  border-color: #8a8a8a;
+  background: #333;
+}
+.search input {
   border: 0;
   outline: 0;
   flex: 1;
   min-width: 0;
   background: transparent;
-  color: var(--bar-strong);
+  color: #fff;
   font: inherit;
-  font-size: 13px;
+  font-size: 14px;
 }
-.bs input::placeholder {
-  color: var(--bar-muted);
+.search input::placeholder {
+  color: #b5b5b5;
 }
-.bs .kbd {
+kbd {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  color: #b5b5b5;
+  border: 1px solid #474747;
+  border-radius: 6px;
+  padding: 0 6px;
+  line-height: 20px;
   background: transparent;
-  line-height: 1.4;
-  font-family: var(--mono);
-  font-size: 11px;
-  border: 1px solid var(--bar-line);
-  border-radius: 5px;
-  padding: 0 5px;
-  color: var(--bar-muted);
 }
-
+.right {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 .me {
   position: relative;
-  flex-shrink: 0;
 }
-.me-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 18px;
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: #cdfee1;
+  color: #0c5132;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 600;
   border: 0;
-  background: var(--bar-on);
-  color: var(--bar-strong);
-  font-size: 13px;
-  font-weight: 500;
-}
-.me-btn:hover,
-.me-btn[aria-expanded='true'] {
-  background: rgba(255, 255, 255, 0.18);
+  cursor: pointer;
 }
 .me-pop {
   position: absolute;
+  top: 44px;
   right: 0;
-  top: calc(100% + 10px);
-  min-width: 220px;
+  width: 260px;
   background: #fff;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  box-shadow: var(--shadow-pop);
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.06);
+  padding: 6px;
   color: var(--ink);
+  z-index: 60;
 }
-.me-name {
-  font-size: 14px;
-  font-weight: 500;
-  padding: 2px 6px;
+.strong {
+  font-weight: 600;
 }
-.me-usage {
+.small {
   font-size: 12px;
-  color: var(--muted-2);
-  padding: 0 6px 4px;
 }
-.me-out {
-  text-align: left;
-  background: none;
+.sep {
+  height: 1px;
+  background: #ebebeb;
+  margin: 6px 4px;
+}
+.opt {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: transparent;
   border: 0;
-  border-top: 1px solid var(--line-2);
-  color: var(--ink-2);
+  text-align: left;
+  color: var(--ink);
+  font: inherit;
   font-size: 14px;
-  padding: 10px 6px 4px;
-  min-height: 40px;
+  cursor: pointer;
 }
-.me-out:hover {
-  color: var(--accent-ink);
+.opt:hover {
+  background: #f7f7f7;
 }
-
-.menu-btn {
-  display: none;
+.savebar {
+  position: absolute;
+  inset: 0;
+  background: #1a1a1a;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px 0 24px;
+  border-bottom: 1px solid #303030;
 }
-
-@media (max-width: 1100px) {
-  .bar-in {
-    gap: 18px;
-    padding: 0 20px;
-  }
-  .links {
-    gap: 16px;
-  }
-  .bs {
-    width: 180px;
-  }
+.sb-msg {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+  font-weight: 600;
 }
-@media (max-width: 960px) {
-  .bar-in {
-    height: auto;
-    min-height: 60px;
-    flex-wrap: wrap;
-    padding: 8px 16px;
-    gap: 10px;
+.sb-acts {
+  display: flex;
+  gap: 8px;
+}
+.sb-btn {
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid #5c5c5c;
+  background: #2b2b2b;
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 550;
+  cursor: pointer;
+}
+.sb-btn:hover {
+  background: #383838;
+}
+.sb-primary {
+  border-color: #fff;
+  background: #fff;
+  color: #1a1a1a;
+  font-weight: 600;
+}
+.sb-primary:hover {
+  background: #ebebeb;
+}
+@media (max-width: 1023px) {
+  .top {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    padding: 0 8px;
   }
-  .bar-sw {
-    flex: 1 1 auto !important;
-    min-width: 0;
+  .burger {
+    display: grid;
   }
-  .menu-btn {
-    display: inline-flex;
-    order: 2;
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    border: 1px solid var(--bar-line);
-    background: transparent;
-    color: var(--bar-strong);
-    align-items: center;
-    justify-content: center;
-  }
-  .me {
-    order: 3;
-  }
-  .bs {
-    order: 4;
+  .search {
     width: 100%;
   }
-  .links {
-    order: 5;
+  kbd {
     display: none;
-    flex-basis: 100%;
-    flex-direction: column;
-    gap: 0;
-    padding-bottom: 6px;
   }
-  .links.open {
-    display: flex;
+}
+@media (max-width: 640px) {
+  .word {
+    display: none;
   }
-  .tl {
-    min-height: 44px;
-    border: 0;
-    border-left: 3px solid transparent;
-    padding-left: 10px;
+  .sb-msg {
+    font-size: 13px;
   }
-  .tl.on {
-    border-left-color: var(--b-mark);
-  }
-  .tl.small {
-    margin-left: 0;
+  .savebar {
+    padding: 0 8px 0 12px;
   }
 }
 </style>

@@ -14,6 +14,8 @@ interface SessionState {
   /** Incrémenté à chaque changement de garage pour recharger la vue. */
   viewKey: number
   newLeads: number
+  /** Voitures à vérifier, pour le compteur du menu. */
+  toReview: number
   usage: { vehicles_month: number; quota: number; visible?: boolean } | null
   toast: { text: string; kind: 'ok' | 'error'; id: number } | null
 }
@@ -26,6 +28,7 @@ export const session = reactive<SessionState>({
   garageId: auth.garageId,
   viewKey: 0,
   newLeads: 0,
+  toReview: 0,
   usage: null,
   toast: null,
 })
@@ -73,8 +76,9 @@ export async function loadGarage(): Promise<void> {
 export async function refreshSidebar(): Promise<void> {
   if (!session.user || !hasGarage.value) return
   try {
-    const d = await get<{ usage: { vehicles_month: number; quota: number; visible?: boolean } }>('/dashboard')
+    const d = await get<{ usage: { vehicles_month: number; quota: number; visible?: boolean }; counts?: { to_review: number } }>('/dashboard')
     session.usage = d.usage
+    session.toReview = d.counts?.to_review ?? 0
   } catch {
     /* sans importance */
   }
@@ -103,6 +107,7 @@ export async function switchGarage(id: number | null): Promise<void> {
   session.garage = null
   session.usage = null
   session.newLeads = 0
+  session.toReview = 0
   if (id) {
     await loadGarage()
     refreshSidebar()
