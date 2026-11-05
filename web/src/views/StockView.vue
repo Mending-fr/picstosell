@@ -223,7 +223,7 @@ function exportCsv() {
       </template>
       <template v-else-if="all.length === 0">
         <strong>Votre stock est vide</strong>
-        <span>Ajoutez votre première voiture : tapez la plaque, on remplit le reste.</span>
+        <span>Ajoutez votre première voiture avec sa plaque.</span>
         <button type="button" class="btn btn-primary" @click="openAdd">Ajouter une voiture</button>
       </template>
       <template v-else>Aucune voiture ici pour l'instant.</template>

@@ -39,7 +39,7 @@ async function submit() {
         <span>picstosell</span>
       </div>
       <h1>Connexion</h1>
-      <p class="lead" style="margin-top: -8px">Votre stock, vos photos de showroom et votre site, au même endroit.</p>
+      <p class="lead" style="margin-top: -8px">Connectez-vous pour gérer les voitures de votre garage.</p>
       <label class="lbl">
         E-mail
         <input v-model="email" class="f" type="email" autocomplete="username" inputmode="email" required :aria-invalid="!!error" />

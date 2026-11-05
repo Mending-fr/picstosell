@@ -148,7 +148,7 @@ onBeforeRouteLeave(() => !dirty.value || window.confirm("La zone au sol n'est pa
     <aside class="tips">
       <section class="card tip">
         <h2 style="font-size: 15px">Un seul décor pour toutes les photos</h2>
-        <p class="muted">Sur le parking, on photographie la voiture sous tous ses angles. Dans le showroom, c'est la voiture qui tourne : chaque photo extérieure est posée dans ce même décor, à la même hauteur. Seule sa longueur change entre une vue de face et une vue de profil.</p>
+        <p class="muted">Toutes les photos extérieures de vos voitures sont posées dans ce décor, à la même hauteur. Entre une vue de face et une vue de profil, seule la longueur de la voiture change.</p>
       </section>
       <section class="card tip">
         <h2 style="font-size: 15px">Pour photographier le showroom</h2>

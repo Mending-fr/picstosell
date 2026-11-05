@@ -223,7 +223,7 @@ const themeFor = ref<AdminGarageRow | null>(null)
   <section aria-labelledby="err" class="col" style="gap: 10px">
     <h2 id="err" style="font-size: 18px">Dernières erreurs</h2>
     <div class="table-wrap">
-      <div v-if="data && !data.errors.length" class="empty">Aucune erreur récente. Tout tourne.</div>
+      <div v-if="data && !data.errors.length" class="empty">Aucune erreur récente.</div>
       <div v-for="(e, i) in data?.errors ?? []" :key="i" class="erow">
         <span class="mono muted" style="width: 96px">{{ shortDateTime(e.at) }}</span>
         <span class="lvl" :class="e.level">{{ e.level === 'error' ? 'Erreur' : 'Alerte' }}</span>

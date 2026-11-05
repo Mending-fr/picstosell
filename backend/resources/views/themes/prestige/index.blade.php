@@ -81,7 +81,7 @@ $tel = $g->phone ? preg_replace('/[^0-9+]/', '', $g->phone) : null;
 @if($vehicles->isEmpty())
 <div class="panel" style="padding:48px 24px;display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center">
 <h3 style="font-size:26px">Rien pour l'instant avec ces critères</h3>
-<span class="muted" style="max-width:520px;line-height:1.5">Le stock change chaque semaine. Dites-nous ce que vous cherchez et on vous appelle quand une voiture correspond.</span>
+<span class="muted" style="max-width:520px;line-height:1.5">Le stock bouge souvent. Dites-nous ce que vous cherchez et on vous appelle quand une voiture correspond.</span>
 <a class="btn" href="{{ route('site.contact', [$g->slug, 'sujet' => 'autre']) }}">Dire ce que je cherche</a>
 </div>
 @else
@@ -109,7 +109,7 @@ $tel = $g->phone ? preg_replace('/[^0-9+]/', '', $g->phone) : null;
 </div>
 <div style="display:flex;flex-direction:column;gap:20px">
 <span class="eyebrow">Qui sommes-nous</span>
-<h2 style="font-size:36px">@if($since)Au service des automobilistes{{ $g->city ? ' de '.$g->city : '' }} depuis {{ (int) $since }}.@else Des voitures à voir, à essayer, et des gens à qui parler.@endif</h2>
+<h2 style="font-size:36px">@if($since){{ $g->city ? 'À '.$g->city : 'Ouvert' }} depuis {{ (int) $since }}.@else Venez voir les voitures au garage.@endif</h2>
 @if($g->about)<p style="margin:0;font-size:16px;line-height:1.65;color:var(--soft);white-space:pre-line">{{ $g->about }}</p>@endif
 @if($rating)
 <div class="panel" style="display:flex;gap:14px;align-items:center;padding:16px 18px;border-radius:14px">

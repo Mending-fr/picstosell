@@ -19,7 +19,7 @@
 @if($vehicles->isEmpty())
 <div style="border:1px dashed #CFCFC8;border-radius:14px;padding:40px 24px;display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center">
 <strong style="font-size:18px">Aucune voiture ne correspond pour l'instant</strong>
-<span class="muted">Le stock change chaque semaine. Dites-nous ce que vous cherchez, on vous prévient dès qu'elle arrive.</span>
+<span class="muted">Le stock bouge souvent. Dites-nous ce que vous cherchez, on vous prévient quand une voiture correspond.</span>
 <a class="btn" href="{{ route('site.contact', [$g->slug, 'sujet' => 'autre']) }}">Nous dire ce que je cherche</a>
 </div>
 @else

@@ -643,7 +643,7 @@ onBeforeRouteLeave(() => {
                     La préparation a échoué{{ curRender.error ? ` : ${curRender.error}` : '' }}.
                   </div>
                   <div v-else class="img wait">Pas encore préparée</div>
-                  <figcaption>Après : dans votre showroom. Seul le décor change, la carrosserie reste celle de la photo.</figcaption>
+                  <figcaption>Après : dans votre showroom.</figcaption>
                 </figure>
               </div>
 
