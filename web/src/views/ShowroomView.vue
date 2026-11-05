@@ -83,14 +83,16 @@ async function upload(e: Event) {
       </div>
       <div role="radiogroup" aria-labelledby="decor-t" class="grid">
         <div class="opt" :class="{ on: data.selected === 'own' }">
-          <button type="button" role="radio" :aria-checked="data.selected === 'own'" class="pick" :disabled="uploading || saving !== null" @click="choose('own')">
-            <img v-if="data.own.image_url" :src="data.own.image_url" alt="" />
-            <span v-else class="empty">{{ uploading ? 'Envoi…' : '+ Ajouter la photo de votre showroom' }}</span>
-          </button>
+          <div class="media">
+            <button type="button" role="radio" :aria-checked="data.selected === 'own'" class="pick" :disabled="uploading || saving !== null" @click="choose('own')">
+              <img v-if="data.own.image_url" :src="data.own.image_url" alt="" />
+              <span v-else class="empty">{{ uploading ? 'Envoi…' : '+ Ajouter la photo de votre showroom' }}</span>
+            </button>
+            <button v-if="data.own.image_url" type="button" class="change" :disabled="uploading" @click="fileInput?.click()">{{ uploading ? 'Envoi…' : 'Changer la photo' }}</button>
+          </div>
           <div class="meta">
             <span class="name">Mon showroom</span>
             <span v-if="data.selected === 'own'" class="tag">Utilisé</span>
-            <button v-if="data.own.image_url" type="button" class="btn-link small" :disabled="uploading" @click="fileInput?.click()">Changer la photo</button>
           </div>
         </div>
         <div v-for="b in data.library" :key="b.id" class="opt" :class="{ on: data.selected === `lib:${b.id}` }">
@@ -190,8 +192,27 @@ async function upload(e: Event) {
   border-radius: 8px;
   padding: 1px 8px;
 }
-.meta .btn-link {
-  margin-left: auto;
-  min-height: 0;
+.media {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.change {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  border: 0;
+  border-radius: 8px;
+  padding: 5px 10px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 550;
+  color: #303030;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+}
+.change:hover {
+  background: #fff;
 }
 </style>
