@@ -979,3 +979,278 @@ input[type='search']::-webkit-search-cancel-button {
     display: inline;
   }
 }
+
+/* =====================================================================
+ * Système « pro » (façon Shopify/Shopylike) : tailles compactes, coins
+ * de 8 à 12 px, boutons sobres. Ces règles priment sur celles du dessus.
+ * ===================================================================== */
+html,
+body {
+  font-size: 14px;
+}
+h1 {
+  font-size: 20px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+strong,
+b {
+  font-weight: 600;
+}
+
+/* boutons */
+.btn {
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 550;
+  gap: 6px;
+  border: 0;
+  background: #fff;
+  color: var(--ink);
+  box-shadow: 0 0 0 1px #e3e3e3, inset 0 -1px 0 #d4d4d4, 0 1px 0 rgba(0, 0, 0, 0.04);
+}
+a.btn:hover {
+  color: var(--ink);
+}
+.btn:hover:not(:disabled) {
+  background: #fafafa;
+}
+.btn:active:not(:disabled) {
+  background: #f1f1f1;
+  box-shadow: 0 0 0 1px #d4d4d4, inset 0 1px 1px rgba(0, 0, 0, 0.08);
+}
+.btn-primary,
+.btn-dark {
+  background: #303030;
+  color: #fff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), inset 0 -1px 0 #000, 0 0 0 1px #1a1a1a;
+}
+a.btn-primary:hover,
+a.btn-dark:hover,
+.btn-primary:hover:not(:disabled),
+.btn-dark:hover:not(:disabled) {
+  background: #1a1a1a;
+  color: #fff;
+}
+.btn-green {
+  background: var(--green-ink);
+  color: #fff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), inset 0 -1px 0 #0f4d31, 0 0 0 1px #17633f;
+}
+.btn-green:hover:not(:disabled) {
+  background: #17633f;
+}
+.btn-danger {
+  background: #fff;
+  color: var(--red-ink);
+  box-shadow: 0 0 0 1px #e3e3e3, inset 0 -1px 0 #d4d4d4;
+}
+.btn-danger:hover:not(:disabled) {
+  background: var(--red-tint);
+}
+.btn-danger-solid {
+  background: #c70a24;
+  color: #fff;
+  box-shadow: inset 0 -1px 0 #8e0b21, 0 0 0 1px #a30a20;
+}
+.btn-ghost {
+  background: transparent;
+  box-shadow: none;
+}
+.btn-lg {
+  min-height: 36px;
+  font-size: 14px;
+  padding: 0 16px;
+}
+.btn-sm {
+  min-height: 28px;
+  font-size: 12.5px;
+  padding: 0 10px;
+}
+.btn-link {
+  min-height: 28px;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 0 2px;
+  color: var(--accent-ink);
+}
+.icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 0;
+  box-shadow: 0 0 0 1px #e3e3e3, inset 0 -1px 0 #d4d4d4;
+}
+.kbd-inv {
+  font-size: 10.5px;
+  padding: 0 5px;
+}
+
+/* champs */
+.lbl {
+  font-size: 13px;
+  color: var(--ink);
+  font-weight: 450;
+  gap: 4px;
+}
+.f {
+  font-size: 13.5px;
+  min-height: 34px;
+  border-radius: 8px;
+  border: 1px solid #b5b5b5;
+  background-color: #fff;
+  padding: 0 10px;
+}
+.f:hover:not(:disabled) {
+  border-color: #8a8a8a;
+  background-color: #fafafa;
+}
+.f:focus {
+  border-color: #005bd3;
+  background-color: #fff;
+  box-shadow: 0 0 0 1px #005bd3;
+}
+select.f {
+  padding: 0 30px 0 10px;
+  background-position: right 10px center;
+}
+.f.f-sm {
+  min-height: 30px;
+  font-size: 13px;
+  border-radius: 8px;
+}
+textarea.f {
+  padding: 8px 10px;
+}
+.err {
+  font-size: 12.5px;
+}
+
+/* cartes, alertes, pastilles */
+.card,
+.panel {
+  border: 0;
+  border-radius: 12px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.07), 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+.card {
+  padding: 16px;
+  gap: 12px;
+}
+.card h2 {
+  font-size: 14px;
+  font-weight: 650;
+}
+.stat {
+  border: 0;
+  border-radius: 12px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.07), 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+.alert {
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+}
+.alert-info {
+  background: #eaf4ff;
+  border-color: #cfe4fb;
+  color: #00428a;
+}
+.pill {
+  font-size: 12px;
+  font-weight: 550;
+  border-radius: 8px;
+  padding: 2px 8px;
+}
+
+/* fenêtres */
+.overlay {
+  background: rgba(0, 0, 0, 0.45);
+  padding-top: 56px;
+}
+.dialog {
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+}
+.dialog-head {
+  padding: 12px 12px 12px 16px;
+  gap: 12px;
+  background: #f3f3f3;
+  border-bottom: 1px solid #e3e3e3;
+}
+.dialog-head h2 {
+  font-size: 14px;
+  font-weight: 650;
+}
+.dialog-close {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+}
+.dialog-body {
+  padding: 16px;
+  gap: 14px;
+}
+.dialog-foot {
+  padding: 12px 16px;
+  border-top: 1px solid #e3e3e3;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.toast {
+  border-radius: 10px;
+  background: #1a1a1a;
+  color: #fff;
+  border-color: #1a1a1a;
+  font-size: 13px;
+  padding: 10px 16px 10px 14px;
+}
+.toast.error {
+  background: #c70a24;
+  border-color: #c70a24;
+  color: #fff;
+}
+.toast.error::before {
+  background: #fff;
+}
+
+/* cible tactile suffisante sur téléphone */
+@media (pointer: coarse) {
+  .btn,
+  .icon-btn {
+    min-height: 40px;
+  }
+  .icon-btn {
+    width: 40px;
+    height: 40px;
+  }
+  .f {
+    min-height: 40px;
+    font-size: 16px;
+  }
+}
+@media (max-width: 860px) {
+  h1 {
+    font-size: 18px;
+  }
+  .card {
+    padding: 14px;
+  }
+  .dialog-head {
+    padding: 12px 12px 12px 16px;
+  }
+  .dialog-body {
+    padding: 16px;
+  }
+  .dialog-foot {
+    padding: 12px 16px;
+  }
+}
+.overlay {
+  z-index: 80;
+}
+.toast {
+  z-index: 90;
+}

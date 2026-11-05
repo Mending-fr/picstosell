@@ -4,6 +4,8 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 const props = defineProps<{
   title: string
   wide?: boolean
+  /** Très large (comparaison de photos). */
+  xl?: boolean
   /** Libellés des étapes : affiche les pastilles numérotées sous le titre. */
   steps?: string[]
   /** Étape courante, à partir de 1. Au-delà du nombre d'étapes (écran final), les pastilles sont masquées. */
@@ -77,7 +79,7 @@ defineExpose({ focusFirst })
 <template>
   <Teleport to="body">
     <div class="overlay" @mousedown.self="emit('close')" @keydown="onKey">
-      <div ref="box" class="dialog" :style="wide ? { maxWidth: '720px' } : undefined" role="dialog" aria-modal="true" :aria-labelledby="titleId">
+      <div ref="box" class="dialog" :style="xl ? { maxWidth: '1120px' } : wide ? { maxWidth: '720px' } : undefined" role="dialog" aria-modal="true" :aria-labelledby="titleId">
         <div class="dialog-head">
           <div class="row between" style="flex-wrap: nowrap">
             <h2 :id="titleId">{{ title }}</h2>

@@ -4,12 +4,14 @@ import PriceHelper from '../components/PriceHelper.vue'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { ApiError, del, download, get, patch, post, errorMessage } from '../api'
-import { FUELS, GEARBOXES, RENDER_STATE, STATUS, SHOTS, INTERIOR_LABELS, DETAIL_LABELS, copyText, listingText, parseNum, num, vehicleTitle, euros } from '../labels'
+import { FUELS, GEARBOXES, RENDER_STATE, SHOTS, INTERIOR_LABELS, DETAIL_LABELS, copyText, listingText, parseNum, num, vehicleTitle } from '../labels'
 import { isManager, toast, refreshSidebar } from '../session'
 import StatusPill from '../components/StatusPill.vue'
 import PhotoPicker, { type PickedPhoto } from '../components/PhotoPicker.vue'
 import EquipmentEditor from '../components/EquipmentEditor.vue'
 import ImageViewer, { type ViewerItem } from '../components/ImageViewer.vue'
+import AppModal from '../components/AppModal.vue'
+import MoreMenu, { type MenuItem } from '../components/MoreMenu.vue'
 import { useSaveBar } from '../saveBar'
 import { uploadPhotos } from '../uploads'
 import type { EquipmentGroup, Photo, Render, Vehicle } from '../types'
@@ -103,16 +105,49 @@ function replaceRender(r: Render) {
   v.value.renders = [...list, r]
 }
 
-function nextToReview() {
+function nextToReview(): boolean {
   const list = photos.value
   const start = list.findIndex((p) => p.id === selected.value)
   for (let i = 1; i <= list.length; i++) {
     const p = list[(start + i) % list.length]
     if (renderOf.value.get(p.id)?.status === 'to_review') {
       selected.value = p.id
-      return
+      return true
     }
   }
+  return false
+}
+
+// ---------- vérification des photos, dans une fenêtre ----------
+const reviewOpen = ref(false)
+function openReview(photoId?: number) {
+  if (photoId) selected.value = photoId
+  else {
+    const first = photos.value.find((p) => renderOf.value.get(p.id)?.status === 'to_review')
+    if (first) selected.value = first.id
+  }
+  reviewOpen.value = true
+}
+const curIndex = computed(() => photos.value.findIndex((p) => p.id === selected.value))
+function step(d: number) {
+  const list = photos.value
+  if (!list.length) return
+  selected.value = list[(curIndex.value + d + list.length) % list.length].id
+}
+/** Vignette : la version showroom quand elle existe, sinon la photo du parking. */
+function thumbOf(p: Photo) {
+  const r = renderOf.value.get(p.id)
+  return r?.url && (r.status === 'approved' || r.status === 'to_review') ? r.url : p.thumb_url
+}
+/** Pastille sur la vignette, seulement quand il y a quelque chose à faire ou à attendre. */
+function badgeOf(p: Photo): { label: string; tone: string } | null {
+  if (p.kind !== 'exterior') return null
+  const r = renderOf.value.get(p.id)
+  if (!r) return { label: 'Sans showroom', tone: 'slate' }
+  if (r.status === 'to_review') return { label: 'À vérifier', tone: 'amber' }
+  if (r.status === 'pending' || r.status === 'processing') return { label: 'En préparation', tone: 'blue' }
+  if (r.status === 'failed') return { label: 'Échec', tone: 'red' }
+  return null
 }
 
 async function act(kind: 'approve' | 'retry' | 'keep') {
@@ -125,7 +160,10 @@ async function act(kind: 'approve' | 'retry' | 'keep') {
   if (kind === 'approve') replaceRender({ ...r, status: 'approved' })
   else if (kind === 'keep') replaceRender({ ...r, status: 'kept_original' })
   else replaceRender({ ...r, status: 'pending', url: null })
-  if (kind !== 'retry') nextToReview()
+  if (kind !== 'retry' && !nextToReview() && reviewOpen.value) {
+    reviewOpen.value = false
+    toast('Toutes les photos sont vérifiées.')
+  }
   try {
     const path = kind === 'approve' ? 'approve' : kind === 'keep' ? 'keep-original' : 'retry'
     const res = await post<Render>(`/renders/${r.id}/${path}`)
@@ -184,6 +222,7 @@ async function reclassify(p: Photo, value: string) {
 
 async function removePhoto(p: Photo) {
   if (!window.confirm(`Supprimer la photo « ${p.display_label} » ?`)) return
+  if (photos.value.length <= 1) reviewOpen.value = false
   const old = v.value?.photos
   if (v.value) v.value.photos = (v.value.photos ?? []).filter((x) => x.id !== p.id)
   selectFirst()
@@ -197,7 +236,7 @@ async function removePhoto(p: Photo) {
 }
 
 // ---------- ajout de photos ----------
-const adding = ref(false)
+const addOpen = ref(false)
 const newPhotos = ref<PickedPhoto[]>([])
 const sending = ref(false)
 const takenKeys = computed(() => exterior.value.map((p) => p.shot_key ?? '').filter(Boolean))
@@ -217,7 +256,7 @@ async function sendPhotos() {
   if (sent === newPhotos.value.length) {
     toast(`${sent} photo${sent > 1 ? 's' : ''} ajoutée${sent > 1 ? 's' : ''}.`)
     newPhotos.value = []
-    adding.value = false
+    addOpen.value = false
   }
   await load(true)
   refreshSidebar()
@@ -338,9 +377,8 @@ async function rewrite() {
     rewriting.value = false
   }
 }
-const showEquipment = ref(false)
+const equipOpen = ref(false)
 const equipmentCount = computed(() => equipment.value.reduce((n, g) => n + g.items.length, 0))
-const editHistory = ref(false)
 
 // ---------- mise en ligne ----------
 const publishing = ref(false)
@@ -389,14 +427,8 @@ async function unpublish() {
   }
 }
 
-const confirmSold = ref(false)
 async function markSold() {
-  if (!confirmSold.value) {
-    confirmSold.value = true
-    setTimeout(() => (confirmSold.value = false), 5000)
-    return
-  }
-  confirmSold.value = false
+  if (!window.confirm("Marquer cette voiture comme vendue ? L'annonce sera retirée de votre site.")) return
   publishing.value = true
   try {
     const d = await post<Vehicle>(`/vehicles/${id}/sold`)
@@ -427,6 +459,12 @@ async function copyListing() {
   const ok = await copyText(listingText({ ...v.value, description: form.description, equipment: equipment.value }))
   toast(ok ? "Texte de l'annonce copié. Collez-le sur Leboncoin ou La Centrale." : 'La copie a échoué.', ok ? 'ok' : 'error')
 }
+
+const moreItems = computed<MenuItem[]>(() => [
+  { label: 'Télécharger les photos (ZIP)', action: exportZip, disabled: exporting.value || !photos.value.length },
+  { label: "Copier le texte de l'annonce", action: copyListing },
+  ...(isSold.value ? [] : [{ label: 'Marquer comme vendue', action: markSold, danger: true, disabled: publishing.value }]),
+])
 
 const queuePos = computed(() => queue.value.indexOf(id))
 const nextVehicle = computed(() => {
@@ -465,14 +503,11 @@ function onKey(e: KeyboardEvent) {
     if (!isOnline.value && !isSold.value) publishAll()
     return
   }
-  if (typing || e.metaKey || e.ctrlKey || e.altKey || !isManager.value) return
+  if (typing || e.metaKey || e.ctrlKey || e.altKey || !isManager.value || !reviewOpen.value || viewerAt.value !== null) return
   const k = e.key.toLowerCase()
   const r = curRender.value
   if (k === 'arrowright' || k === 'arrowleft') {
-    const list = photos.value
-    const i = list.findIndex((p) => p.id === selected.value)
-    const n = list[(i + (k === 'arrowright' ? 1 : list.length - 1)) % list.length]
-    if (n) selected.value = n.id
+    step(k === 'arrowright' ? 1 : -1)
     return
   }
   if (!r) return
@@ -500,7 +535,7 @@ onBeforeRouteLeave(() => {
   <div class="page">
     <div v-if="notFound" class="empty" style="min-height: 60vh; justify-content: center">
       <strong>Cette voiture n'existe pas ou a été supprimée</strong>
-      <RouterLink to="/vehicles" class="btn btn-primary">Retour au stock</RouterLink>
+      <RouterLink to="/vehicles" class="btn btn-primary">Retour au parc</RouterLink>
     </div>
     <div v-else-if="loadError" class="empty" style="min-height: 60vh; justify-content: center">
       <strong>Impossible d'afficher cette voiture</strong>
@@ -509,208 +544,88 @@ onBeforeRouteLeave(() => {
     </div>
 
     <template v-else>
-      <!-- en-tête -->
-      <div class="page-head">
-        <div class="row" style="gap: 14px">
-          <button type="button" class="icon-btn" aria-label="Retour" @click="router.back()">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3B4150" stroke-width="2" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
-          </button>
-          <template v-if="v">
-            <span class="plate plate-lg">{{ v.plate }}</span>
-            <h1 class="title">{{ vehicleTitle(v) }}</h1>
-            <span v-if="queuePos >= 0 && v.status === 'to_review'" class="pill" style="color: #A55A0B; background: #FCF1E3">
-              Voiture {{ queuePos + 1 }} sur {{ queue.length }} à vérifier
-            </span>
-            <StatusPill v-else :status="v.status" />
-          </template>
-          <template v-else>
-            <span class="skel" style="width: 110px; height: 30px" />
-            <span class="skel" style="width: 280px; height: 28px" />
-          </template>
+      <!-- en-tête : retour, titre, statut ; à droite la file à vérifier et les actions secondaires -->
+      <header class="head">
+        <button type="button" class="icon-btn" aria-label="Retour" @click="router.back()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
+        </button>
+        <div v-if="v" class="head-t">
+          <h1 class="title" :title="vehicleTitle(v)">{{ vehicleTitle(v) }}</h1>
+          <span class="plate">{{ v.plate }}</span>
+          <StatusPill :status="v.status" />
         </div>
-        <div v-if="v && isManager" class="row">
-          <button type="button" class="btn" :disabled="exporting" @click="exportZip">
-            <span v-if="exporting" class="spinner" aria-hidden="true" />Télécharger les photos
-          </button>
-          <button v-if="!isOnline && !isSold" type="button" class="btn btn-green" :disabled="publishing" @click="publishAll">
-            <span v-if="publishing" class="spinner" aria-hidden="true" />
-            Tout est bon, mettre en ligne <span class="kbd-inv" aria-hidden="true">⌘ ↵</span>
-          </button>
-          <RouterLink v-else-if="nextVehicle" :to="`/vehicles/${nextVehicle}`" class="btn btn-primary">Voiture suivante à vérifier</RouterLink>
+        <div v-else class="head-t"><span class="skel" style="width: 320px; height: 24px" /></div>
+        <div v-if="v && isManager" class="head-a">
+          <template v-if="queue.length > 1 || (queue.length === 1 && queuePos < 0)">
+            <span class="muted small">{{ queuePos >= 0 ? `${queuePos + 1} sur ${queue.length} à vérifier` : `${queue.length} à vérifier` }}</span>
+            <RouterLink v-if="nextVehicle" :to="`/vehicles/${nextVehicle}`" class="btn">Suivante</RouterLink>
+          </template>
+          <MoreMenu :items="moreItems" />
         </div>
-      </div>
-      <p v-if="publishError" class="alert alert-error" role="alert" style="margin: 0">{{ publishError }}</p>
+      </header>
 
       <div class="layout">
-        <!-- photos -->
-        <section aria-label="Photos de la voiture" class="photos">
-          <template v-if="!v">
-            <div class="skel" style="aspect-ratio: 16/7; border-radius: 14px" />
-            <div class="strip"><div v-for="i in 6" :key="i" class="skel" style="aspect-ratio: 4/3.6" /></div>
-          </template>
+        <!-- colonne principale -->
+        <div class="main-col">
+          <!-- photos -->
+          <section class="card" aria-labelledby="ph-t">
+            <div class="card-h">
+              <h2 id="ph-t">Photos <span v-if="photos.length" class="muted count">{{ photos.length }}</span></h2>
+              <button v-if="isManager && photos.length" type="button" class="btn-link" @click="addOpen = true">Ajouter des photos</button>
+            </div>
 
-          <template v-else-if="!photos.length">
-            <div class="card">
-              <div class="col" style="gap: 4px">
-                <h2 style="font-size: 18px">Pas encore de photos</h2>
-                <p class="muted" style="margin: 0">
-                  Prenez les photos avec l'appli sur le parking, ou importez-les ici depuis l'ordinateur. On les place ensuite dans votre showroom.
-                </p>
+            <template v-if="!v">
+              <div class="grid"><div v-for="i in 7" :key="i" class="skel tile" :class="{ big: i === 1 }" /></div>
+            </template>
+
+            <button v-else-if="!photos.length" type="button" class="drop" :disabled="!isManager" @click="addOpen = true">
+              <strong>Ajouter des photos</strong>
+              <span>Prises avec l'appli sur le parking ou importées depuis l'ordinateur. On les place ensuite dans votre showroom.</span>
+            </button>
+
+            <template v-else>
+              <div v-if="pending" class="note blue" role="status">
+                <span class="spinner" aria-hidden="true" />
+                <span class="grow">Photos en préparation. La page se met à jour toute seule.</span>
               </div>
-              <PhotoPicker v-model="newPhotos" :disabled="sending" />
-              <div class="row" style="justify-content: flex-end">
-                <button type="button" class="btn btn-primary" :disabled="!newPhotos.length || sending" @click="sendPhotos">
-                  <span v-if="sending" class="spinner" aria-hidden="true" />
-                  Envoyer et préparer les photos
+              <div v-else-if="isManager && toReview" class="note amber">
+                <span class="grow">{{ toReview }} photo{{ toReview > 1 ? 's' : '' }} à vérifier avant la mise en ligne</span>
+                <button type="button" class="btn btn-sm btn-primary" @click="openReview()">Vérifier</button>
+              </div>
+              <div v-else-if="isManager && needRender.length" class="note">
+                <span class="grow">{{ needRender.length }} photo{{ needRender.length > 1 ? 's' : '' }} sans version showroom</span>
+                <button type="button" class="btn btn-sm" :disabled="launching" @click="launchRenders"><span v-if="launching" class="spinner" aria-hidden="true" />Préparer</button>
+              </div>
+
+              <div class="grid">
+                <button v-for="(p, i) in photos" :key="p.id" type="button" class="tile" :class="{ big: i === 0 }" :title="p.display_label" @click="openReview(p.id)">
+                  <img :src="thumbOf(p)" :alt="p.display_label" loading="lazy" />
+                  <span v-if="badgeOf(p)" class="badge-s" :class="badgeOf(p)!.tone">{{ badgeOf(p)!.label }}</span>
                 </button>
               </div>
+            </template>
+          </section>
+
+          <!-- description -->
+          <section v-if="isManager" class="card" aria-labelledby="ds-t">
+            <div class="card-h">
+              <h2 id="ds-t">Description</h2>
+              <button type="button" class="btn-link" :disabled="rewriting || !v" @click="rewrite"><span v-if="rewriting" class="spinner" aria-hidden="true" style="width: 12px; height: 12px; margin-right: 6px" />Réécrire avec l'IA</button>
             </div>
-          </template>
+            <label class="sr-only" for="v-desc">Description</label>
+            <textarea id="v-desc" v-model="form.description" class="f" rows="8" :disabled="!v" placeholder="Quelques phrases sur la voiture : entretien, propriétaires, points forts." />
+            <span class="muted small">Texte proposé par l'IA à partir des informations de la voiture. Relisez-le avant de mettre en ligne.</span>
+          </section>
 
-          <template v-else>
-            <div v-if="needRender.length && !pending" class="alert alert-info row between">
-              <span>{{ needRender.length }} photo{{ needRender.length > 1 ? 's' : '' }} du parking {{ needRender.length > 1 ? "n'ont" : "n'a" }} pas encore de version showroom.</span>
-              <button type="button" class="btn btn-primary btn-sm" :disabled="launching" @click="launchRenders">
-                <span v-if="launching" class="spinner" aria-hidden="true" />Préparer les photos showroom
-              </button>
-            </div>
-            <div v-if="pending" class="alert alert-info" role="status">
-              <span class="spinner" aria-hidden="true" style="vertical-align: -3px; margin-right: 8px" />Photos en préparation, la page se met à jour toute seule.
-            </div>
-
-            <div v-if="cur" class="card viewer">
-              <div class="row between">
-                <div class="row" style="gap: 10px; flex-wrap: nowrap; min-width: 0">
-                  <span style="font-size: 16px; font-weight: 500; white-space: nowrap">{{ cur.kind === 'exterior' ? `Vue ${cur.display_label.toLowerCase()}` : cur.display_label }}</span>
-                  <span v-if="cur.classified === 'ai'" class="pill ai" title="L'IA a reconnu ce que montre la photo. Corrigez si besoin.">Reconnue par l'IA</span>
-                  <label v-if="isManager" class="fix">
-                    <span class="sr-only">Corriger ce que montre la photo</span>
-                    <select class="f f-sm" :value="classOf(cur)" :disabled="fixing" @change="reclassify(cur, ($event.target as HTMLSelectElement).value)">
-                      <optgroup label="Extérieur (placée dans le showroom)">
-                        <option v-for="s in SHOTS" :key="s.key" :value="`exterior:${s.key}`">{{ s.label }}</option>
-                        <option value="exterior:">Extérieur, autre angle</option>
-                      </optgroup>
-                      <optgroup label="Intérieur (publiée telle quelle)">
-                        <option v-for="l in INTERIOR_LABELS" :key="l" :value="`interior:${l}`">{{ l }}</option>
-                      </optgroup>
-                      <optgroup label="Détail (publiée telle quelle)">
-                        <option v-for="l in DETAIL_LABELS" :key="l" :value="`detail:${l}`">{{ l }}</option>
-                      </optgroup>
-                    </select>
-                  </label>
-                </div>
-                <div v-if="curRender?.url" role="group" aria-label="Affichage" class="seg">
-                  <button type="button" :aria-pressed="viewMode === 'side'" @click="viewMode = 'side'">Côte à côte</button>
-                  <button type="button" :aria-pressed="viewMode === 'overlay'" @click="viewMode = 'overlay'">Superposé</button>
-                </div>
-              </div>
-
-              <!-- photo telle quelle -->
-              <figure v-if="cur.kind !== 'exterior'" class="fig">
-                <button type="button" class="zoom" aria-label="Voir en grand" @click="zoom(cur.id, 'p')"><img :src="cur.url" :alt="cur.kind === 'interior' ? 'Intérieur' : 'Détail'" class="img" /></button>
-                <figcaption>Cette photo est publiée telle quelle.</figcaption>
-              </figure>
-
-              <!-- superposé -->
-              <div v-else-if="viewMode === 'overlay' && curRender?.url" class="col" style="gap: 8px">
-                <div class="ov">
-                  <img :src="cur.url" alt="Avant : sur le parking" class="img" />
-                  <img :src="curRender.url" alt="Après : dans votre showroom" class="img top" :style="{ clipPath: `inset(0 0 0 ${split}%)` }" />
-                  <span class="ov-line" :style="{ left: split + '%' }" aria-hidden="true" />
-                  <span class="tag l">Parking</span><span class="tag r">Showroom</span>
-                </div>
-                <div class="row" style="gap: 12px; flex-wrap: nowrap">
-                  <label class="lbl grow"><span class="sr-only">Glisser pour comparer avant et après</span><input v-model.number="split" type="range" min="0" max="100" /></label>
-                  <button type="button" class="btn btn-sm" @click="zoom(cur.id, 's')">Voir en grand</button>
-                </div>
-              </div>
-
-              <!-- côte à côte -->
-              <div v-else class="pair">
-                <figure class="fig">
-                  <button type="button" class="zoom" aria-label="Voir la photo du parking en grand" @click="zoom(cur.id, 'p')"><img :src="cur.url" alt="Avant : sur le parking" class="img" /></button>
-                  <figcaption>Avant : sur le parking</figcaption>
-                </figure>
-                <figure class="fig">
-                  <button v-if="curRender?.url && curRender.status !== 'pending' && curRender.status !== 'processing'" type="button" class="zoom" aria-label="Voir la photo showroom en grand" @click="zoom(cur.id, 's')"><img :src="curRender.url" alt="Après : dans votre showroom" class="img" /></button>
-                  <div v-else-if="curRender && (curRender.status === 'pending' || curRender.status === 'processing')" class="img wait">
-                    <span class="spinner" aria-hidden="true" /> En préparation…
-                  </div>
-                  <div v-else-if="curRender?.status === 'failed'" class="img wait ko">
-                    La préparation a échoué{{ curRender.error ? ` : ${curRender.error}` : '' }}.
-                  </div>
-                  <div v-else class="img wait">Pas encore préparée</div>
-                  <figcaption>Après : dans votre showroom.</figcaption>
-                </figure>
-              </div>
-
-              <div v-if="isManager && curRender" class="row">
-                <button type="button" class="btn btn-primary" :disabled="acting || curRender.status !== 'to_review' || !curRender.url" @click="act('approve')">
-                  C'est bon <span class="kbd-inv" aria-hidden="true">A</span>
-                </button>
-                <button type="button" class="btn" :disabled="acting || curRender.status === 'pending' || curRender.status === 'processing'" @click="act('retry')">
-                  Refaire <span class="kbd" aria-hidden="true">R</span>
-                </button>
-                <button type="button" class="btn" :disabled="acting || curRender.status === 'kept_original' || curRender.status === 'pending' || curRender.status === 'processing'" @click="act('keep')">
-                  Garder la photo du parking <span class="kbd" aria-hidden="true">O</span>
-                </button>
-                <span class="muted" style="font-size: 13px; margin-left: auto" :style="{ color: stateOf(cur).color }">{{ stateOf(cur).label }}</span>
-              </div>
-              <div v-else-if="isManager && cur.kind === 'exterior' && !curRender" class="row">
-                <button type="button" class="btn btn-primary" :disabled="launching" @click="launchRenders">Préparer les photos showroom</button>
-              </div>
-            </div>
-
-            <div class="strip" role="listbox" aria-label="Toutes les photos">
-              <button
-                v-for="p in photos"
-                :key="p.id"
-                type="button"
-                role="option"
-                class="th"
-                :aria-selected="p.id === selected"
-                @click="selected = p.id"
-              >
-                <img :src="renderOf.get(p.id)?.status === 'approved' || renderOf.get(p.id)?.status === 'to_review' ? renderOf.get(p.id)?.url ?? p.thumb_url : p.thumb_url" alt="" loading="lazy" />
-                <span class="th-l">{{ p.display_label }}</span>
-                <span class="th-s" :style="{ color: stateOf(p).color }">{{ stateOf(p).label }}</span>
-              </button>
-            </div>
-
-            <div class="row">
-              <button v-if="!adding" type="button" class="btn btn-sm" @click="adding = true">Ajouter ou remplacer des photos</button>
-              <button v-if="isManager && cur" type="button" class="btn btn-sm btn-danger" @click="removePhoto(cur)">Supprimer cette photo</button>
-              <span class="muted" style="font-size: 13px">Astuce : flèches gauche et droite pour passer d'une photo à l'autre.</span>
-            </div>
-            <div v-if="adding" class="card">
-              <PhotoPicker v-model="newPhotos" :taken="takenKeys" :disabled="sending" />
-              <div class="row" style="justify-content: flex-end">
-                <button type="button" class="btn" :disabled="sending" @click="(adding = false), (newPhotos = [])">Annuler</button>
-                <button type="button" class="btn btn-primary" :disabled="!newPhotos.length || sending" @click="sendPhotos">
-                  <span v-if="sending" class="spinner" aria-hidden="true" />Envoyer les photos
-                </button>
-              </div>
-            </div>
-          </template>
-        </section>
-
-        <!-- la voiture -->
-        <section v-if="isManager" aria-label="La voiture" class="card side">
-          <div class="row between">
-            <h2 class="side-t">La voiture</h2>
-            <span v-if="v" class="muted" style="font-size: 13px">{{ STATUS[v.status].label }}</span>
-          </div>
-          <template v-if="v">
-            <div class="two">
-              <label class="lbl">Prix TTC (€)<input id="v-price" :value="form.price" class="f" inputmode="numeric" @input="form.price = onThousandsInput($event)" :aria-invalid="!!fieldErrors.price" /><span v-if="fieldErrors.price" class="err">{{ fieldErrors.price }}</span></label>
-              <label class="lbl">Kilométrage<input :value="form.mileage" class="f" inputmode="numeric" @input="form.mileage = onThousandsInput($event)" :aria-invalid="!!fieldErrors.mileage" /></label>
-              <label class="lbl">
-                Boîte
-                <select v-model="form.gearbox" class="f">
-                  <option value="">Non précisée</option>
-                  <option v-for="o in GEARBOXES" :key="o.value" :value="o.value">{{ o.label }}</option>
-                </select>
-              </label>
+          <!-- caractéristiques -->
+          <section v-if="isManager" class="card" aria-labelledby="ca-t">
+            <div class="card-h"><h2 id="ca-t">Caractéristiques</h2></div>
+            <div v-if="v" class="fields">
+              <label class="lbl">Marque<input v-model="form.make" class="f" /></label>
+              <label class="lbl">Modèle<input v-model="form.model" class="f" /></label>
+              <label class="lbl">Version<input v-model="form.version" class="f" /></label>
+              <label class="lbl">Kilométrage<input :value="form.mileage" class="f" inputmode="numeric" :aria-invalid="!!fieldErrors.mileage" @input="form.mileage = onThousandsInput($event)" /></label>
+              <label class="lbl">1re immatriculation<input v-model="form.first_registration" class="f" type="month" /></label>
               <label class="lbl">
                 Énergie
                 <select v-model="form.fuel" class="f">
@@ -718,150 +633,421 @@ onBeforeRouteLeave(() => {
                   <option v-for="o in FUELS" :key="o.value" :value="o.value">{{ o.label }}</option>
                 </select>
               </label>
-              <label class="lbl">1re immatriculation<input v-model="form.first_registration" class="f" type="month" /></label>
-              <div class="two-in">
-                <label class="lbl">Puissance<input v-model="form.power_hp" class="f" inputmode="numeric" placeholder="ch" aria-label="Puissance en chevaux" /></label>
-                <label class="lbl">CV<input v-model="form.fiscal_hp" class="f" inputmode="numeric" /></label>
-              </div>
-            </div>
-            <PriceHelper :car="priceCar" @use="(p) => (form.price = num(p))" />
-            <details class="more">
-              <summary>Marque, modèle, couleur…</summary>
-              <div class="two" style="margin-top: 12px">
-                <label class="lbl">Marque<input v-model="form.make" class="f" /></label>
-                <label class="lbl">Modèle<input v-model="form.model" class="f" /></label>
-                <label class="lbl" style="grid-column: 1 / -1">Version<input v-model="form.version" class="f" /></label>
-                <label class="lbl">Couleur<input v-model="form.color" class="f" /></label>
-                <div class="two-in">
-                  <label class="lbl">Portes<input v-model="form.doors" class="f" inputmode="numeric" /></label>
-                  <label class="lbl">Places<input v-model="form.seats" class="f" inputmode="numeric" /></label>
-                </div>
-              </div>
-            </details>
-
-            <div class="hist">
-              <div class="col" style="gap: 2px; min-width: 0">
-                <span style="font-size: 14px; font-weight: 500">Historique</span>
-                <span class="muted" style="font-size: 13px">{{ form.history_url ? 'Lien HistoVec ajouté' : 'Aucun historique pour le moment' }}</span>
-              </div>
-              <div class="row" style="gap: 4px">
-                <a v-if="v.history_url && !editHistory" :href="v.history_url" target="_blank" rel="noopener" class="btn-link" style="display: inline-flex; align-items: center">Voir</a>
-                <button type="button" class="btn-link" @click="editHistory = !editHistory">{{ editHistory ? 'Fermer' : form.history_url ? 'Changer' : 'Ajouter' }}</button>
-              </div>
-              <label v-if="editHistory" class="lbl" style="flex-basis: 100%">
-                Lien HistoVec
-                <input v-model="form.history_url" class="f" type="url" placeholder="Collez le lien ici" :aria-invalid="!!fieldErrors.history_url" />
-                <span v-if="fieldErrors.history_url" class="err">{{ fieldErrors.history_url }}</span>
+              <label class="lbl">
+                Boîte
+                <select v-model="form.gearbox" class="f">
+                  <option value="">Non précisée</option>
+                  <option v-for="o in GEARBOXES" :key="o.value" :value="o.value">{{ o.label }}</option>
+                </select>
               </label>
+              <label class="lbl">Puissance (ch)<input v-model="form.power_hp" class="f" inputmode="numeric" /></label>
+              <label class="lbl">Puissance fiscale (CV)<input v-model="form.fiscal_hp" class="f" inputmode="numeric" /></label>
+              <label class="lbl">Couleur<input v-model="form.color" class="f" /></label>
+              <label class="lbl">Portes<input v-model="form.doors" class="f" inputmode="numeric" /></label>
+              <label class="lbl">Places<input v-model="form.seats" class="f" inputmode="numeric" /></label>
             </div>
-          </template>
-          <template v-else>
-            <div v-for="i in 5" :key="i" class="skel" style="height: 44px" />
-          </template>
-        </section>
+            <div v-else class="fields"><span v-for="i in 6" :key="i" class="skel" style="height: 52px" /></div>
+          </section>
 
-        <!-- annonce -->
-        <section v-if="isManager" aria-label="L'annonce" class="card side">
-          <div class="row between">
-            <h2 class="side-t">L'annonce</h2>
-            <span class="muted" style="font-size: 12px">Texte écrit par l'IA, à relire</span>
-          </div>
-          <template v-if="v">
-            <label class="lbl">Description<textarea v-model="form.description" class="f" rows="7" placeholder="Quelques phrases sur la voiture : entretien, propriétaires, points forts." /></label>
-            <div class="row">
-              <button type="button" class="btn btn-sm" :disabled="rewriting" @click="rewrite"><span v-if="rewriting" class="spinner" aria-hidden="true" />Réécrire le texte</button>
-              <button type="button" class="btn btn-sm" :aria-expanded="showEquipment" @click="showEquipment = !showEquipment">Équipements ({{ equipmentCount }})</button>
+          <!-- équipements -->
+          <section v-if="isManager" class="card" aria-labelledby="eq-t">
+            <div class="card-h">
+              <h2 id="eq-t">Équipements <span v-if="equipmentCount" class="muted count">{{ equipmentCount }}</span></h2>
+              <button type="button" class="btn-link" :disabled="!v" @click="equipOpen = true">{{ equipmentCount ? 'Modifier' : 'Ajouter' }}</button>
             </div>
-            <EquipmentEditor v-if="showEquipment" v-model="equipment" />
+            <dl v-if="equipment.some((g) => g.items.length)" class="eq">
+              <template v-for="g in equipment.filter((x) => x.items.length)" :key="g.group">
+                <dt>{{ g.group || 'Autres' }}</dt>
+                <dd>{{ g.items.join(' · ') }}</dd>
+              </template>
+            </dl>
+            <span v-else class="muted small">Aucun équipement renseigné.</span>
+          </section>
+        </div>
 
-            <div class="where">
-              <span class="muted" style="font-size: 13px; font-weight: 500">Où la mettre en ligne</span>
-              <div class="where-row">
-                <div class="col" style="gap: 2px">
-                  <span style="font-weight: 500">Votre site</span>
-                  <span class="muted" style="font-size: 13px">{{ isOnline ? 'En ligne' : isSold ? 'Vendue, retirée du site' : 'Pas encore en ligne' }}</span>
-                </div>
-                <button v-if="isOnline" type="button" class="btn btn-sm" :disabled="publishing" @click="unpublish">Retirer de mon site</button>
-                <button v-else-if="!isSold" type="button" class="btn btn-sm btn-green" :disabled="publishing" @click="publishAll">Mettre en ligne</button>
+        <!-- colonne latérale -->
+        <aside v-if="isManager" class="side-col">
+          <section class="card" aria-labelledby="pub-t">
+            <h2 id="pub-t">Votre site</h2>
+            <template v-if="v">
+              <div class="state">
+                <span class="dot" :class="isOnline ? 'on' : isSold ? 'sold' : 'off'" aria-hidden="true" />
+                <span>{{ isOnline ? 'En ligne' : isSold ? `Vendue${v.sold_at ? ` le ${new Date(v.sold_at).toLocaleDateString('fr-FR')}` : ''}` : 'Pas encore en ligne' }}</span>
               </div>
-              <div class="where-row">
-                <div class="col" style="gap: 2px">
-                  <span style="font-weight: 500">Leboncoin et La Centrale</span>
-                  <span class="muted" style="font-size: 13px">Photos et texte prêts à copier</span>
-                </div>
-                <div class="row" style="gap: 6px">
-                  <button type="button" class="btn btn-sm" :disabled="exporting" @click="exportZip">Photos (ZIP)</button>
-                  <button type="button" class="btn btn-sm" @click="copyListing">Copier le texte</button>
-                </div>
-              </div>
-              <button v-if="!isSold" type="button" class="btn btn-danger" :disabled="publishing" @click="markSold">
-                {{ confirmSold ? 'Confirmer : la voiture est vendue' : 'Marquer vendue' }}
+              <button v-if="!isOnline && !isSold" type="button" class="btn btn-primary full" :disabled="publishing" @click="publishAll">
+                <span v-if="publishing" class="spinner" aria-hidden="true" />Mettre en ligne <span class="kbd-inv" aria-hidden="true">⌘ ↵</span>
               </button>
-              <span v-else class="muted" style="font-size: 13px">Vendue {{ v.sold_at ? `le ${new Date(v.sold_at).toLocaleDateString('fr-FR')}` : '' }} à {{ euros(v.price) }}.</span>
+              <button v-else-if="isOnline" type="button" class="btn full" :disabled="publishing" @click="unpublish">Retirer de mon site</button>
+              <span v-if="!isOnline && !isSold && toReview" class="muted small">Les {{ toReview }} photo{{ toReview > 1 ? 's' : '' }} à vérifier seront validées en même temps.</span>
+              <p v-if="publishError" class="err" role="alert" style="margin: 0">{{ publishError }}</p>
+            </template>
+            <span v-else class="skel" style="height: 32px" />
+          </section>
+
+          <section class="card" aria-labelledby="pr-t">
+            <h2 id="pr-t">Prix</h2>
+            <label class="lbl">
+              Prix de vente TTC
+              <span class="suffix">
+                <input id="v-price" :value="form.price" class="f" inputmode="numeric" :disabled="!v" :aria-invalid="!!fieldErrors.price" @input="form.price = onThousandsInput($event)" />
+                <span aria-hidden="true">€</span>
+              </span>
+              <span v-if="fieldErrors.price" class="err">{{ fieldErrors.price }}</span>
+            </label>
+            <PriceHelper v-if="v" :car="priceCar" @use="(p) => (form.price = num(p))" />
+          </section>
+
+          <section class="card" aria-labelledby="hi-t">
+            <div class="card-h">
+              <h2 id="hi-t">Historique</h2>
+              <a v-if="v?.history_url" :href="v.history_url" target="_blank" rel="noopener" class="btn-link">Ouvrir</a>
             </div>
-          </template>
-          <template v-else>
-            <div v-for="i in 4" :key="i" class="skel" style="height: 44px" />
-          </template>
-        </section>
+            <label class="lbl">
+              Lien du rapport HistoVec
+              <input v-model="form.history_url" class="f" type="url" :disabled="!v" placeholder="https://" :aria-invalid="!!fieldErrors.history_url" />
+              <span v-if="fieldErrors.history_url" class="err">{{ fieldErrors.history_url }}</span>
+            </label>
+          </section>
+
+          <section class="card" aria-labelledby="ot-t">
+            <h2 id="ot-t">Leboncoin, La Centrale</h2>
+            <span class="muted small">Récupérez les photos et le texte pour publier l'annonce sur ces sites.</span>
+            <div class="row" style="gap: 8px">
+              <button type="button" class="btn btn-sm" :disabled="exporting || !photos.length" @click="exportZip"><span v-if="exporting" class="spinner" aria-hidden="true" />Photos (ZIP)</button>
+              <button type="button" class="btn btn-sm" :disabled="!v" @click="copyListing">Copier le texte</button>
+            </div>
+          </section>
+        </aside>
       </div>
     </template>
   </div>
+
+  <!-- vérifier une photo -->
+  <AppModal v-if="reviewOpen && cur" xl :title="`${cur.display_label} · ${curIndex + 1} sur ${photos.length}`" @close="reviewOpen = false">
+    <div class="rv-bar">
+      <label v-if="isManager" class="rv-kind">
+        <span class="muted small">Ce que montre la photo</span>
+        <select class="f f-sm" :value="classOf(cur)" :disabled="fixing" @change="reclassify(cur, ($event.target as HTMLSelectElement).value)">
+          <optgroup label="Extérieur (placée dans le showroom)">
+            <option v-for="s in SHOTS" :key="s.key" :value="`exterior:${s.key}`">{{ s.label }}</option>
+            <option value="exterior:">Extérieur, autre angle</option>
+          </optgroup>
+          <optgroup label="Intérieur (publiée telle quelle)">
+            <option v-for="l in INTERIOR_LABELS" :key="l" :value="`interior:${l}`">{{ l }}</option>
+          </optgroup>
+          <optgroup label="Détail (publiée telle quelle)">
+            <option v-for="l in DETAIL_LABELS" :key="l" :value="`detail:${l}`">{{ l }}</option>
+          </optgroup>
+        </select>
+      </label>
+      <span v-if="cur.classified === 'ai'" class="pill ai">Reconnue par l'IA</span>
+      <span class="grow" />
+      <span class="small" :style="{ color: stateOf(cur).color }">{{ stateOf(cur).label }}</span>
+      <div v-if="curRender?.url && cur.kind === 'exterior'" role="group" aria-label="Affichage" class="seg">
+        <button type="button" :aria-pressed="viewMode === 'side'" @click="viewMode = 'side'">Côte à côte</button>
+        <button type="button" :aria-pressed="viewMode === 'overlay'" @click="viewMode = 'overlay'">Superposé</button>
+      </div>
+    </div>
+
+    <figure v-if="cur.kind !== 'exterior'" class="fig one">
+      <button type="button" class="zoom" aria-label="Voir en grand" @click="zoom(cur.id, 'p')"><img :src="cur.url" :alt="cur.display_label" class="img" /></button>
+      <figcaption>Photo publiée telle quelle.</figcaption>
+    </figure>
+
+    <div v-else-if="viewMode === 'overlay' && curRender?.url" class="col" style="gap: 8px">
+      <div class="ov">
+        <img :src="cur.url" alt="Sur le parking" class="img" />
+        <img :src="curRender.url" alt="Dans votre showroom" class="img top" :style="{ clipPath: `inset(0 0 0 ${split}%)` }" />
+        <span class="ov-line" :style="{ left: split + '%' }" aria-hidden="true" />
+        <span class="tag l">Parking</span><span class="tag r">Showroom</span>
+      </div>
+      <label><span class="sr-only">Glisser pour comparer</span><input v-model.number="split" type="range" min="0" max="100" /></label>
+    </div>
+
+    <div v-else class="pair">
+      <figure class="fig">
+        <button type="button" class="zoom" aria-label="Voir la photo du parking en grand" @click="zoom(cur.id, 'p')"><img :src="cur.url" alt="Sur le parking" class="img" /></button>
+        <figcaption>Sur le parking</figcaption>
+      </figure>
+      <figure class="fig">
+        <button v-if="curRender?.url && curRender.status !== 'pending' && curRender.status !== 'processing'" type="button" class="zoom" aria-label="Voir la photo showroom en grand" @click="zoom(cur.id, 's')"><img :src="curRender.url" alt="Dans votre showroom" class="img" /></button>
+        <div v-else-if="curRender && (curRender.status === 'pending' || curRender.status === 'processing')" class="img wait"><span class="spinner" aria-hidden="true" /> En préparation…</div>
+        <div v-else-if="curRender?.status === 'failed'" class="img wait ko">La préparation a échoué{{ curRender.error ? ` : ${curRender.error}` : '' }}.</div>
+        <div v-else class="img wait">
+          <span>Pas encore de version showroom</span>
+          <button v-if="isManager" type="button" class="btn btn-sm" :disabled="launching" @click="launchRenders">Préparer</button>
+        </div>
+        <figcaption>Dans votre showroom</figcaption>
+      </figure>
+    </div>
+
+    <template #footer>
+      <button type="button" class="icon-btn" aria-label="Photo précédente" @click="step(-1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg></button>
+      <button type="button" class="icon-btn" aria-label="Photo suivante" @click="step(1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg></button>
+      <button v-if="isManager" type="button" class="btn-link danger" @click="removePhoto(cur)">Supprimer</button>
+      <span class="grow" />
+      <template v-if="isManager && curRender">
+        <button type="button" class="btn" :disabled="acting || ['kept_original', 'pending', 'processing'].includes(curRender.status)" @click="act('keep')">Garder la photo du parking <span class="kbd" aria-hidden="true">O</span></button>
+        <button type="button" class="btn" :disabled="acting || ['pending', 'processing'].includes(curRender.status)" @click="act('retry')">Refaire <span class="kbd" aria-hidden="true">R</span></button>
+        <button type="button" class="btn btn-primary" :disabled="acting || curRender.status !== 'to_review' || !curRender.url" @click="act('approve')">C'est bon <span class="kbd-inv" aria-hidden="true">A</span></button>
+      </template>
+    </template>
+  </AppModal>
+
+  <!-- ajouter des photos -->
+  <AppModal v-if="addOpen" title="Ajouter des photos" wide @close="!sending && ((addOpen = false), (newPhotos = []))">
+    <PhotoPicker v-model="newPhotos" :taken="takenKeys" :disabled="sending" />
+    <template #footer>
+      <button type="button" class="btn" :disabled="sending" @click="(addOpen = false), (newPhotos = [])">Annuler</button>
+      <button type="button" class="btn btn-primary" :disabled="!newPhotos.length || sending" @click="sendPhotos"><span v-if="sending" class="spinner" aria-hidden="true" />Envoyer</button>
+    </template>
+  </AppModal>
+
+  <!-- équipements -->
+  <AppModal v-if="equipOpen" title="Équipements" wide @close="equipOpen = false">
+    <EquipmentEditor v-model="equipment" />
+    <template #footer>
+      <span class="muted small grow">Enregistrez ensuite avec la barre du haut.</span>
+      <button type="button" class="btn btn-primary" @click="equipOpen = false">Terminé</button>
+    </template>
+  </AppModal>
+
   <ImageViewer v-if="viewerAt !== null" :items="viewerItems" :start="viewerAt" @close="viewerAt = null" />
 </template>
 
 <style scoped>
 .page {
+  max-width: 1160px;
+  margin: 0 auto;
+  width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
+}
+.small {
+  font-size: 12.5px;
+}
+.head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 40px;
+}
+.head-t {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
 }
 .title {
-  font-size: 22px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
-.unsaved {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--amber-ink);
+.head-a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
 }
-/* trois colonnes : photos, la voiture, l'annonce */
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px 380px;
-  gap: 18px;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 16px;
   align-items: start;
 }
-.photos {
-  min-width: 0;
+.main-col,
+.side-col {
   display: flex;
   flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+.card-h {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 28px;
+}
+.count {
+  font-weight: 450;
+  margin-left: 4px;
+}
+.full {
+  width: 100%;
+}
+
+/* photos */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  grid-auto-rows: 1fr;
+  gap: 8px;
+}
+.tile {
+  position: relative;
+  aspect-ratio: 1;
+  border: 0;
+  padding: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f1f1f1;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+}
+.tile.big {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+.tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.tile:hover img {
+  filter: brightness(0.94);
+}
+.badge-s {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  font-size: 11.5px;
+  font-weight: 550;
+  border-radius: 6px;
+  padding: 1px 6px;
+  background: #fff;
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+.badge-s.amber {
+  background: #ffd79d;
+  color: #5e4200;
+}
+.badge-s.blue {
+  background: #e0f0ff;
+  color: #00428a;
+}
+.badge-s.red {
+  background: #fedad9;
+  color: #8e0b21;
+}
+.badge-s.slate {
+  background: #f1f1f1;
+  color: var(--muted);
+}
+.drop {
+  border: 1.5px dashed #b5b5b5;
+  border-radius: 10px;
+  background: #fafafa;
+  padding: 32px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+}
+.drop strong {
+  color: var(--accent-ink);
+  font-size: 14px;
+}
+.drop:hover:not(:disabled) {
+  background: #f4f4f4;
+}
+.note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 8px;
+  padding: 8px 10px 8px 12px;
+  font-size: 13px;
+  background: #f1f1f1;
+}
+.note.amber {
+  background: #fff1e0;
+  color: #5e4200;
+}
+.note.blue {
+  background: #eaf4ff;
+  color: #00428a;
+}
+
+/* caractéristiques */
+.fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
 }
-.side {
-  min-width: 0;
-  padding: 18px 20px;
-  gap: 14px;
+.eq {
+  margin: 0;
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 16px;
+  font-size: 13px;
 }
-.side-t {
-  font-size: 15px;
-  font-weight: 500;
+.eq dt {
+  font-weight: 550;
 }
-@media (max-width: 1280px) {
-  .layout {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .photos {
-    grid-column: 1 / -1;
-  }
+.eq dd {
+  margin: 0;
+  color: var(--ink-2);
 }
-@media (max-width: 800px) {
-  .layout {
-    grid-template-columns: minmax(0, 1fr);
-  }
+
+/* colonne latérale */
+.state {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
 }
-.viewer {
-  padding: 16px;
-  gap: 14px;
+.state .dot.on {
+  background: var(--green-dot);
+}
+.state .dot.off {
+  background: #b5b5b5;
+}
+.state .dot.sold {
+  background: var(--red-ink);
+}
+.suffix {
+  position: relative;
+  display: block;
+}
+.suffix .f {
+  padding-right: 28px;
+}
+.suffix > span {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* fenêtre de vérification */
+.rv-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.rv-kind {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.rv-kind select {
+  width: auto;
+  max-width: 240px;
+}
+.pill.ai {
+  color: var(--violet-ink);
+  background: var(--violet-tint);
 }
 .zoom {
   padding: 0;
@@ -870,11 +1056,7 @@ onBeforeRouteLeave(() => {
   cursor: zoom-in;
   display: block;
   width: 100%;
-  border-radius: 10px;
-}
-.zoom:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
+  border-radius: 8px;
 }
 .pair {
   display: grid;
@@ -885,33 +1067,38 @@ onBeforeRouteLeave(() => {
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+}
+.fig.one {
+  max-width: 640px;
+  align-self: center;
+  width: 100%;
 }
 .fig figcaption {
-  font-size: 13px;
+  font-size: 12.5px;
   color: var(--muted);
 }
 .img {
   width: 100%;
   aspect-ratio: 4/3;
   object-fit: cover;
-  border-radius: 10px;
-  background: #EEF0F3;
+  border-radius: 8px;
+  background: #f1f1f1;
 }
 .wait {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  color: var(--accent-dark);
-  background: #E0F0FF;
-  font-size: 14px;
+  color: var(--muted);
+  font-size: 13px;
   text-align: center;
   padding: 12px;
 }
 .wait.ko {
-  color: var(--red-ink);
-  background: var(--red-soft);
+  color: #8e0b21;
+  background: #fedad9;
 }
 .ov {
   position: relative;
@@ -931,116 +1118,37 @@ onBeforeRouteLeave(() => {
 }
 .tag {
   position: absolute;
-  top: 10px;
+  top: 8px;
   font-size: 12px;
-  font-weight: 500;
-  background: rgba(255, 255, 255, 0.9);
+  font-weight: 550;
+  background: rgba(255, 255, 255, 0.92);
   border-radius: 6px;
-  padding: 3px 8px;
+  padding: 2px 8px;
 }
 .tag.l {
-  left: 10px;
+  left: 8px;
 }
 .tag.r {
-  right: 10px;
+  right: 8px;
 }
-.strip {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
-  gap: 8px;
+.danger {
+  color: var(--red-ink);
 }
-.th {
-  text-align: left;
-  border: 2px solid var(--line);
-  border-radius: 10px;
-  background: #fff;
-  padding: 6px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  color: var(--ink);
-}
-.th[aria-selected='true'] {
-  border-color: var(--accent);
-}
-.th img {
-  width: 100%;
-  aspect-ratio: 4/3;
-  object-fit: cover;
-  border-radius: 6px;
-  background: #EEF0F3;
-}
-.pill.ai {
-  color: var(--violet-ink);
-  background: var(--violet-tint);
-  white-space: nowrap;
-}
-.fix select {
-  min-width: 0;
-  max-width: 200px;
-}
-.th-l {
-  font-size: 12px;
-  font-weight: 500;
-}
-.th-s {
-  font-size: 12px;
-}
-.two {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-.two-in {
-  display: grid;
-  grid-template-columns: 1.4fr 1fr;
-  gap: 8px;
-}
-.more summary {
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--accent);
-  min-height: 32px;
-  display: flex;
-  align-items: center;
-}
-.hist {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 10px 12px;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-.where {
-  border-top: 1px solid var(--line-2);
-  padding-top: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.where-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-@media (max-width: 860px) {
-  .page {
-    padding: 16px 16px 40px;
+
+@media (max-width: 1000px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
   }
-  .title {
-    font-size: 20px;
+}
+@media (max-width: 640px) {
+  .fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .pair {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
-  .side {
-    position: static;
+  .head-t .plate {
+    display: none;
   }
 }
 </style>
