@@ -17,6 +17,7 @@ const router = createRouter({
   scrollBehavior: () => ({ top: 0 }),
   routes: [
     { path: '/login', component: () => import('./views/LoginView.vue'), meta: { layout: 'public', title: 'Connexion' } },
+    { path: '/invitation/:token', component: () => import('./views/InvitationView.vue'), meta: { layout: 'public', title: 'Invitation' } },
     { path: '/', component: () => import('./views/HomeView.vue'), meta: { layout: 'garage', title: 'Accueil' } },
     { path: '/vehicles', component: () => import('./views/StockView.vue'), meta: { layout: 'garage', title: 'Mon parc' } },
     // Ancien lien : l'ajout se fait désormais dans une modale, ouverte par-dessus Mon parc.
@@ -29,6 +30,7 @@ const router = createRouter({
     { path: '/settings', component: () => import('./views/SettingsView.vue'), meta: { layout: 'garage', role: 'manager', title: 'Réglages' } },
     { path: '/mending', component: () => import('./views/mending/OverviewView.vue'), meta: { layout: 'mending', role: 'super', title: 'Espace Mending' } },
     { path: '/mending/models', component: () => import('./views/mending/ModelsView.vue'), meta: { layout: 'mending', role: 'super', title: 'Réglages photo IA' } },
+    { path: '/mending/users', component: () => import('./views/mending/UsersView.vue'), meta: { layout: 'mending', role: 'super', title: 'Utilisateurs' } },
     { path: '/mending/backdrops', component: () => import('./views/mending/BackdropsView.vue'), meta: { layout: 'mending', role: 'super', title: 'Décors' } },
     { path: '/mending/comparisons', component: () => import('./views/mending/ComparisonsView.vue'), meta: { layout: 'mending', role: 'super', title: 'Comparer les modèles' } },
     { path: '/mending/comparisons/:id(\\d+)', component: () => import('./views/mending/ComparisonView.vue'), meta: { layout: 'mending', role: 'super', title: 'Comparatif' } },

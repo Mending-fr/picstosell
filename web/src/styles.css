@@ -1363,3 +1363,8 @@ h3 {
   font-weight: 650;
   color: var(--ink);
 }
+@media (max-width: 760px) {
+  .t .hide-s {
+    display: none;
+  }
+}

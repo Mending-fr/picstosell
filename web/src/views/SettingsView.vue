@@ -1,10 +1,14 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ApiError, del, get, patch, post, errorMessage } from '../api'
-import { copyText, garageStatusLabel, monthName } from '../labels'
+import { del, get, patch, errorMessage } from '../api'
+import { garageStatusLabel, monthName } from '../labels'
 import { session, toast } from '../session'
-import type { Garage, GarageSettings, Usage, User } from '../types'
+import type { Garage, GarageSettings, Invitation, Usage, User } from '../types'
+import { ROLE_LABEL } from '../team'
+import InviteModal from '../components/InviteModal.vue'
+import PendingInvitations from '../components/PendingInvitations.vue'
+import MoreMenu, { type MenuItem } from '../components/MoreMenu.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -24,48 +28,32 @@ function setTab(t: Tab) {
 
 // ---------- équipe ----------
 const users = ref<User[] | null>(null)
+const invitations = ref<Invitation[]>([])
 const teamError = ref('')
-const invite = reactive({ name: '', email: '', role: 'photographer' as 'photographer' | 'manager' })
-const inviteErrors = ref<Record<string, string>>({})
-const inviting = ref(false)
-const created = ref<{ user: User; temporary_password: string } | null>(null)
-const copied = ref(false)
+const inviteOpen = ref(false)
 
 async function loadUsers() {
   teamError.value = ''
   try {
-    users.value = (await get<{ data: User[] }>('/users')).data
+    const r = await get<{ data: User[]; invitations: Invitation[] }>('/users')
+    users.value = r.data
+    invitations.value = r.invitations
   } catch (e) {
     teamError.value = errorMessage(e)
   }
 }
-
-async function sendInvite() {
-  inviteErrors.value = {}
-  if (!invite.name.trim()) inviteErrors.value.name = 'Indiquez le prénom et le nom.'
-  if (!/^\S+@\S+\.\S+$/.test(invite.email.trim())) inviteErrors.value.email = 'Indiquez une adresse e-mail valide.'
-  if (Object.keys(inviteErrors.value).length) return
-  inviting.value = true
-  try {
-    const r = await post<{ user: User; temporary_password: string }>('/users', { name: invite.name.trim(), email: invite.email.trim(), role: invite.role })
-    created.value = r
-    copied.value = false
-    users.value = [...(users.value ?? []), { ...r.user, invited: true }].sort((a, b) => a.name.localeCompare(b.name))
-    invite.name = ''
-    invite.email = ''
-  } catch (e) {
-    if (e instanceof ApiError && e.status === 422) for (const [k, m] of Object.entries(e.errors)) inviteErrors.value[k] = m[0]
-    else toast(errorMessage(e), 'error')
-  } finally {
-    inviting.value = false
-  }
+function onInvited(inv: Invitation) {
+  invitations.value = [inv, ...invitations.value.filter((x) => x.id !== inv.id && (!inv.email || x.email !== inv.email))]
 }
 
-async function copyPassword() {
-  if (!created.value) return
-  const text = `Adresse : ${location.origin}/app/\nE-mail : ${created.value.user.email}\nMot de passe provisoire : ${created.value.temporary_password}`
-  copied.value = await copyText(text)
-  if (!copied.value) toast('La copie a échoué, notez le mot de passe à la main.', 'error')
+async function setRole(u: User, role: 'manager' | 'photographer') {
+  try {
+    const n = await patch<User>(`/users/${u.id}`, { role })
+    users.value = (users.value ?? []).map((x) => (x.id === u.id ? { ...x, ...n } : x))
+    toast(`${u.name} est maintenant ${ROLE_LABEL[role].toLowerCase()}.`)
+  } catch (e) {
+    toast(errorMessage(e), 'error')
+  }
 }
 
 async function removeUser(u: User) {
@@ -81,7 +69,14 @@ async function removeUser(u: User) {
   }
 }
 
-const roleLabel = (r: string) => (r === 'manager' ? 'Gérant : tout faire' : r === 'photographer' ? 'Photos seulement' : 'Équipe Mending')
+function userMenu(u: User): MenuItem[] {
+  return [
+    u.role === 'manager'
+      ? { label: 'Passer photographe', action: () => setRole(u, 'photographer') }
+      : { label: 'Passer gérant', action: () => setRole(u, 'manager') },
+    { label: "Retirer l'accès", action: () => removeUser(u), danger: true },
+  ]
+}
 
 // ---------- photos ----------
 const garage = ref<Garage | null>(null)
@@ -135,55 +130,47 @@ onMounted(() => {
   </div>
 
   <!-- Équipe -->
-  <section v-if="tab === 'team'" class="card" aria-label="Équipe">
-    <p v-if="teamError" class="alert alert-error" role="alert">{{ teamError }}</p>
-    <div class="col">
-      <template v-if="!users && !teamError">
-        <div v-for="i in 3" :key="i" class="urow"><span class="skel" style="width: 180px; height: 18px" /></div>
-      </template>
-      <div v-for="u in users ?? []" :key="u.id" class="urow">
-        <div class="col" style="gap: 2px; min-width: 0">
-          <span style="font-weight: 500">{{ u.name }}{{ u.id === session.user?.id ? ' (vous)' : '' }}</span>
-          <span class="muted" style="font-size: 13px; word-break: break-all">{{ u.invited ? `${u.email} · pas encore connecté` : u.email }}</span>
-        </div>
-        <div class="row">
-          <span class="pill" :style="u.role === 'manager' ? { background: '#E0F0FF', color: '#00527C' } : { background: '#F1F3F6', color: '#3B4150' }">{{ roleLabel(u.role) }}</span>
-          <button v-if="u.id !== session.user?.id" type="button" class="btn-link" style="color: var(--red-ink)" :aria-label="`Retirer l'accès de ${u.name}`" @click="removeUser(u)">Retirer</button>
-        </div>
+  <template v-if="tab === 'team'">
+    <p v-if="teamError" class="alert alert-error" role="alert">{{ teamError }} <button type="button" class="btn-link" @click="loadUsers">Réessayer</button></p>
+    <section class="col" style="gap: 10px" aria-labelledby="mb-t">
+      <div class="row between">
+        <h2 id="mb-t">Membres <span v-if="users" class="muted" style="font-weight: 450">{{ users.length }}</span></h2>
+        <button type="button" class="btn btn-primary" @click="inviteOpen = true">Inviter</button>
       </div>
-    </div>
-
-    <div v-if="created" class="alert alert-ok col" style="gap: 10px; font-weight: 400" role="status">
-      <strong>{{ created.user.name }} peut se connecter.</strong>
-      <span>Donnez-lui ce mot de passe provisoire. Il ne sera plus affiché ensuite.</span>
-      <div class="row">
-        <code class="pw">{{ created.temporary_password }}</code>
-        <button type="button" class="btn btn-sm" @click="copyPassword">{{ copied ? 'Copié' : 'Copier les accès' }}</button>
-        <button type="button" class="btn-link" @click="created = null">J'ai noté, masquer</button>
+      <div class="table-wrap">
+        <table class="t">
+          <thead>
+            <tr><th>Nom</th><th>Rôle</th><th class="hide-s">Dernière connexion</th><th><span class="sr-only">Actions</span></th></tr>
+          </thead>
+          <tbody>
+            <template v-if="!users && !teamError">
+              <tr v-for="i in 2" :key="i"><td colspan="4"><span class="skel" style="display: block; width: 220px; height: 14px" /></td></tr>
+            </template>
+            <tr v-for="u in users ?? []" :key="u.id">
+              <td>
+                <span class="col" style="gap: 1px; min-width: 0">
+                  <span style="font-weight: 500">{{ u.name }}{{ u.id === session.user?.id ? ' (vous)' : '' }}</span>
+                  <span class="muted" style="font-size: 12px">{{ u.email }}</span>
+                </span>
+              </td>
+              <td>{{ ROLE_LABEL[u.role] }}</td>
+              <td class="soft hide-s">{{ u.invited ? 'Jamais connecté' : 'Déjà connecté' }}</td>
+              <td style="text-align: right">
+                <MoreMenu v-if="u.id !== session.user?.id" :items="userMenu(u)" label="Gérer" />
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-    </div>
+    </section>
 
-    <form class="invite" novalidate @submit.prevent="sendInvite">
-      <label class="lbl">
-        Prénom et nom
-        <input v-model="invite.name" class="f" autocomplete="off" :aria-invalid="!!inviteErrors.name" />
-        <span v-if="inviteErrors.name" class="err">{{ inviteErrors.name }}</span>
-      </label>
-      <label class="lbl">
-        Inviter quelqu'un (e-mail)
-        <input v-model="invite.email" class="f" type="email" placeholder="prenom@garage.fr" autocomplete="off" :aria-invalid="!!inviteErrors.email" />
-        <span v-if="inviteErrors.email" class="err">{{ inviteErrors.email }}</span>
-      </label>
-      <label class="lbl">
-        Ce qu'il peut faire
-        <select v-model="invite.role" class="f">
-          <option value="photographer">Photos seulement</option>
-          <option value="manager">Gérant : tout faire</option>
-        </select>
-      </label>
-      <button type="submit" class="btn btn-primary" :disabled="inviting"><span v-if="inviting" class="spinner" aria-hidden="true" />Créer l'accès</button>
-    </form>
-  </section>
+    <section v-if="invitations.length" class="col" style="gap: 10px" aria-labelledby="iv-t">
+      <h2 id="iv-t">Invitations en attente</h2>
+      <PendingInvitations :invitations="invitations" base="/invitations" @update="(l) => (invitations = l)" />
+    </section>
+
+    <InviteModal v-if="inviteOpen" @close="inviteOpen = false" @created="onInvited" />
+  </template>
 
   <!-- Photos -->
   <section v-if="tab === 'photos'" class="card" aria-label="Photos">
@@ -271,31 +258,6 @@ onMounted(() => {
   padding: 14px 0;
   border-bottom: 1px solid var(--line-2);
   flex-wrap: wrap;
-}
-.invite {
-  background: #f7f7f7;
-  border-radius: 10px;
-  padding: 12px;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
-  gap: 12px;
-  align-items: end;
-}
-@media (max-width: 900px) {
-  .invite {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-.pw {
-  font-family: var(--mono);
-  font-size: 16px;
-  font-weight: 500;
-  background: #fff;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 8px 12px;
-  color: var(--ink);
-  user-select: all;
 }
 .bar {
   height: 8px;

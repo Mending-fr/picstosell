@@ -6,6 +6,8 @@ use App\Http\Controllers\Api\Admin\BackdropController;
 use App\Http\Controllers\Api\Admin\GarageAdminController;
 use App\Http\Controllers\Api\BackdropChoiceController;
 use App\Http\Controllers\Api\Admin\SiteThemeController;
+use App\Http\Controllers\Api\Admin\UserAdminController;
+use App\Http\Controllers\Api\InvitationController;
 use App\Http\Controllers\Api\Admin\OverviewController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DashboardController;
@@ -24,6 +26,8 @@ Route::prefix('v1')->group(function () {
     Route::post('auth/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
     Route::get('shots/{id}/overlay', [ShowroomController::class, 'overlay'])->whereNumber('id');
     Route::get('public/{slug}/listings', [PublicController::class, 'listings']);
+    Route::get('invitations/{token}', [InvitationController::class, 'show'])->middleware('throttle:30,1');
+    Route::post('invitations/{token}/accept', [InvitationController::class, 'accept'])->middleware('throttle:10,1');
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('auth/logout', [AuthController::class, 'logout']);
@@ -31,6 +35,12 @@ Route::prefix('v1')->group(function () {
 
         Route::middleware('role:super')->prefix('admin')->group(function () {
             Route::get('overview', OverviewController::class);
+            Route::get('users', [UserAdminController::class, 'index']);
+            Route::patch('users/{user}', [UserAdminController::class, 'update']);
+            Route::delete('users/{user}', [UserAdminController::class, 'destroy']);
+            Route::post('invitations', [UserAdminController::class, 'invite']);
+            Route::post('invitations/{invitation}/resend', [UserAdminController::class, 'resend']);
+            Route::delete('invitations/{invitation}', [UserAdminController::class, 'revoke']);
             Route::post('garages', [GarageAdminController::class, 'store']);
             Route::patch('garages/{garage}', [GarageAdminController::class, 'update']);
             Route::get('garages/{garage}/site-theme', [SiteThemeController::class, 'index']);
@@ -100,8 +110,11 @@ Route::prefix('v1')->group(function () {
                 Route::post('garage/logo', [GarageController::class, 'logo']);
 
                 Route::get('users', [UserController::class, 'index']);
-                Route::post('users', [UserController::class, 'store']);
+                Route::patch('users/{id}', [UserController::class, 'update'])->whereNumber('id');
                 Route::delete('users/{id}', [UserController::class, 'destroy'])->whereNumber('id');
+                Route::post('invitations', [UserController::class, 'invite']);
+                Route::post('invitations/{id}/resend', [UserController::class, 'resend'])->whereNumber('id');
+                Route::delete('invitations/{id}', [UserController::class, 'revoke'])->whereNumber('id');
 
                 Route::get('usage', UsageController::class);
             });

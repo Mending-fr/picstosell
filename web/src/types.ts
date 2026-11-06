@@ -21,6 +21,25 @@ export interface User {
   role: Role
   garage_id: number | null
   invited?: boolean
+  /** Espace Mending seulement */
+  garage_name?: string | null
+  last_login_at?: string | null
+}
+
+export interface Invitation {
+  id: number
+  email: string | null
+  name: string | null
+  role: Role
+  role_label: string
+  garage_id: number | null
+  garage_name: string | null
+  invited_by: string | null
+  link: string
+  emailed_at: string | null
+  expires_at: string
+  expired: boolean
+  created_at: string | null
 }
 
 export interface GarageSummary {

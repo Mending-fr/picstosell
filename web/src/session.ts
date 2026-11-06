@@ -115,6 +115,12 @@ export async function switchGarage(id: number | null): Promise<void> {
   session.viewKey++
 }
 
+/** Ouvre la session avec un jeton déjà obtenu (par exemple en acceptant une invitation). */
+export async function startSession(token: string): Promise<void> {
+  auth.setToken(token)
+  await loadMe()
+}
+
 export async function login(email: string, password: string): Promise<void> {
   const r = await post<{ token: string; user: User }>('/auth/login', { email, password, device_name: 'web' })
   auth.setToken(r.token)
