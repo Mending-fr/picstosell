@@ -26,6 +26,10 @@ $specs = array_filter([
     'Portes' => $v->doors,
     'Places' => $v->seats,
     'Couleur' => $v->color,
+    'CO2' => $v->co2 !== null ? $v->co2.' g/km'.(\App\Services\Vehicle\Emissions::co2Class($v->co2) ? ' (classe '.\App\Services\Vehicle\Emissions::co2Class($v->co2).')' : '') : null,
+    "Vignette Crit'Air" => $v->critairValue() ? \App\Services\Vehicle\Emissions::CRITAIR_LABELS[$v->critairValue()] : null,
+    'Garantie' => $v->warranty,
+    'Première main' => $v->first_hand ? 'Oui' : null,
 ]);
 $promises = array_values(array_filter(array_map(fn ($i) => $theme->opt("promise_{$i}_title") ? ['t' => $theme->opt("promise_{$i}_title"), 'x' => $theme->opt("promise_{$i}_text")] : null, [1, 2, 3])));
 $side = array_slice($images, 1, 2);
@@ -74,6 +78,9 @@ $car = $v;
 </div>
 @endif
 
+@if($v->badges)
+<div class="wrap" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:18px">@foreach(\App\Support\Badges::labels($v) as $b)<span style="border:1px solid var(--ink);border-radius:999px;padding:5px 14px;font-size:13px;letter-spacing:.02em">{{ $b }}</span>@endforeach</div>
+@endif
 @if($specs)
 <div style="display:flex;flex-direction:column;gap:16px">
 <h2 style="font-size:30px">Caractéristiques</h2>

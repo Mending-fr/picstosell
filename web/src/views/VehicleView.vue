@@ -4,8 +4,8 @@ import PriceHelper from '../components/PriceHelper.vue'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { ApiError, del, download, get, patch, post, errorMessage } from '../api'
-import { FUELS, GEARBOXES, RENDER_STATE, SHOTS, INTERIOR_LABELS, DETAIL_LABELS, copyText, listingText, parseNum, num, vehicleTitle } from '../labels'
-import { isManager, toast, refreshSidebar } from '../session'
+import { FUELS, GEARBOXES, RENDER_STATE, SHOTS, INTERIOR_LABELS, DETAIL_LABELS, ORIGINS, CRITAIR_LABELS, CRITAIR_COLORS, copyText, listingText, parseNum, num, vehicleTitle, critairOf, co2Class, minutesLabel } from '../labels'
+import { isManager, session, toast, refreshSidebar } from '../session'
 import StatusPill from '../components/StatusPill.vue'
 import PhotoPicker, { type PickedPhoto } from '../components/PhotoPicker.vue'
 import EquipmentEditor from '../components/EquipmentEditor.vue'
@@ -14,7 +14,7 @@ import AppModal from '../components/AppModal.vue'
 import MoreMenu, { type MenuItem } from '../components/MoreMenu.vue'
 import { useSaveBar } from '../saveBar'
 import { uploadPhotos } from '../uploads'
-import type { EquipmentGroup, Photo, Render, Vehicle } from '../types'
+import type { Critair, EquipmentGroup, Photo, RegistrationRead, Render, Vehicle } from '../types'
 
 const route = useRoute()
 const router = useRouter()
@@ -279,7 +279,18 @@ const form = reactive({
   seats: '',
   description: '',
   history_url: '',
+  vin: '',
+  co2: '',
+  euro_norm: '',
+  empty_weight: '',
+  body_type: '',
+  file_number: '',
+  origin: '',
+  warranty: '',
+  first_hand: '' as '' | 'oui' | 'non',
+  critair: '' as '' | Critair,
 })
+const badges = ref<string[]>([])
 const priceCar = computed(() => ({
   plate: v.value?.plate ?? null,
   make: form.make,
@@ -297,14 +308,14 @@ const original = ref('')
 const fieldErrors = ref<Record<string, string>>({})
 
 function snapshot() {
-  return JSON.stringify({ ...form, equipment: equipment.value })
+  return JSON.stringify({ ...form, equipment: equipment.value, badges: badges.value })
 }
 function fillForm(d: Vehicle) {
   form.price = d.price != null ? num(d.price) : ''
   form.mileage = d.mileage != null ? num(d.mileage) : ''
   form.gearbox = d.gearbox ?? ''
   form.fuel = d.fuel ?? ''
-  form.first_registration = d.first_registration ? d.first_registration.slice(0, 7) : ''
+  form.first_registration = d.first_registration ? d.first_registration.slice(0, 10) : ''
   form.power_hp = d.power_hp != null ? String(d.power_hp) : ''
   form.fiscal_hp = d.fiscal_hp != null ? String(d.fiscal_hp) : ''
   form.make = d.make ?? ''
@@ -315,6 +326,17 @@ function fillForm(d: Vehicle) {
   form.seats = d.seats != null ? String(d.seats) : ''
   form.description = d.description ?? ''
   form.history_url = d.history_url ?? ''
+  form.vin = d.vin ?? ''
+  form.co2 = d.co2 != null ? String(d.co2) : ''
+  form.euro_norm = d.euro_norm ?? ''
+  form.empty_weight = d.empty_weight != null ? String(d.empty_weight) : ''
+  form.body_type = d.body_type ?? ''
+  form.file_number = d.file_number ?? ''
+  form.origin = d.origin ?? ''
+  form.warranty = d.warranty ?? ''
+  form.first_hand = d.first_hand === true ? 'oui' : d.first_hand === false ? 'non' : ''
+  form.critair = d.critair ?? ''
+  badges.value = [...(d.badges ?? [])]
   equipment.value = JSON.parse(JSON.stringify(d.equipment ?? []))
   original.value = snapshot()
 }
@@ -336,7 +358,7 @@ async function saveListing(quiet = false): Promise<boolean> {
       mileage: parseNum(form.mileage),
       gearbox: form.gearbox || null,
       fuel: form.fuel || null,
-      first_registration: form.first_registration ? `${form.first_registration}-01` : null,
+      first_registration: form.first_registration || null,
       power_hp: parseNum(form.power_hp),
       fiscal_hp: parseNum(form.fiscal_hp),
       make: form.make.trim() || null,
@@ -347,6 +369,17 @@ async function saveListing(quiet = false): Promise<boolean> {
       seats: parseNum(form.seats),
       description: form.description.trim() || null,
       history_url: form.history_url.trim() || null,
+      vin: form.vin.trim().toUpperCase() || null,
+      co2: parseNum(form.co2),
+      euro_norm: form.euro_norm.trim() || null,
+      empty_weight: parseNum(form.empty_weight),
+      body_type: form.body_type.trim() || null,
+      file_number: form.file_number.trim() || null,
+      origin: form.origin || null,
+      warranty: form.warranty.trim() || null,
+      first_hand: form.first_hand === '' ? null : form.first_hand === 'oui',
+      critair: form.critair || null,
+      badges: badges.value,
       equipment: equipment.value.filter((g) => g.group.trim()).map((g) => ({ group: g.group.trim(), items: g.items })),
     })
     v.value = { ...d, photos: v.value?.photos ?? d.photos, renders: d.renders ?? v.value?.renders }
@@ -458,6 +491,73 @@ async function copyListing() {
   if (!v.value) return
   const ok = await copyText(listingText({ ...v.value, description: form.description, equipment: equipment.value }))
   toast(ok ? "Texte de l'annonce copié. Collez-le sur Leboncoin ou La Centrale." : 'La copie a échoué.', ok ? 'ok' : 'error')
+}
+
+// ---------- carte grise ----------
+const cgInput = ref<HTMLInputElement | null>(null)
+const reading = ref(false)
+const CG_KEYS = ['vin', 'make', 'model', 'fuel', 'power_hp', 'fiscal_hp', 'seats', 'co2', 'empty_weight', 'body_type', 'euro_norm', 'first_registration'] as const
+async function readRegistration(e: Event) {
+  const t = e.target as HTMLInputElement
+  const file = t.files?.[0]
+  t.value = ''
+  if (!file) return
+  reading.value = true
+  const fd = new FormData()
+  fd.append('file', file)
+  try {
+    const r = await post<RegistrationRead>('/lookup/registration', fd)
+    const f = r.fields
+    let n = 0
+    for (const k of CG_KEYS) {
+      const val = f[k]
+      if (val === undefined || val === null || val === '') continue
+      n++
+      if (k === 'first_registration') form.first_registration = String(val).slice(0, 10)
+      else (form as Record<string, string>)[k] = String(val)
+    }
+    if (f.plate && v.value && f.plate !== v.value.plate) toast(`Attention : la carte grise porte la plaque ${f.plate}, la fiche ${v.value.plate}.`, 'error')
+    else toast(n ? `${n} informations reprises de la carte grise. Vérifiez-les puis enregistrez.` : "Rien n'a pu être lu. Réessayez avec une photo plus nette.", n ? 'ok' : 'error')
+  } catch (err) {
+    toast(errorMessage(err), 'error')
+  } finally {
+    reading.value = false
+  }
+}
+
+// ---------- Crit'Air, CO2, vignettes ----------
+const autoCritair = computed(() => critairOf(form.fuel || null, form.euro_norm || null, form.first_registration || null))
+const shownCritair = computed<Critair | null>(() => form.critair || autoCritair.value)
+const co2Cls = computed(() => co2Class(parseNum(form.co2)))
+const badgeOptions = computed(() => {
+  const opts = new Map<string, string>()
+  for (const b of v.value?.suggested_badges ?? []) opts.set(b.key, b.label)
+  for (const k of badges.value) if (!opts.has(k)) opts.set(k, k)
+  return [...opts].map(([key, label]) => ({ key, label }))
+})
+function toggleBadge(k: string) {
+  badges.value = badges.value.includes(k) ? badges.value.filter((x) => x !== k) : [...badges.value, k]
+}
+const newBadge = ref('')
+function addBadge() {
+  const t = newBadge.value.trim()
+  if (t && !badges.value.includes(t) && badges.value.length < 8) badges.value = [...badges.value, t]
+  newBadge.value = ''
+}
+
+// ---------- documents à imprimer ----------
+const printing = ref<string | null>(null)
+async function printDoc(type: 'affiche' | 'co2' | 'offre') {
+  if (!v.value) return
+  if (dirty.value && !(await saveListing(true))) return
+  printing.value = type
+  try {
+    await download(`/vehicles/${id}/documents/${type}`, `${type}-${v.value.plate}.pdf`)
+  } catch (e) {
+    toast(errorMessage(e), 'error')
+  } finally {
+    printing.value = null
+  }
 }
 
 const moreItems = computed<MenuItem[]>(() => [
@@ -619,13 +719,19 @@ onBeforeRouteLeave(() => {
 
           <!-- caractéristiques -->
           <section v-if="isManager" class="card" aria-labelledby="ca-t">
-            <div class="card-h"><h2 id="ca-t">Caractéristiques</h2></div>
+            <div class="card-h">
+              <h2 id="ca-t">Caractéristiques</h2>
+              <button type="button" class="btn-link" :disabled="!v || reading" @click="cgInput?.click()">
+                <span v-if="reading" class="spinner" aria-hidden="true" style="width: 12px; height: 12px; margin-right: 6px" />{{ reading ? 'Lecture…' : 'Scanner la carte grise' }}
+              </button>
+              <input ref="cgInput" type="file" accept="image/*" capture="environment" class="sr-only" tabindex="-1" aria-hidden="true" @change="readRegistration" />
+            </div>
             <div v-if="v" class="fields">
               <label class="lbl">Marque<input v-model="form.make" class="f" /></label>
               <label class="lbl">Modèle<input v-model="form.model" class="f" /></label>
               <label class="lbl">Version<input v-model="form.version" class="f" /></label>
               <label class="lbl">Kilométrage<input :value="form.mileage" class="f" inputmode="numeric" :aria-invalid="!!fieldErrors.mileage" @input="form.mileage = onThousandsInput($event)" /></label>
-              <label class="lbl">1re immatriculation<input v-model="form.first_registration" class="f" type="month" /></label>
+              <label class="lbl">1re immatriculation<input v-model="form.first_registration" class="f" type="date" /></label>
               <label class="lbl">
                 Énergie
                 <select v-model="form.fuel" class="f">
@@ -645,6 +751,13 @@ onBeforeRouteLeave(() => {
               <label class="lbl">Couleur<input v-model="form.color" class="f" /></label>
               <label class="lbl">Portes<input v-model="form.doors" class="f" inputmode="numeric" /></label>
               <label class="lbl">Places<input v-model="form.seats" class="f" inputmode="numeric" /></label>
+              <label class="lbl">
+                <span>CO2 (g/km) <span v-if="co2Cls" class="cls" :class="`c-${co2Cls}`">{{ co2Cls }}</span></span>
+                <input v-model="form.co2" class="f" inputmode="numeric" :aria-invalid="!!fieldErrors.co2" />
+              </label>
+              <label class="lbl">Norme Euro<input v-model="form.euro_norm" class="f" placeholder="Ex. Euro 6" /></label>
+              <label class="lbl">Poids à vide (kg)<input v-model="form.empty_weight" class="f" inputmode="numeric" /></label>
+              <label class="lbl wide">Numéro de série (VIN)<input v-model="form.vin" class="f mono-f" maxlength="17" :aria-invalid="!!fieldErrors.vin" /></label>
             </div>
             <div v-else class="fields"><span v-for="i in 6" :key="i" class="skel" style="height: 52px" /></div>
           </section>
@@ -663,6 +776,22 @@ onBeforeRouteLeave(() => {
             </dl>
             <span v-else class="muted small">Aucun équipement renseigné.</span>
           </section>
+
+          <!-- vignettes -->
+          <section v-if="isManager" class="card" aria-labelledby="bd-t">
+            <div class="card-h"><h2 id="bd-t">Vignettes</h2></div>
+            <span class="muted small" style="margin-top: -6px">Les atouts mis en avant sur l'annonce, l'affiche et le site. Cochez ceux à afficher.</span>
+            <div v-if="v" class="chips">
+              <button v-for="b in badgeOptions" :key="b.key" type="button" class="chip" :aria-pressed="badges.includes(b.key)" @click="toggleBadge(b.key)">
+                <svg v-if="badges.includes(b.key)" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M5 12l5 5 9-10" /></svg>{{ b.label }}
+              </button>
+              <form class="chip-add" @submit.prevent="addBadge">
+                <label class="sr-only" for="v-badge">Autre vignette</label>
+                <input id="v-badge" v-model="newBadge" class="f f-sm" maxlength="40" placeholder="Autre atout…" />
+              </form>
+            </div>
+            <span v-if="v && !v.suggested_badges.length && !badges.length" class="muted small">Renseignez le kilométrage, les équipements ou la garantie pour obtenir des propositions.</span>
+          </section>
         </div>
 
         <!-- colonne latérale -->
@@ -680,6 +809,7 @@ onBeforeRouteLeave(() => {
               <button v-else-if="isOnline" type="button" class="btn full" :disabled="publishing" @click="unpublish">Retirer de mon site</button>
               <span v-if="!isOnline && !isSold && toReview" class="muted small">Les {{ toReview }} photo{{ toReview > 1 ? 's' : '' }} à vérifier seront validées en même temps.</span>
               <p v-if="publishError" class="err" role="alert" style="margin: 0">{{ publishError }}</p>
+              <span v-if="isOnline && v.minutes_to_online !== null" class="muted small">Mise en ligne {{ minutesLabel(v.minutes_to_online) }} après l'ajout de la voiture.</span>
             </template>
             <span v-else class="skel" style="height: 32px" />
           </section>
@@ -695,6 +825,49 @@ onBeforeRouteLeave(() => {
               <span v-if="fieldErrors.price" class="err">{{ fieldErrors.price }}</span>
             </label>
             <PriceHelper v-if="v" :car="priceCar" @use="(p) => (form.price = num(p))" />
+          </section>
+
+          <section class="card" aria-labelledby="ve-t">
+            <h2 id="ve-t">Vente</h2>
+            <template v-if="v">
+              <label class="lbl">Dossier VO n°<input v-model="form.file_number" class="f" placeholder="Ex. B-104" /></label>
+              <label class="lbl">
+                Origine
+                <select v-model="form.origin" class="f">
+                  <option value="">Non précisée</option>
+                  <option v-for="o in ORIGINS" :key="o.value" :value="o.value">{{ o.label }}</option>
+                </select>
+              </label>
+              <label class="lbl">Garantie<input v-model="form.warranty" class="f" :placeholder="session.garage?.settings.default_warranty ?? 'Ex. OR 12 mois'" /></label>
+              <label class="lbl">
+                1re main
+                <select v-model="form.first_hand" class="f">
+                  <option value="">Non précisé</option>
+                  <option value="oui">Oui</option>
+                  <option value="non">Non</option>
+                </select>
+              </label>
+              <div class="crit">
+                <span v-if="shownCritair" class="pastille" :style="{ background: CRITAIR_COLORS[shownCritair], color: ['2', 'non_classe'].includes(shownCritair) ? '#303030' : '#fff' }" aria-hidden="true">{{ shownCritair === 'non_classe' ? 'NC' : shownCritair }}</span>
+                <label class="lbl grow">
+                  Vignette Crit'Air
+                  <select v-model="form.critair" class="f">
+                    <option value="">{{ autoCritair ? `Automatique : ${CRITAIR_LABELS[autoCritair]}` : 'Automatique (énergie et date manquantes)' }}</option>
+                    <option v-for="(l, k) in CRITAIR_LABELS" :key="k" :value="k">{{ l }}</option>
+                  </select>
+                </label>
+              </div>
+            </template>
+          </section>
+
+          <section class="card" aria-labelledby="dc-t">
+            <h2 id="dc-t">Documents à imprimer</h2>
+            <span class="muted small">En PDF, aux couleurs du garage. Réglez l'en-tête dans Réglages, onglet Documents.</span>
+            <div class="docs">
+              <button type="button" class="btn btn-sm" :disabled="!v || printing !== null" @click="printDoc('affiche')"><span v-if="printing === 'affiche'" class="spinner" aria-hidden="true" />Affiche prix</button>
+              <button type="button" class="btn btn-sm" :disabled="!v || printing !== null" @click="printDoc('co2')"><span v-if="printing === 'co2'" class="spinner" aria-hidden="true" />Étiquette CO2</button>
+              <button type="button" class="btn btn-sm" :disabled="!v || printing !== null" @click="printDoc('offre')"><span v-if="printing === 'offre'" class="spinner" aria-hidden="true" />Fiche offre</button>
+            </div>
           </section>
 
           <section class="card" aria-labelledby="hi-t">
@@ -981,6 +1154,80 @@ onBeforeRouteLeave(() => {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
+}
+.fields .wide {
+  grid-column: span 2;
+}
+.mono-f {
+  font-family: var(--mono);
+  font-size: 13px;
+  text-transform: uppercase;
+}
+.cls {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  border-radius: 4px;
+  padding: 0 5px;
+  margin-left: 4px;
+}
+.c-A { background: #1f8a3c; }
+.c-B { background: #3aa935; }
+.c-C { background: #9ccb3b; color: #1a1a1a; }
+.c-D { background: #f2e600; color: #1a1a1a; }
+.c-E { background: #f6b21b; color: #1a1a1a; }
+.c-F { background: #ef7d22; }
+.c-G { background: #e2231a; }
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 0;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12.5px;
+  font-weight: 550;
+  background: #f1f1f1;
+  color: var(--ink-2);
+  box-shadow: 0 0 0 1px #e3e3e3;
+}
+.chip[aria-pressed='true'] {
+  background: #303030;
+  color: #fff;
+  box-shadow: none;
+}
+.chip-add .f {
+  width: 150px;
+  min-height: 28px;
+  border-radius: 999px;
+}
+.crit {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+.pastille {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 15px;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px #fff inset, 0 0 0 1px #d4d4d4;
+}
+.docs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 .eq {
   margin: 0;

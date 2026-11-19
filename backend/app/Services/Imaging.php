@@ -37,6 +37,46 @@ class Imaging
         return (string) ob_get_clean();
     }
 
+    /** Bandeau des vignettes d'atouts en bas de la photo principale (pastilles blanches sur fond sombre). */
+    public static function badgeBanner(GdImage $img, array $labels): GdImage
+    {
+        $font = resource_path('fonts/Carlito-Bold.ttf');
+        if (! $labels || ! is_file($font)) {
+            return $img;
+        }
+        $w = imagesx($img);
+        $h = imagesy($img);
+        $size = max(12, (int) ($w * 0.018));
+        $padX = (int) ($size * 0.9);
+        $pillH = (int) ($size * 2.1);
+        $gap = (int) ($size * 0.6);
+        $bandH = $pillH + $gap * 2;
+        imagealphablending($img, true);
+        imagefilledrectangle($img, 0, $h - $bandH, $w, $h, imagecolorallocatealpha($img, 15, 15, 15, 35));
+        $white = imagecolorallocate($img, 255, 255, 255);
+        $ink = imagecolorallocate($img, 25, 25, 25);
+        $x = $gap * 2;
+        $y = $h - $bandH + $gap;
+        // Hauteur de référence sans accents : toutes les pastilles ont leur texte sur la même ligne.
+        $ref = imagettfbbox($size, 0, $font, 'Hx');
+        $baseline = (int) ($y + $pillH / 2 + ($ref[1] - $ref[7]) / 2 - $ref[1]);
+        foreach ($labels as $label) {
+            $box = imagettfbbox($size, 0, $font, $label);
+            $tw = $box[2] - $box[0];
+            $pw = $tw + $padX * 2;
+            if ($x + $pw > $w - $gap) {
+                break;
+            }
+            imagefilledrectangle($img, $x + (int) ($pillH / 2), $y, $x + $pw - (int) ($pillH / 2), $y + $pillH, $white);
+            imagefilledellipse($img, $x + (int) ($pillH / 2), $y + (int) ($pillH / 2), $pillH, $pillH, $white);
+            imagefilledellipse($img, $x + $pw - (int) ($pillH / 2), $y + (int) ($pillH / 2), $pillH, $pillH, $white);
+            imagettftext($img, $size, 0, $x + $padX - $box[0], $baseline, $ink, $font, $label);
+            $x += $pw + $gap;
+        }
+
+        return $img;
+    }
+
     /** Réduit l'image pour que son plus grand côté fasse au plus $max pixels. */
     public static function fit(GdImage $img, int $max): GdImage
     {

@@ -11,7 +11,7 @@ import { FUELS, GEARBOXES, fuelLabel, gearboxLabel, num, parseNum, plateNormaliz
 import { session, isManager, refreshSidebar, toast } from '../session'
 import { stockChanged } from '../modals'
 import { uploadPhotos } from '../uploads'
-import type { PlateLookup, User, Vehicle } from '../types'
+import type { PlateLookup, RegistrationRead, User, Vehicle } from '../types'
 
 const emit = defineEmits<{ close: [] }>()
 const router = useRouter()
@@ -44,6 +44,10 @@ const blank = () => ({
   doors: '',
   seats: '',
   vin: '',
+  co2: '',
+  empty_weight: '',
+  euro_norm: '',
+  body_type: '',
   mileage: '',
   price: '',
   history_url: '',
@@ -138,6 +142,57 @@ async function find() {
   step.value = 2
 }
 
+// ---------- carte grise : tout remplir d'une photo ----------
+const cgInput = ref<HTMLInputElement | null>(null)
+const scanning = ref(false)
+const regDate = ref('')
+const scanned = ref(false)
+async function scanRegistration(e: Event) {
+  const t = e.target as HTMLInputElement
+  const file = t.files?.[0]
+  t.value = ''
+  if (!file) return
+  errors.value = {}
+  stepError.value = ''
+  scanning.value = true
+  const fd = new FormData()
+  fd.append('file', file)
+  let f: RegistrationRead['fields']
+  try {
+    f = (await post<RegistrationRead>('/lookup/registration', fd)).fields
+  } catch (err) {
+    stepError.value = errorMessage(err)
+    scanning.value = false
+    return
+  }
+  scanning.value = false
+  if (!f.plate) {
+    stepError.value = "La plaque n'a pas pu être lue. Tapez-la ci-dessus, ou reprenez la photo bien à plat."
+    return
+  }
+  plate.value = f.plate
+  // La recherche par plaque donne la version et la couleur ; la carte grise fait foi pour le reste.
+  await find()
+  const s = (x: unknown) => (x === undefined || x === null ? '' : String(x))
+  if (f.vin) form.vin = f.vin
+  if (f.first_registration) {
+    regDate.value = f.first_registration
+    form.first_registration = f.first_registration.slice(0, 7)
+  }
+  if (f.fuel) form.fuel = f.fuel
+  if (f.fiscal_hp) form.fiscal_hp = s(f.fiscal_hp)
+  if (f.power_hp && !form.power_hp) form.power_hp = s(f.power_hp)
+  if (f.seats) form.seats = s(f.seats)
+  if (!form.make && f.make) form.make = f.make
+  if (!form.model && f.model) form.model = f.model
+  form.co2 = s(f.co2)
+  form.empty_weight = s(f.empty_weight)
+  form.euro_norm = s(f.euro_norm)
+  form.body_type = s(f.body_type)
+  scanned.value = true
+  if (lookup.value === 'notfound') lookupMsg.value = 'Plaque absente de la base : les informations viennent de la carte grise. Ajoutez la version et la couleur si besoin.'
+}
+
 function manual() {
   errors.value = {}
   if (!plate.value.trim()) {
@@ -213,7 +268,8 @@ function payload() {
     make: form.make.trim() || null,
     model: form.model.trim() || null,
     version: form.version.trim() || null,
-    first_registration: form.first_registration ? `${form.first_registration}-01` : null,
+    // Date exacte lue sur la carte grise, si le mois n'a pas été changé depuis.
+    first_registration: form.first_registration ? (regDate.value.startsWith(form.first_registration) ? regDate.value : `${form.first_registration}-01`) : null,
     fuel: form.fuel || null,
     gearbox: form.gearbox || null,
     power_hp: n(form.power_hp),
@@ -222,6 +278,10 @@ function payload() {
     doors: n(form.doors),
     seats: n(form.seats),
     vin: form.vin.trim() || null,
+    co2: n(form.co2),
+    empty_weight: n(form.empty_weight),
+    euro_norm: form.euro_norm.trim() || null,
+    body_type: form.body_type.trim() || null,
     mileage: n(form.mileage),
     price: n(form.price),
     history_url: form.history_url.trim() || null,
@@ -319,6 +379,8 @@ async function save() {
 
 function restart() {
   Object.assign(form, blank())
+  regDate.value = ''
+  scanned.value = false
   plate.value = ''
   lookup.value = 'idle'
   lookupMsg.value = ''
@@ -399,6 +461,13 @@ const doneTitle = computed(() => {
           On retrouve le modèle et la version. Vous pouvez aussi taper le numéro de série.
           <button type="button" class="btn-link inline" @click="manual">Saisir à la main</button>
         </span>
+        <div class="or"><span>ou</span></div>
+        <button type="button" class="btn scan" :disabled="scanning || looking" @click="cgInput?.click()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M7 10h6M7 14h10" /></svg>
+          <span v-if="scanning" class="spinner" aria-hidden="true" />{{ scanning ? 'Lecture de la carte grise…' : 'Photographier la carte grise' }}
+        </button>
+        <span class="help" style="margin-top: -10px">Tout est rempli d'un coup : plaque, numéro de série, date, énergie, puissance, CO2. Une photo à plat, bien éclairée.</span>
+        <input ref="cgInput" type="file" accept="image/*" capture="environment" class="sr-only" tabindex="-1" aria-hidden="true" @change="scanRegistration" />
       </template>
 
       <!-- 2. La voiture -->
@@ -414,6 +483,7 @@ const doneTitle = computed(() => {
           </div>
         </div>
         <p v-else class="alert alert-warn" style="margin: 0">{{ lookupMsg }}</p>
+        <p v-if="scanned" class="muted" style="margin: 0; font-size: 13px">Carte grise lue : numéro de série, date exacte, énergie, puissance{{ form.co2 ? ', CO2' : '' }}{{ form.empty_weight ? ', poids' : '' }} repris.</p>
 
         <button v-if="found" type="button" class="btn-link fix" :aria-expanded="editing" aria-controls="car-fields" @click="editing = !editing">
           {{ editing ? 'Masquer les informations' : "Ce n'est pas ça ? Corriger les informations" }}
@@ -567,6 +637,24 @@ const doneTitle = computed(() => {
   letter-spacing: 0.08em;
   min-height: 62px;
   padding: 0 18px;
+}
+.or {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+.or::before,
+.or::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e3e3e3;
+}
+.scan {
+  min-height: 40px;
+  font-size: 14px;
 }
 .help {
   font-size: 14px;

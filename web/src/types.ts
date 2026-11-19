@@ -58,6 +58,11 @@ export interface GarageSettings {
   add_logo: boolean
   review_before_publish: boolean
   export_size: 'marketplace' | 'large' | string
+  doc_header: string | null
+  doc_footer: string | null
+  doc_color: string | null
+  price_note: string | null
+  default_warranty: string | null
 }
 
 export interface Garage {
@@ -138,6 +143,24 @@ export interface Vehicle {
   description: string | null
   equipment: EquipmentGroup[]
   history_url: string | null
+  file_number: string | null
+  body_type: string | null
+  co2: number | null
+  co2_class: string | null
+  euro_norm: string | null
+  euro_level: number | null
+  /** Crit'Air choisi à la main (null : déduit) */
+  critair: Critair | null
+  /** Crit'Air affiché : choisi ou déduit de l'énergie et de la norme Euro */
+  critair_value: Critair | null
+  empty_weight: number | null
+  origin: Origin | null
+  warranty: string | null
+  first_hand: boolean | null
+  badges: string[]
+  badge_labels: string[]
+  suggested_badges: { key: string; label: string }[]
+  minutes_to_online: number | null
   status: VehicleStatus
   photographer_id?: number | null
   days_in_stock: number
@@ -151,7 +174,17 @@ export interface Vehicle {
   renders?: Render[]
 }
 
-export type VehicleInput = Partial<Omit<Vehicle, 'id' | 'status' | 'days_in_stock' | 'leads_count' | 'cover_url' | 'photos' | 'renders' | 'created_at' | 'published_at' | 'sold_at'>> & {
+export type Critair = '0' | '1' | '2' | '3' | '4' | '5' | 'non_classe'
+export type Origin = 'particulier' | 'reprise' | 'loueur' | 'societe' | 'import' | 'vehicule_de_direction' | 'autre'
+
+/** Ce que renvoie la lecture d'une carte grise. */
+export interface RegistrationRead {
+  fields: Partial<Pick<Vehicle, 'plate' | 'first_registration' | 'vin' | 'make' | 'model' | 'fuel' | 'power_hp' | 'fiscal_hp' | 'seats' | 'co2' | 'empty_weight' | 'body_type' | 'euro_norm'>>
+  critair: Critair | null
+  co2_class: string | null
+}
+
+export type VehicleInput = Partial<Omit<Vehicle, 'id' | 'status' | 'days_in_stock' | 'leads_count' | 'cover_url' | 'photos' | 'renders' | 'created_at' | 'published_at' | 'sold_at' | 'co2_class' | 'euro_level' | 'critair_value' | 'badge_labels' | 'suggested_badges' | 'minutes_to_online'>> & {
   photographer_id?: number | null
 }
 

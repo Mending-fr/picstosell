@@ -12,10 +12,11 @@ import MoreMenu, { type MenuItem } from '../components/MoreMenu.vue'
 
 const route = useRoute()
 const router = useRouter()
-type Tab = 'team' | 'photos' | 'plan'
+type Tab = 'team' | 'photos' | 'docs' | 'plan'
 const TABS: { id: Tab; label: string }[] = [
   { id: 'team', label: 'Équipe' },
   { id: 'photos', label: 'Photos' },
+  { id: 'docs', label: 'Documents' },
   { id: 'plan', label: 'Abonnement et factures' },
 ]
 const tab = ref<Tab>((TABS.find((t) => t.id === route.query.onglet)?.id ?? 'team') as Tab)
@@ -23,7 +24,7 @@ function setTab(t: Tab) {
   tab.value = t
   router.replace({ query: { onglet: t } })
   if (t === 'plan' && !usage.value) loadUsage()
-  if (t === 'photos' && !garage.value) loadGarage()
+  if ((t === 'photos' || t === 'docs') && !garage.value) loadGarage()
 }
 
 // ---------- équipe ----------
@@ -117,7 +118,7 @@ const usagePct = computed(() => (usage.value && usage.value.quota ? Math.min(100
 
 onMounted(() => {
   loadUsers()
-  if (tab.value === 'photos') loadGarage()
+  if (tab.value === 'photos' || tab.value === 'docs') loadGarage()
   if (tab.value === 'plan') loadUsage()
 })
 </script>
@@ -179,14 +180,14 @@ onMounted(() => {
         <input type="checkbox" :checked="garage.settings.hide_plate" @change="setSetting('hide_plate', ($event.target as HTMLInputElement).checked)" />
         <span class="col" style="gap: 2px">
           <span style="font-weight: 500">Cacher la plaque sur les photos mises en ligne</span>
-          <span class="muted" style="font-size: 13px">La plaque est toujours cachée avant le traitement des photos, même si cette case est décochée.</span>
+          <span class="muted" style="font-size: 13px">L'IA repère la plaque sur chaque photo publiée et la couvre d'une plaque à votre nom ou à votre logo. Vérifiez-le sur les premières photos.</span>
         </span>
       </label>
       <label class="check">
         <input type="checkbox" :checked="garage.settings.add_logo" @change="setSetting('add_logo', ($event.target as HTMLInputElement).checked)" />
         <span class="col" style="gap: 2px">
           <span style="font-weight: 500">Ajouter le logo du garage sur les photos</span>
-          <span class="muted" style="font-size: 13px">En bas à droite, discret.</span>
+          <span class="muted" style="font-size: 13px">En bas à droite, discret. Le logo se règle dans la page Site.</span>
         </span>
       </label>
       <label class="check">
@@ -203,6 +204,35 @@ onMounted(() => {
           <option value="large">Grande taille</option>
         </select>
       </label>
+    </template>
+    <template v-else>
+      <div v-for="i in 3" :key="i" class="skel" style="height: 52px" />
+    </template>
+  </section>
+
+  <!-- Documents -->
+  <section v-if="tab === 'docs'" class="card" aria-label="Documents">
+    <template v-if="garage">
+      <p class="muted" style="margin: 0; font-size: 13px">Affiche prix, étiquette CO2 et fiche offre reprennent ces informations. Elles s'impriment depuis la fiche de chaque voiture.</p>
+      <div class="docs-grid">
+        <label class="lbl">
+          En-tête (en haut à gauche)
+          <textarea class="f" rows="5" :value="garage.settings.doc_header ?? ''" :placeholder="`${garage.name.toUpperCase()}\nPrénom NOM\nAgent Renault\nAdresse\nCode postal VILLE`" @change="setSetting('doc_header', ($event.target as HTMLTextAreaElement).value.trim() || null)" />
+          <span class="muted" style="font-weight: 400; font-size: 12px">Une ligne par information. La première s'écrit en gras. Le téléphone et le logo de la page Site sont ajoutés tout seuls.</span>
+        </label>
+        <div class="col" style="gap: 12px">
+          <label class="lbl">Bandeau du bas<input class="f" :value="garage.settings.doc_footer ?? ''" placeholder="Ex. Renault Occasions" @change="setSetting('doc_footer', ($event.target as HTMLInputElement).value.trim() || null)" /></label>
+          <label class="lbl">Mention sous le prix<input class="f" :value="garage.settings.price_note ?? ''" @change="setSetting('price_note', ($event.target as HTMLInputElement).value.trim() || null)" /></label>
+          <label class="lbl">Garantie proposée par défaut<input class="f" :value="garage.settings.default_warranty ?? ''" placeholder="Ex. OR 12 mois" @change="setSetting('default_warranty', ($event.target as HTMLInputElement).value.trim() || null)" /></label>
+          <label class="lbl">
+            Couleur du titre
+            <span class="row" style="gap: 8px; flex-wrap: nowrap">
+              <input type="color" class="swatch-in" :value="garage.settings.doc_color ?? '#1b6d8f'" @change="setSetting('doc_color', ($event.target as HTMLInputElement).value)" />
+              <span class="muted" style="font-weight: 400">{{ garage.settings.doc_color ?? '#1b6d8f' }}</span>
+            </span>
+          </label>
+        </div>
+      </div>
     </template>
     <template v-else>
       <div v-for="i in 3" :key="i" class="skel" style="height: 52px" />
@@ -258,6 +288,24 @@ onMounted(() => {
   padding: 14px 0;
   border-bottom: 1px solid var(--line-2);
   flex-wrap: wrap;
+}
+.docs-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+@media (max-width: 760px) {
+  .docs-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.swatch-in {
+  width: 40px;
+  height: 32px;
+  border: 0;
+  padding: 0;
+  background: none;
+  cursor: pointer;
 }
 .bar {
   height: 8px;

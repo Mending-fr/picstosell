@@ -49,7 +49,10 @@
 @if($v->description)
 <section style="max-width:760px"><h2 style="font-size:22px">Ce qu'il faut savoir</h2><p style="font-size:16px;line-height:1.6;color:#2A2D35;white-space:pre-line">{{ $v->description }}</p></section>
 @endif
-@php($specs = array_filter(['Mise en circulation' => $v->first_registration?->translatedFormat('F Y'), 'Kilométrage' => $v->mileage !== null ? $fmt($v->mileage).' km' : null, 'Carburant' => \App\Models\Vehicle::FUEL_LABELS[$v->fuel] ?? null, 'Boîte' => $v->gearbox ? ucfirst($v->gearbox) : null, 'Puissance' => $v->power_hp ? $v->power_hp.' ch'.($v->fiscal_hp ? ' ('.$v->fiscal_hp.' CV fiscaux)' : '') : null, 'Portes' => $v->doors, 'Places' => $v->seats, 'Couleur' => $v->color]))
+@php($specs = array_filter(['Mise en circulation' => $v->first_registration?->translatedFormat('F Y'), 'Kilométrage' => $v->mileage !== null ? $fmt($v->mileage).' km' : null, 'Carburant' => \App\Models\Vehicle::FUEL_LABELS[$v->fuel] ?? null, 'Boîte' => $v->gearbox ? ucfirst($v->gearbox) : null, 'Puissance' => $v->power_hp ? $v->power_hp.' ch'.($v->fiscal_hp ? ' ('.$v->fiscal_hp.' CV fiscaux)' : '') : null, 'Portes' => $v->doors, 'Places' => $v->seats, 'Couleur' => $v->color, 'CO2' => $v->co2 !== null ? $v->co2.' g/km'.(\App\Services\Vehicle\Emissions::co2Class($v->co2) ? ' (classe '.\App\Services\Vehicle\Emissions::co2Class($v->co2).')' : '') : null, "Vignette Crit'Air" => $v->critairValue() ? \App\Services\Vehicle\Emissions::CRITAIR_LABELS[$v->critairValue()] : null, 'Garantie' => $v->warranty, 'Première main' => $v->first_hand ? 'Oui' : null]))
+@if($v->badges)
+<div style="display:flex;flex-wrap:wrap;gap:8px">@foreach(\App\Support\Badges::labels($v) as $b)<span style="border:1.5px solid var(--brand);color:var(--brand);border-radius:999px;padding:5px 14px;font-weight:600;font-size:14px">{{ $b }}</span>@endforeach</div>
+@endif
 @if($specs)
 <section><h2 style="font-size:22px">Caractéristiques</h2>
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:0 32px;border-top:1px solid var(--line)">

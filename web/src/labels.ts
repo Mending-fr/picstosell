@@ -1,5 +1,5 @@
 // Libellés français et mises en forme partagées.
-import type { Fuel, Gearbox, LeadType, RenderStatus, ShotKey, Vehicle, VehicleStatus } from './types'
+import type { Critair, Fuel, Gearbox, LeadType, Origin, RenderStatus, ShotKey, Vehicle, VehicleStatus } from './types'
 
 export const FUELS: { value: Fuel; label: string }[] = [
   { value: 'essence', label: 'Essence' },
@@ -7,7 +7,7 @@ export const FUELS: { value: Fuel; label: string }[] = [
   { value: 'hybride', label: 'Hybride' },
   { value: 'hybride_rechargeable', label: 'Hybride rechargeable' },
   { value: 'electrique', label: 'Électrique' },
-  { value: 'gpl', label: 'GPL' },
+  { value: 'gpl', label: 'Essence et GPL' },
   { value: 'autre', label: 'Autre' },
 ]
 
@@ -227,8 +227,12 @@ export function listingText(v: Vehicle): string {
     v.gearbox ? `Boîte : ${gearboxLabel(v.gearbox)}` : '',
     v.power_hp ? `Puissance : ${v.power_hp} ch${v.fiscal_hp ? ` (${v.fiscal_hp} CV)` : ''}` : '',
     v.color ? `Couleur : ${v.color}` : '',
+    v.co2 !== null && v.co2 !== undefined ? `CO2 : ${v.co2} g/km${co2Class(v.co2) ? ` (classe ${co2Class(v.co2)})` : ''}` : '',
+    v.critair_value ? `Vignette : ${CRITAIR_LABELS[v.critair_value]}` : '',
+    v.warranty ? `Garantie : ${v.warranty}` : '',
     v.price ? `Prix : ${euros(v.price)} TTC` : '',
   ].filter(Boolean)
+  if (v.badge_labels?.length) lines.push(v.badge_labels.join(' · '))
   lines.push('', ...facts)
   if (v.description) lines.push('', v.description)
   if (v.equipment?.length) {
@@ -236,4 +240,88 @@ export function listingText(v: Vehicle): string {
     for (const g of v.equipment) if (g.items.length) lines.push(`${g.group} : ${g.items.join(', ')}`)
   }
   return lines.join('\n')
+}
+
+// ---------- Crit'Air, CO2, vente (même barème que le serveur) ----------
+export const CRITAIR_LABELS: Record<Critair, string> = {
+  '0': "Crit'Air 0 (électrique)",
+  '1': "Crit'Air 1",
+  '2': "Crit'Air 2",
+  '3': "Crit'Air 3",
+  '4': "Crit'Air 4",
+  '5': "Crit'Air 5",
+  non_classe: 'Non classé',
+}
+export const CRITAIR_COLORS: Record<Critair, string> = {
+  '0': '#00a650',
+  '1': '#7f3f98',
+  '2': '#f2c400',
+  '3': '#f39200',
+  '4': '#8b4513',
+  '5': '#6d6e70',
+  non_classe: '#cccccc',
+}
+export const ORIGINS: { value: Origin; label: string }[] = [
+  { value: 'particulier', label: 'Particulier' },
+  { value: 'reprise', label: 'Reprise' },
+  { value: 'loueur', label: 'Loueur' },
+  { value: 'societe', label: 'Société' },
+  { value: 'import', label: 'Import' },
+  { value: 'vehicule_de_direction', label: 'Véhicule de direction' },
+  { value: 'autre', label: 'Autre' },
+]
+
+export function co2Class(co2: number | null): string | null {
+  if (co2 === null || Number.isNaN(co2)) return null
+  if (co2 <= 100) return 'A'
+  if (co2 <= 120) return 'B'
+  if (co2 <= 140) return 'C'
+  if (co2 <= 160) return 'D'
+  if (co2 <= 200) return 'E'
+  if (co2 <= 250) return 'F'
+  return 'G'
+}
+
+function euroLevel(norm: string | null, firstRegistration: string | null): number | null {
+  if (norm) {
+    const n = norm.replace(/\s+/g, '').toUpperCase()
+    const m = /EURO([1-6])/.exec(n) ?? /^([1-6])[A-Z-]*$/.exec(n)
+    if (m) return Number(m[1])
+    if (n.includes('98/69B')) return 4
+    if (n.includes('98/69')) return 3
+    if (n.includes('96/69') || n.includes('94/12')) return 2
+    if (n.includes('91/441') || n.includes('93/59')) return 1
+  }
+  if (!firstRegistration) return null
+  const d = firstRegistration.length === 7 ? `${firstRegistration}-01` : firstRegistration
+  if (d >= '2015-09-01') return 6
+  if (d >= '2011-01-01') return 5
+  if (d >= '2006-01-01') return 4
+  if (d >= '2001-01-01') return 3
+  if (d >= '1997-01-01') return 2
+  if (d >= '1993-01-01') return 1
+  return 0
+}
+
+/** Crit'Air d'une voiture particulière, d'après l'énergie et la norme Euro (ou la date de 1re immatriculation). */
+export function critairOf(fuel: string | null, norm: string | null, firstRegistration: string | null): Critair | null {
+  if (fuel === 'electrique') return '0'
+  if (fuel === 'gpl' || fuel === 'hybride_rechargeable') return '1'
+  const e = euroLevel(norm, firstRegistration)
+  if (e === null || !fuel || fuel === 'autre') return null
+  if (fuel === 'essence' || fuel === 'hybride') return e >= 5 ? '1' : e === 4 ? '2' : e >= 2 ? '3' : 'non_classe'
+  if (fuel === 'diesel') return e >= 5 ? '2' : e === 4 ? '3' : e === 3 ? '4' : e === 2 ? '5' : 'non_classe'
+  return null
+}
+
+/** « 2 h 10 » ou « 3 jours » : temps entre l'ajout de la voiture et sa mise en ligne. */
+export function minutesLabel(minutes: number): string {
+  if (minutes < 60) return `${Math.max(1, minutes)} min`
+  if (minutes < 60 * 24) {
+    const h = Math.floor(minutes / 60)
+    const m = minutes % 60
+    return m ? `${h} h ${String(m).padStart(2, '0')}` : `${h} h`
+  }
+  const d = Math.round(minutes / 1440)
+  return `${d} jour${d > 1 ? 's' : ''}`
 }

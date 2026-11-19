@@ -6,6 +6,8 @@ use App\Models\Vehicle;
 use App\Services\Vehicle\Emissions;
 use App\Services\DescriptionWriter;
 use App\Services\Plate\PlateLookupService;
+use App\Services\Imaging;
+use App\Support\Badges;
 use App\Support\Media;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -71,6 +73,8 @@ class VehicleController extends Controller
     {
         $data = $this->validated($request, creating: true);
         $data['plate'] = Vehicle::normalizePlate($data['plate']);
+        // Garantie habituelle du garage, modifiable ensuite sur la fiche.
+        $data['warranty'] ??= $this->garage()->setting('default_warranty');
         $vehicle = $this->garage()->vehicles()->create($data + ['status' => 'to_photograph']);
 
         return response()->json($vehicle->fresh()->toApi(true), 201);
@@ -168,7 +172,12 @@ class VehicleController extends Controller
                 default => null,
             };
             if ($path) {
-                $zip->addFromString(sprintf('%02d.jpg', $i++), Media::get($path));
+                $bytes = Media::get($path);
+                // Photo principale : bandeau des vignettes choisies par le garage.
+                if ($i === 1 && $v->badges) {
+                    $bytes = Imaging::jpeg(Imaging::badgeBanner(Imaging::load($bytes), Badges::labels($v)), 90);
+                }
+                $zip->addFromString(sprintf('%02d.jpg', $i++), $bytes);
             }
         }
         $zip->addFromString('annonce.txt', trim($v->label().' '.$v->version)."\n".($v->price ? number_format($v->price, 0, ',', ' ').' €' : '')."\n\n".$v->description);
