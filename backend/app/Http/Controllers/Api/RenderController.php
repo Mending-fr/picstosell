@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Jobs\FinishPhoto;
 use App\Models\Render;
 use App\Services\RenderLauncher;
 use Illuminate\Http\Request;
@@ -34,6 +35,7 @@ class RenderController extends Controller
     {
         $r = $this->find($id);
         $r->update(['status' => 'kept_original']);
+        FinishPhoto::dispatch($r->photo_id);
         $this->refresh($r);
 
         return $r->toApi();

@@ -56,6 +56,8 @@ return [
         'model' => env('ANTHROPIC_MODEL', 'claude-opus-5-5'),
         // Rangement des photos : un modèle rapide suffit.
         'vision_model' => env('ANTHROPIC_VISION_MODEL', 'claude-haiku-5-5'),
+        // Lecture de documents (carte grise) : un modèle plus précis que celui qui range les photos.
+        'document_model' => env('ANTHROPIC_DOCUMENT_MODEL', 'claude-sonnet-5-5'),
     ],
 
     'autoways' => [

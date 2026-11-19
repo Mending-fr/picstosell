@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Vehicle;
+use App\Services\Vehicle\Emissions;
 use App\Services\DescriptionWriter;
 use App\Services\Plate\PlateLookupService;
 use App\Support\Media;
@@ -161,7 +162,8 @@ class VehicleController extends Controller
         foreach ($v->photos as $photo) {
             $r = $latest[$photo->id] ?? null;
             $path = match (true) {
-                $photo->kind !== 'exterior', ! $r, $r->status === 'kept_original' => $photo->path,
+                $photo->kind !== 'exterior', ! $r => $photo->path,
+                $r->status === 'kept_original' => $photo->published_path ?? $photo->path,
                 $r->status === 'approved' => $r->output_path,
                 default => null,
             };
@@ -201,6 +203,17 @@ class VehicleController extends Controller
             'equipment.*.items' => 'array',
             'equipment.*.items.*' => 'string|max:120',
             'history_url' => 'nullable|url|max:500',
+            'file_number' => 'nullable|string|max:30',
+            'body_type' => 'nullable|string|max:10',
+            'co2' => 'nullable|integer|min:0|max:999',
+            'euro_norm' => 'nullable|string|max:40',
+            'critair' => ['nullable', Rule::in(array_keys(Emissions::CRITAIR_LABELS))],
+            'empty_weight' => 'nullable|integer|min:0|max:9999',
+            'origin' => ['nullable', Rule::in(Vehicle::ORIGINS)],
+            'warranty' => 'nullable|string|max:60',
+            'first_hand' => 'nullable|boolean',
+            'badges' => 'nullable|array|max:8',
+            'badges.*' => 'string|max:40',
             // Un employé du garage, ou un compte Mending qui fait les photos lui-même.
             'photographer_id' => ['nullable', Rule::exists('users', 'id')->where(fn ($q) => $q->where('garage_id', $this->garage()->id)->orWhere('role', 'super_admin'))],
         ]);

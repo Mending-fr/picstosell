@@ -62,6 +62,10 @@ class RenderPipeline
                 }
             }
 
+            // Plaque cachée et logo du garage, sauf pour les comparatifs de modèles.
+            if (! $render->comparison_id) {
+                $final = app(PhotoFinisher::class)->finish($final, $garage);
+            }
             $path = "garages/{$garage->id}/vehicles/{$vehicle->id}/renders/{$render->id}.jpg";
             Media::put($path, Imaging::jpeg($final, 88));
 

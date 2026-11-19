@@ -56,6 +56,7 @@ class ApiPlaqueProvider
             'doors' => isset($d['nb_portes']) && is_numeric($d['nb_portes']) ? (int) $d['nb_portes'] : null,
             'seats' => isset($d['nr_passagers']) && is_numeric($d['nr_passagers']) ? (int) $d['nr_passagers'] : null,
             'vin' => $d['vin'] ?? null ?: null,
+            'co2' => isset($d['co2']) && is_numeric($d['co2']) && (int) $d['co2'] > 0 ? (int) $d['co2'] : null,
         ];
     }
 

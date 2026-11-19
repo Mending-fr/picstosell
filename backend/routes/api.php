@@ -15,6 +15,8 @@ use App\Http\Controllers\Api\GarageController;
 use App\Http\Controllers\Api\LeadController;
 use App\Http\Controllers\Api\PhotoController;
 use App\Http\Controllers\Api\PublicController;
+use App\Http\Controllers\Api\RegistrationController;
+use App\Http\Controllers\Api\DocumentController;
 use App\Http\Controllers\Api\RenderController;
 use App\Http\Controllers\Api\ShowroomController;
 use App\Http\Controllers\Api\UsageController;
@@ -71,6 +73,7 @@ Route::prefix('v1')->group(function () {
             Route::post('vehicles', [VehicleController::class, 'store']);
             Route::get('vehicles/{id}', [VehicleController::class, 'show'])->whereNumber('id');
             Route::get('lookup/plate/{plate}', [VehicleController::class, 'lookup']);
+            Route::post('lookup/registration', [RegistrationController::class, 'read'])->middleware('throttle:20,1');
             Route::post('vehicles/{id}/uploads', [PhotoController::class, 'uploads'])->whereNumber('id');
             Route::post('vehicles/{id}/photos', [PhotoController::class, 'store'])->whereNumber('id');
             Route::post('vehicles/{id}/renders', [PhotoController::class, 'renders'])->whereNumber('id');
@@ -87,6 +90,7 @@ Route::prefix('v1')->group(function () {
                 Route::post('pricing/advice', [VehicleController::class, 'priceAdvice'])->middleware('throttle:20,1');
                 Route::post('vehicles/{id}/description', [VehicleController::class, 'description'])->whereNumber('id');
                 Route::post('vehicles/{id}/approve-all', [RenderController::class, 'approveAll'])->whereNumber('id');
+                Route::get('vehicles/{id}/documents/{type}', [DocumentController::class, 'show'])->whereNumber('id')->whereIn('type', ['affiche', 'co2', 'offre']);
                 Route::get('vehicles/{id}/export', [VehicleController::class, 'export'])->whereNumber('id');
                 Route::patch('photos/{id}', [PhotoController::class, 'update'])->whereNumber('id');
 

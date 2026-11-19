@@ -19,6 +19,12 @@ class Garage extends Model
         'export_size' => 'marketplace',
         // Compteur « voitures du mois / quota » dans le menu du garage (réglé par Mending)
         'show_usage' => false,
+        // Affiche prix, étiquette CO2 et fiche offre
+        'doc_header' => null,         // lignes en haut à gauche (raison sociale, contact, adresse)
+        'doc_footer' => null,         // bandeau du bas (« Renault Occasions »)
+        'doc_color' => '#1b6d8f',     // couleur du titre
+        'price_note' => "Hors frais d'immatriculation et frais de dossier",
+        'default_warranty' => null,   // garantie proposée par défaut (« OR 12 mois »)
     ];
 
     protected $guarded = ['id'];

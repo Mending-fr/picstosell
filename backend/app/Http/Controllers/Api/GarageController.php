@@ -30,6 +30,11 @@ class GarageController extends Controller
             'settings.add_logo' => 'boolean',
             'settings.review_before_publish' => 'boolean',
             'settings.export_size' => 'in:marketplace,large',
+            'settings.doc_header' => 'nullable|string|max:400',
+            'settings.doc_footer' => 'nullable|string|max:80',
+            'settings.doc_color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'settings.price_note' => 'nullable|string|max:120',
+            'settings.default_warranty' => 'nullable|string|max:60',
         ]);
         $g = $this->garage();
         if (isset($data['settings'])) {

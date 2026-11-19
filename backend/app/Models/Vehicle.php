@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Services\Vehicle\Emissions;
+use App\Support\Badges;
 use App\Support\Media;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -22,7 +24,14 @@ class Vehicle extends Model
     public const FUEL_LABELS = [
         'essence' => 'Essence', 'diesel' => 'Diesel', 'hybride' => 'Hybride',
         'hybride_rechargeable' => 'Hybride rechargeable', 'electrique' => 'Électrique',
-        'gpl' => 'GPL', 'autre' => 'Autre',
+        'gpl' => 'Essence et GPL', 'autre' => 'Autre',
+    ];
+
+    public const ORIGINS = ['particulier', 'reprise', 'loueur', 'societe', 'import', 'vehicule_de_direction', 'autre'];
+
+    public const ORIGIN_LABELS = [
+        'particulier' => 'Particulier', 'reprise' => 'Reprise', 'loueur' => 'Loueur', 'societe' => 'Société',
+        'import' => 'Import', 'vehicule_de_direction' => 'Véhicule de direction', 'autre' => 'Autre',
     ];
 
     protected $guarded = ['id'];
@@ -32,6 +41,8 @@ class Vehicle extends Model
         return [
             'first_registration' => 'date',
             'equipment' => 'array',
+            'badges' => 'array',
+            'first_hand' => 'boolean',
             'published_at' => 'datetime',
             'sold_at' => 'datetime',
         ];
@@ -140,7 +151,7 @@ class Vehicle extends Model
                 if ($r && $r->status === 'approved' && $r->output_path) {
                     $images[] = ['url' => Media::url($r->output_path), 'label' => $photo->displayLabel()];
                 } elseif (! $r || $r->status === 'kept_original') {
-                    $images[] = ['url' => Media::url($photo->path), 'label' => $photo->displayLabel()];
+                    $images[] = ['url' => Media::url($photo->published_path ?? $photo->path), 'label' => $photo->displayLabel()];
                 }
             } else {
                 $images[] = ['url' => Media::url($photo->path), 'label' => $photo->displayLabel()];
@@ -189,6 +200,23 @@ class Vehicle extends Model
         $this->save();
     }
 
+    /** Vignette Crit'Air : celle choisie à la main, sinon celle déduite de l'énergie et de la norme Euro. */
+    public function critairValue(): ?string
+    {
+        return $this->critair ?: Emissions::critair($this->fuel, $this->euro_norm, $this->first_registration);
+    }
+
+    public function fuelLabel(): ?string
+    {
+        return $this->fuel ? (self::FUEL_LABELS[$this->fuel] ?? $this->fuel) : null;
+    }
+
+    /** Minutes entre l'ajout de la voiture et sa mise en ligne (temps passé par voiture). */
+    public function minutesToOnline(): ?int
+    {
+        return $this->published_at && $this->created_at ? (int) $this->created_at->diffInMinutes($this->published_at) : null;
+    }
+
     public function toApi(bool $full = false): array
     {
         $data = [
@@ -211,6 +239,22 @@ class Vehicle extends Model
             'description' => $this->description,
             'equipment' => $this->equipment ?? [],
             'history_url' => $this->history_url,
+            'file_number' => $this->file_number,
+            'body_type' => $this->body_type,
+            'co2' => $this->co2,
+            'co2_class' => Emissions::co2Class($this->co2),
+            'euro_norm' => $this->euro_norm,
+            'euro_level' => Emissions::euroLevel($this->euro_norm, $this->first_registration),
+            'critair' => $this->critair,
+            'critair_value' => $this->critairValue(),
+            'empty_weight' => $this->empty_weight,
+            'origin' => $this->origin,
+            'warranty' => $this->warranty,
+            'first_hand' => $this->first_hand,
+            'badges' => $this->badges ?? [],
+            'badge_labels' => Badges::labels($this),
+            'suggested_badges' => collect(Badges::suggest($this))->map(fn ($k) => ['key' => $k, 'label' => Badges::label($k, $this)])->values(),
+            'minutes_to_online' => $this->minutesToOnline(),
             'status' => $this->status,
             'photographer_id' => $this->photographer_id,
             'days_in_stock' => $this->daysInStock(),
