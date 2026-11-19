@@ -21,7 +21,7 @@ Repères des champs : A immatriculation, B date de 1re immatriculation, D.1 marq
 E numéro VIN (17 caractères), G.1 poids à vide national (kg), J.1 genre national (VP, CTTE…), P.2 puissance nette max (kW),
 P.3 type de carburant (code de 2 lettres : ES, GO, EL, EH, EE, GH, GL, EG, GP, GN, FE…), P.6 puissance administrative (CV),
 S.1 nombre de places assises, V.7 CO2 (g/km), V.9 classe environnementale (norme Euro ou directive).
-N'écris jamais le nom ni l'adresse du titulaire. Appelle toujours l'outil report_registration.
+N'écris jamais le nom ni l'adresse du titulaire.
 TXT;
 
     private const FIELDS = ['plate', 'first_registration', 'make', 'version', 'commercial_name', 'vin', 'empty_weight', 'body_type', 'power_kw', 'fuel_code', 'fiscal_hp', 'seats', 'co2', 'euro_norm'];
@@ -56,15 +56,17 @@ TXT;
         try {
             $res = $client->messages->create(
                 model: config('services.anthropic.document_model') ?: config('services.anthropic.vision_model'),
-                maxTokens: 600,
+                // Marge pour la réflexion du modèle, toujours active sur les modèles récents.
+                maxTokens: 4000,
                 system: self::SYSTEM,
-                tools: [[
-                    'name' => 'report_registration',
-                    'description' => 'Renvoie les champs lus sur la carte grise.',
-                    'strict' => true,
-                    'inputSchema' => ['type' => 'object', 'additionalProperties' => false, 'required' => self::FIELDS, 'properties' => $props],
-                ]],
-                toolChoice: ['type' => 'tool', 'name' => 'report_registration'],
+                // Sortie JSON imposée par le schéma : les modèles récents refusent un outil forcé (tool_choice).
+                outputConfig: [
+                    'effort' => 'low', // simple recopie : pas besoin de réfléchir longtemps
+                    'format' => [
+                        'type' => 'json_schema',
+                        'schema' => ['type' => 'object', 'additionalProperties' => false, 'required' => self::FIELDS, 'properties' => $props],
+                    ],
+                ],
                 messages: [[
                     'role' => 'user',
                     'content' => [
@@ -77,11 +79,17 @@ TXT;
             report($e);
             throw new RuntimeException("La carte grise n'a pas pu être lue. Réessayez avec une photo plus nette.");
         }
-        foreach ($res->content as $block) {
-            if ($block->type === 'tool_use' && $block->name === 'report_registration') {
-                return self::clean((array) $block->input);
+        if ($res->stopReason === 'end_turn') {
+            foreach ($res->content as $block) {
+                if ($block->type === 'text') {
+                    $data = json_decode($block->text, true);
+                    if (is_array($data)) {
+                        return self::clean($data);
+                    }
+                }
             }
         }
+        report(new RuntimeException('Lecture de carte grise sans JSON exploitable (stop_reason: '.$res->stopReason.')'));
         throw new RuntimeException("La carte grise n'a pas pu être lue. Réessayez avec une photo plus nette.");
     }
 
