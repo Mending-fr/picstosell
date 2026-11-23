@@ -88,6 +88,25 @@ class InventoryTest extends TestCase
         $this->getJson('/api/v1/inventories', $h)->assertJsonPath('data.0.id', $id)->assertJsonPath('data.0.user', 'Paul');
     }
 
+    public function test_plaques_lues_par_le_telephone(): void
+    {
+        $g = Garage::create(['name' => 'Valognes', 'status' => 'pilot']);
+        Sanctum::actingAs(User::create(['name' => 'Paul', 'email' => 'p@a.fr', 'password' => 'x', 'role' => 'photographer', 'garage_id' => $g->id]));
+        $clio = $g->vehicles()->create(['plate' => 'GX-553-WJ', 'make' => 'Renault', 'model' => 'Clio', 'status' => 'online']);
+        $h = ['X-Garage-Id' => $g->id];
+        $id = $this->postJson('/api/v1/inventories', [], $h)->json('id');
+
+        $this->postJson("/api/v1/inventories/{$id}/reads", ['plates' => [['plate' => 'GX553WJ', 'seen' => 4], ['plate' => 'FB-301-QA', 'seen' => 1], ['plate' => 'BONJOUR']]], $h)
+            ->assertOk()->assertJsonPath('found', 1)->assertJsonPath('unknown', 1);
+        $this->postJson("/api/v1/inventories/{$id}/reads", ['plates' => [['plate' => 'GX-553-WJ', 'seen' => 2]]], $h)->assertOk();
+        $res = $this->postJson("/api/v1/inventories/{$id}/finish", [], $h)->assertOk();
+        $this->assertSame(6, $res->json('found_list.0.seen'));
+        $this->assertTrue($res->json('found_list.0.sure'));
+        $this->assertSame($clio->id, $res->json('found_list.0.vehicle.id'));
+        $this->assertFalse($res->json('unknown_list.0.sure'));
+        $this->postJson("/api/v1/inventories/{$id}/reads", ['plates' => [['plate' => 'AA-111-AA']]], $h)->assertStatus(422);
+    }
+
     public function test_un_autre_garage_ne_voit_pas_l_inventaire(): void
     {
         $a = Garage::create(['name' => 'A', 'status' => 'pilot']);

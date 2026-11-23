@@ -80,6 +80,7 @@ Route::prefix('v1')->group(function () {
             Route::post('inventories', [InventoryController::class, 'store']);
             Route::get('inventories/{id}', [InventoryController::class, 'show'])->whereNumber('id');
             Route::post('inventories/{id}/frames', [InventoryController::class, 'frame'])->whereNumber('id')->middleware('throttle:240,1');
+            Route::post('inventories/{id}/reads', [InventoryController::class, 'reads'])->whereNumber('id')->middleware('throttle:240,1');
             Route::post('inventories/{id}/finish', [InventoryController::class, 'finish'])->whereNumber('id');
             Route::patch('inventories/{id}/plates/{plateId}', [InventoryController::class, 'plate'])->whereNumber(['id', 'plateId']);
             Route::post('vehicles/{id}/uploads', [PhotoController::class, 'uploads'])->whereNumber('id');

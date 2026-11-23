@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Jobs\ReadInventoryFrame;
 use App\Models\Inventory;
 use App\Services\Imaging;
+use App\Services\Vehicle\InventoryMatcher;
+use App\Services\Vehicle\PlateReader;
 use App\Support\Media;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -44,6 +46,30 @@ class InventoryController extends Controller
         ReadInventoryFrame::dispatch($frame->id);
 
         return response()->json(['frame_id' => $frame->id] + $inv->summary(), 201);
+    }
+
+    /** Plaques lues par le téléphone lui-même (lecture sur l'appareil) : seulement les numéros, sans image. */
+    public function reads(Request $request, int $id, InventoryMatcher $matcher)
+    {
+        $inv = $this->find($id);
+        abort_if($inv->status !== 'running', 422, 'Cet inventaire est terminé.');
+        $data = $request->validate([
+            'plates' => 'required|array|min:1|max:200',
+            'plates.*.plate' => 'required|string|max:20',
+            'plates.*.seen' => 'nullable|integer|min:1|max:10000',
+        ]);
+        $found = [];
+        foreach ($data['plates'] as $p) {
+            $plate = PlateReader::normalize($p['plate']);
+            if ($plate) {
+                $seen = (int) ($p['seen'] ?? 1);
+                // Lue au moins deux fois sur le téléphone : on la considère comme nette.
+                $found[] = ['plate' => $plate, 'confidence' => $seen >= 2 ? 'high' : 'low', 'seen' => $seen];
+            }
+        }
+        $matcher->record($inv, null, $found);
+
+        return $inv->summary();
     }
 
     public function finish(int $id)
