@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\BackdropChoiceController;
 use App\Http\Controllers\Api\Admin\SiteThemeController;
 use App\Http\Controllers\Api\Admin\UserAdminController;
 use App\Http\Controllers\Api\InvitationController;
+use App\Http\Controllers\Api\InventoryController;
 use App\Http\Controllers\Api\Admin\OverviewController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DashboardController;
@@ -74,6 +75,13 @@ Route::prefix('v1')->group(function () {
             Route::get('vehicles/{id}', [VehicleController::class, 'show'])->whereNumber('id');
             Route::get('lookup/plate/{plate}', [VehicleController::class, 'lookup']);
             Route::post('lookup/registration', [RegistrationController::class, 'read'])->middleware('throttle:20,1');
+            // Inventaire du parc (appli mobile, ouvert aux employés)
+            Route::get('inventories', [InventoryController::class, 'index']);
+            Route::post('inventories', [InventoryController::class, 'store']);
+            Route::get('inventories/{id}', [InventoryController::class, 'show'])->whereNumber('id');
+            Route::post('inventories/{id}/frames', [InventoryController::class, 'frame'])->whereNumber('id')->middleware('throttle:240,1');
+            Route::post('inventories/{id}/finish', [InventoryController::class, 'finish'])->whereNumber('id');
+            Route::patch('inventories/{id}/plates/{plateId}', [InventoryController::class, 'plate'])->whereNumber(['id', 'plateId']);
             Route::post('vehicles/{id}/uploads', [PhotoController::class, 'uploads'])->whereNumber('id');
             Route::post('vehicles/{id}/photos', [PhotoController::class, 'store'])->whereNumber('id');
             Route::post('vehicles/{id}/renders', [PhotoController::class, 'renders'])->whereNumber('id');

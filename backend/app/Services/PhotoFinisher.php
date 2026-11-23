@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use Anthropic\Client;
 use App\Models\Garage;
+use App\Services\Ai\ClaudeJson;
 use App\Support\Media;
 use GdImage;
 use Throwable;
@@ -45,56 +45,34 @@ class PhotoFinisher
         $small = Imaging::fit($img, 1024);
         $sw = imagesx($small);
         $sh = imagesy($small);
-        $point = ['type' => 'array', 'items' => ['type' => 'integer'], 'description' => '[x, y] en pixels'];
-        try {
-            $client = new Client(apiKey: config('services.anthropic.key'));
-            $res = $client->messages->create(
-                model: config('services.anthropic.vision_model'),
-                maxTokens: 400,
-                system: "Tu repères les plaques d'immatriculation sur des photos de voitures. Pour chaque plaque lisible ou partiellement visible, donne ses 4 coins (haut gauche, haut droit, bas droit, bas gauche) en pixels, dans une image de {$sw} × {$sh} pixels, en suivant l'inclinaison de la plaque. Aucune plaque : liste vide. Appelle toujours l'outil report_plates.",
-                tools: [[
-                    'name' => 'report_plates',
-                    'description' => 'Renvoie les plaques trouvées.',
-                    'inputSchema' => [
-                        'type' => 'object',
-                        'required' => ['plates'],
-                        'properties' => ['plates' => ['type' => 'array', 'items' => [
-                            'type' => 'object', 'required' => ['corners'],
-                            'properties' => ['corners' => ['type' => 'array', 'items' => $point, 'minItems' => 4, 'maxItems' => 4]],
-                        ]]],
-                    ],
-                ]],
-                toolChoice: ['type' => 'tool', 'name' => 'report_plates'],
-                messages: [[
-                    'role' => 'user',
-                    'content' => [
-                        ['type' => 'image', 'source' => ['type' => 'base64', 'mediaType' => 'image/jpeg', 'data' => base64_encode(Imaging::jpeg($small, 85))]],
-                        ['type' => 'text', 'text' => 'Où sont les plaques ?'],
-                    ],
-                ]],
-            );
-        } catch (Throwable $e) {
-            report($e);
-
+        $point = ['type' => 'object', 'additionalProperties' => false, 'required' => ['x', 'y'], 'properties' => ['x' => ['type' => 'integer'], 'y' => ['type' => 'integer']]];
+        $data = ClaudeJson::ask(
+            config('services.anthropic.vision_model'),
+            "Tu repères les plaques d'immatriculation sur des photos de voitures. Pour chaque plaque lisible ou partiellement visible, donne ses 4 coins dans l'ordre haut gauche, haut droit, bas droit, bas gauche, en pixels d'une image de {$sw} × {$sh} pixels, en suivant l'inclinaison de la plaque. Aucune plaque : liste vide.",
+            Imaging::jpeg($small, 85),
+            'Où sont les plaques ?',
+            [
+                'type' => 'object', 'additionalProperties' => false, 'required' => ['plates'],
+                'properties' => ['plates' => ['type' => 'array', 'items' => [
+                    'type' => 'object', 'additionalProperties' => false, 'required' => ['corners'],
+                    'properties' => ['corners' => ['type' => 'array', 'items' => $point]],
+                ]]],
+            ],
+        );
+        if (! $data) {
             return [];
         }
         $out = [];
-        foreach ($res->content as $block) {
-            if ($block->type !== 'tool_use') {
+        foreach ((array) ($data['plates'] ?? []) as $p) {
+            $corners = (array) ($p['corners'] ?? []);
+            if (count($corners) !== 4) {
                 continue;
             }
-            foreach ((array) (((array) $block->input)['plates'] ?? []) as $p) {
-                $corners = (array) (((array) $p)['corners'] ?? []);
-                if (count($corners) !== 4) {
-                    continue;
-                }
-                $quad = [];
-                foreach ($corners as $c) {
-                    $c = array_values((array) $c);
-                    $quad[] = [(int) round(($c[0] ?? 0) * $w / $sw), (int) round(($c[1] ?? 0) * $h / $sh)];
-                }
-                $out[] = $quad;
+            $quad = [];
+            foreach ($corners as $c) {
+                $quad[] = [(int) round(((int) ($c['x'] ?? 0)) * $w / $sw), (int) round(((int) ($c['y'] ?? 0)) * $h / $sh)];
             }
+            $out[] = $quad;
         }
 
         return $out;

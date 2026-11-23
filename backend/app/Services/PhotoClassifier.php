@@ -4,8 +4,7 @@ namespace App\Services;
 
 use App\Models\Photo;
 use App\Models\Shot;
-use Anthropic\Client;
-use Throwable;
+use App\Services\Ai\ClaudeJson;
 
 /**
  * Reconnaît une photo de voiture : extérieur (et sous quel angle), intérieur ou détail.
@@ -22,9 +21,9 @@ front_left (avant et côté gauche de la voiture visibles, en biais), front (de 
 rear_right (arrière et côté droit), rear (de dos), rear_left (arrière et côté gauche), left (profil gauche).
 Le côté gauche de la voiture est celui du conducteur en France.
 Intérieur : sièges, tableau de bord, compteur, écran, coffre. Détail : gros plan sur une jante, un pneu, un phare, un défaut, un équipement, un document.
-Appelle toujours l'outil report_photo.
 TXT;
 
+    // Schéma de la réponse (l'ancien outil report_photo, gardé pour sa description des champs).
     private const TOOL = [
         'name' => 'report_photo',
         'description' => 'Renvoie le type de photo, l\'angle pour une vue extérieure et un libellé pour l\'intérieur ou un détail.',
@@ -52,32 +51,10 @@ TXT;
         if (! self::available()) {
             return null;
         }
-        try {
-            $client = new Client(apiKey: config('services.anthropic.key'));
-            $res = $client->messages->create(
-                model: config('services.anthropic.vision_model'),
-                maxTokens: 300,
-                system: self::SYSTEM,
-                tools: [self::TOOL],
-                toolChoice: ['type' => 'tool', 'name' => 'report_photo'],
-                messages: [[
-                    'role' => 'user',
-                    'content' => [
-                        ['type' => 'image', 'source' => ['type' => 'base64', 'mediaType' => 'image/jpeg', 'data' => base64_encode($jpegBytes)]],
-                        ['type' => 'text', 'text' => 'Range cette photo.'],
-                    ],
-                ]],
-            );
-            foreach ($res->content as $block) {
-                if ($block->type === 'tool_use' && $block->name === 'report_photo') {
-                    return $this->clean((array) $block->input);
-                }
-            }
-        } catch (Throwable $e) {
-            report($e);
-        }
+        $tool = self::TOOL['inputSchema'];
+        $data = ClaudeJson::ask(config('services.anthropic.vision_model'), self::SYSTEM, $jpegBytes, 'Range cette photo.', $tool, 1000);
 
-        return null;
+        return $data ? $this->clean($data) : null;
     }
 
     private function clean(array $in): ?array
