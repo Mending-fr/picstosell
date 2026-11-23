@@ -424,3 +424,40 @@ export interface TestPhoto {
   label: string
   vehicle: string
 }
+
+// ---------- inventaire du parc ----------
+export interface InventoryCar {
+  id: number
+  plate: string
+  label: string
+  status: VehicleStatus
+  cover_url: string | null
+}
+export interface InventoryPlate {
+  id: number
+  plate: string
+  seen: number
+  sure: boolean
+  dismissed: boolean
+  image_url: string | null
+  vehicle: InventoryCar | null
+  corrected: boolean
+}
+export interface InventorySummary {
+  id: number
+  status: 'running' | 'done'
+  user: string | null
+  created_at: string | null
+  finished_at: string | null
+  frames: number
+  pending_frames: number
+  found: number
+  unknown: number
+  missing: number
+}
+export interface Inventory extends InventorySummary {
+  found_list: InventoryPlate[]
+  unknown_list: InventoryPlate[]
+  missing_list: InventoryCar[]
+  dismissed_list: InventoryPlate[]
+}

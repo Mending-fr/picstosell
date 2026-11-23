@@ -9,7 +9,7 @@ import PhotoPicker, { type PickedPhoto } from './PhotoPicker.vue'
 import { ApiError, get, post, errorMessage } from '../api'
 import { FUELS, GEARBOXES, fuelLabel, gearboxLabel, num, parseNum, plateNormalize } from '../labels'
 import { session, isManager, refreshSidebar, toast } from '../session'
-import { stockChanged } from '../modals'
+import { modals, stockChanged } from '../modals'
 import { uploadPhotos } from '../uploads'
 import type { PlateLookup, RegistrationRead, User, Vehicle } from '../types'
 
@@ -20,7 +20,9 @@ const STEPS = ['La plaque', 'La voiture', 'Kilométrage', 'Prix', 'Les photos']
 const step = ref(1)
 
 // ---------- étape 1 : la plaque ----------
-const plate = ref('')
+// Plaque transmise par l'inventaire, sinon vide.
+const plate = ref(modals.addPlate)
+modals.addPlate = ''
 const looking = ref(false)
 const lookup = ref<'idle' | 'found' | 'notfound'>('idle')
 const lookupMsg = ref('')

@@ -50,6 +50,7 @@ const items = computed<Item[]>(() => {
         ? [
             { to: { path: '/vehicles', query: { status: 'to_review' } }, label: 'À vérifier', on: () => route.path === '/vehicles' && status.value === 'to_review', badge: session.toReview },
             { to: { path: '/vehicles', query: { status: 'sold' } }, label: 'Vendues', on: () => route.path === '/vehicles' && status.value === 'sold' },
+            { to: '/vehicles/inventaires', label: 'Inventaires', on: () => route.path.startsWith('/vehicles/inventaires') },
           ]
         : undefined,
     },

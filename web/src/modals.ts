@@ -4,13 +4,16 @@ import { reactive } from 'vue'
 
 export const modals = reactive({
   add: false,
+  /** Plaque à pré-remplir dans « Ajouter une voiture » (venue d'un inventaire). */
+  addPlate: '',
   price: false,
   /** Incrémenté quand une modale a modifié le stock : les vues abonnées se rechargent. */
   version: 0,
 })
 
-export function openAdd() {
+export function openAdd(plate: unknown = '') {
   modals.price = false
+  modals.addPlate = typeof plate === 'string' ? plate : ''
   modals.add = true
 }
 
